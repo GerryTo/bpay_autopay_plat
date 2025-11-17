@@ -1,0 +1,32 @@
+.wrapper {
+  min-height: 900px;
+  /* background-size: cover; */
+  background-image: url(../assets/logo_comm.png);
+}
+
+.form {
+  border-right: 1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-7));
+  min-height: 100vh; /* Tinggi penuh viewport */
+  height: 100vh;
+  width: 35%;
+  max-width: 450px;
+  padding: 30px;
+  padding-top: 13%;
+  justify-content: center; /* Center vertikal konten form */
+  
+
+  @media (max-width: $mantine-breakpoint-sm) {
+    max-width: 100%;
+    width: 100%;
+    min-height: 100vh;
+  }
+}
+
+.title {
+  color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
+  font-family: Outfit, var(--mantine-font-family);
+  font-weight: 500;
+  text-align: center;
+  margin-top: var(--mantine-spacing-md);
+  margin-bottom: 50px;
+}
