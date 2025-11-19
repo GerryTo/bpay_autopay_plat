@@ -1,0 +1,120 @@
+<div>
+    <div class="page-header-container box">{{pagelang.pagetitle}}</div>
+    <div class="page-body box">
+        <form>
+            <div class="form-section-header">Login Data</div>
+            <div class="form-group">
+                <label for="merchantcode">User Login :</label>
+                <input type="text" class="form-control form-control-sm" id="login" placeholder="Input Login code"
+                    ng-model="data.login" />
+            </div>
+            <div class="form-group">
+                <label for="merchantcode">Password :</label>
+                <input type="password" class="form-control form-control-sm" id="password" placeholder="Input Password"
+                    ng-model="data.password" />
+            </div>
+            <div class="form-group">
+                <label for="merchantname">Active :</label>
+                <select class="form-control" ng-model="data.active" id="Active">
+                    <option value="Y">Yes</option>
+                    <option value="N">No</option>
+                </select>
+            </div>
+            <div class="form-group" ng-hide="isMerchant">
+                <label for="merchantname">Login Type :</label>
+                <select class="form-control" ng-model="data.logintype" ng-change="changeType()" id="Login Type">
+                    <option ng-repeat="item in loginTypeList" value="{{item.value}}">{{item.display}}</option>
+                </select>
+            </div>
+            <div class="form-group" ng-show="data.logintype == 'G'">
+                <label for="merchantname">Agent Group :</label>
+                <select class="form-control" ng-model="data.agentgroupid" id="agentgroup">
+                    <option value="0">- NO GROUP -</option>
+                    <option ng-repeat="item in agentGroupList" value="{{item.agentgroupid}}">{{item.agentgroupname}}
+                    </option>
+                </select>
+            </div>
+            <!--
+            <div class="form-group" ng-hide="isMerchant">
+                <label for="merchantname">Login Type :</label>
+                <select class="form-control" ng-model="data.logintype" ng-change="getTypeLogin(data.logintype)" id="Login Type">
+                    <option value="A">Admin</option>
+                    <option value="M">Merchant</option>
+                    <option value="S">Super Admin</option>
+					<option value="R">Reseller</option>
+                </select>
+            </div>
+		-->
+            <div class="form-group" ng-hide="isMerchant">
+                <label for="securecode">Merchant :</label>
+                <select class="form-control" ng-model="data.merchantcode" id="countrycode">
+                    <option ng-repeat="item in merchantlist" value="{{item.merchantCode}}">{{item.merchantName}}
+                    </option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="phonenumber">Phone Number :</label>
+                <input type="text" class="form-control form-control-sm" id="phonenumber"
+                    placeholder="Input phone number" ng-model="data.phoneNumber" />
+            </div>
+            <div class="form-group">
+                <label for="agentname">Agent Name :</label>
+                <input type="text" class="form-control form-control-sm" id="agentname" placeholder="Input agent name"
+                    ng-model="data.agentName" />
+            </div>
+            <div class="form-group">
+                <label for="alias">Alias :</label>
+                <input type="text" class="form-control form-control-sm" id="alias" placeholder="Input alias"
+                    ng-model="data.alias" />
+            </div>
+            <div class="form-group">
+                <label for="alias">Login Status :</label>
+                <select class="form-control" ng-model="data.status" id="status">
+                    <option ng-repeat="item in listLoginStatus" value="{{item.id}}">{{item.description}}</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="merchantname">Use Credit :</label>
+                <select class="form-control" ng-model="data.useCredit" id="useCredit">
+                    <option selected value="Y">Yes</option>
+                    <option value="N">No</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="merchantname">is Direct Merchant :</label>
+                <select class="form-control" ng-model="data.isdm" id="isdm">
+                    <option selected value="Y">Yes</option>
+                    <option value="N">No</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="isSetMerchant">Set Merchant :</label>
+                <select class="form-control" ng-model="data.isSetMerchant" id="isSetMerchant">
+                    <option value="Y">Yes</option>
+                    <option value="N">No</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="provider">Set Provider:</label>
+                <select class="form-control" ng-model="data.provider" id="provider">
+                    <option value="Airtel">Airtel</option>
+                    <option value="Banglalink">Banglalink</option>
+                    <option value="Grameenphone">Grameenphone</option>
+                    <option value="Robi">Robi</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="securecode">CP Access :</label>
+                <div ng-repeat="item in menunav">
+                    <input type="checkbox" id="Menu_{{$index}}" ng-checked="checkedMenu(item)"
+                        ng-click="menuClick(item,$index)" ng-model="access[$index]" ng-hide="itemhide[$index]"><label
+                        for="Menu_{{$index}}" ng-hide="itemhide[$index]"> {{item.menu}}</label></br>
+                </div>
+            </div>
+            <div class="form-section-footer">
+                <button type="button" class="btn btn-primary btn-sm" ng-click="save()">{{globallang.save}}</button>
+                <button type="button" class="btn btn-default btn-sm" ng-click="cancel()">{{globallang.cancel}}</button>
+            </div>
+        </form>
+    </div>
+</div>

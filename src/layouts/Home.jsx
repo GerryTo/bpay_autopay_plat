@@ -22,10 +22,10 @@ export default function Home() {
             header={{ height: 60 }}
             footer={{ height: 60 }}
             navbar={{
-                width: 300,
+                width: 260,
                 breakpoint: "sm",
                 collapsed: { mobile: !opened },
-                padding: "xl",
+                padding: 0,
             }}
             padding="md"
         >
