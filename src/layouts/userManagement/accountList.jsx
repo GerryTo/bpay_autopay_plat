@@ -32,20 +32,73 @@ const AccountList = () => {
   const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Filter data based on search query
+  // Column-specific filters
+  const [columnFilters, setColumnFilters] = useState({
+    login: '',
+    status: '',
+    type: '',
+    merchantcode: '',
+    phoneNumber: '',
+    agentName: '',
+    alias: '',
+    isdm: '',
+    issetmerchant: '',
+  });
+
+  // Filter data based on column filters
   const filteredData = data.filter((item) => {
-    const query = searchQuery.toLowerCase();
+    // Check each column filter
+    const loginMatch =
+      !columnFilters.login ||
+      item.login?.toLowerCase().includes(columnFilters.login.toLowerCase());
+
+    const statusMatch =
+      !columnFilters.status || item.active === columnFilters.status;
+
+    const typeMatch = !columnFilters.type || item.type === columnFilters.type;
+
+    const merchantMatch =
+      !columnFilters.merchantcode ||
+      item.merchantcode
+        ?.toLowerCase()
+        .includes(columnFilters.merchantcode.toLowerCase());
+
+    const phoneMatch =
+      !columnFilters.phoneNumber ||
+      item.phoneNumber
+        ?.toLowerCase()
+        .includes(columnFilters.phoneNumber.toLowerCase());
+
+    const agentMatch =
+      !columnFilters.agentName ||
+      item.agentName
+        ?.toLowerCase()
+        .includes(columnFilters.agentName.toLowerCase());
+
+    const aliasMatch =
+      !columnFilters.alias ||
+      item.alias?.toLowerCase().includes(columnFilters.alias.toLowerCase());
+
+    const dmMatch = !columnFilters.isdm || item.isdm === columnFilters.isdm;
+
+    const setMerchantMatch =
+      !columnFilters.issetmerchant ||
+      item.issetmerchant === columnFilters.issetmerchant;
+
+    // All filters must match
     return (
-      item.login?.toLowerCase().includes(query) ||
-      item.type?.toLowerCase().includes(query) ||
-      item.merchantcode?.toLowerCase().includes(query) ||
-      item.phoneNumber?.toLowerCase().includes(query) ||
-      item.agentName?.toLowerCase().includes(query) ||
-      item.alias?.toLowerCase().includes(query)
+      loginMatch &&
+      statusMatch &&
+      typeMatch &&
+      merchantMatch &&
+      phoneMatch &&
+      agentMatch &&
+      aliasMatch &&
+      dmMatch &&
+      setMerchantMatch
     );
   });
 
@@ -55,10 +108,33 @@ const AccountList = () => {
   const endIndex = startIndex + itemsPerPage;
   const paginatedData = filteredData.slice(startIndex, endIndex);
 
-  // Reset to page 1 when search query changes
+  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery]);
+  }, [columnFilters]);
+
+  // Update column filter
+  const handleFilterChange = (column, value) => {
+    setColumnFilters((prev) => ({
+      ...prev,
+      [column]: value,
+    }));
+  };
+
+  // Clear all filters
+  const handleClearFilters = () => {
+    setColumnFilters({
+      login: '',
+      status: '',
+      type: '',
+      merchantcode: '',
+      phoneNumber: '',
+      agentName: '',
+      alias: '',
+      isdm: '',
+      issetmerchant: '',
+    });
+  };
 
   const getListData = async () => {
     setLoading(true);
@@ -309,16 +385,20 @@ const AccountList = () => {
               >
                 Refresh
               </Button>
+              <Button
+                leftSection={<IconSearch size={18} />}
+                onClick={handleClearFilters}
+                variant="light"
+                color="red"
+                radius="md"
+              >
+                Clear All Filters
+              </Button>
             </Group>
 
-            <TextInput
-              placeholder="Search by login, merchant, phone..."
-              leftSection={<IconSearch size={18} />}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.currentTarget.value)}
-              style={{ minWidth: 300 }}
-              radius="md"
-            />
+            {/* <Badge size="lg" variant="light" color="blue">
+              {filteredData.length} of {data.length} records
+            </Badge> */}
           </Group>
 
           {/* Table */}
@@ -370,7 +450,7 @@ const AccountList = () => {
                     backgroundColor: '#f8f9fa',
                     fontWeight: 600,
                     fontSize: '13px',
-                    color: '#495057',
+                    color: '#0f1011ff',
                     whiteSpace: 'nowrap',
                     padding: '12px 16px',
                   },
@@ -381,6 +461,7 @@ const AccountList = () => {
                 }}
               >
                 <Table.Thead>
+                  {/* Header Row */}
                   <Table.Tr>
                     <Table.Th style={{ minWidth: 120 }}>Login</Table.Th>
                     <Table.Th style={{ minWidth: 120 }}>Status</Table.Th>
@@ -394,6 +475,136 @@ const AccountList = () => {
                     </Table.Th>
                     <Table.Th style={{ minWidth: 130 }}>Set Merchant</Table.Th>
                     <Table.Th style={{ minWidth: 120 }}>Action</Table.Th>
+                  </Table.Tr>
+
+                  {/* Filter Row */}
+                  <Table.Tr style={{ backgroundColor: '#e7f5ff' }}>
+                    <Table.Th style={{ padding: '8px' }}>
+                      <TextInput
+                        placeholder="Filter login..."
+                        size="xs"
+                        value={columnFilters.login}
+                        onChange={(e) =>
+                          handleFilterChange('login', e.currentTarget.value)
+                        }
+                      />
+                    </Table.Th>
+                    <Table.Th style={{ padding: '8px' }}>
+                      <Select
+                        placeholder="All"
+                        size="xs"
+                        value={columnFilters.status}
+                        onChange={(value) =>
+                          handleFilterChange('status', value || '')
+                        }
+                        data={[
+                          { value: '', label: 'All' },
+                          { value: 'Y', label: 'Active' },
+                          { value: 'N', label: 'Inactive' },
+                        ]}
+                        clearable
+                      />
+                    </Table.Th>
+                    <Table.Th style={{ padding: '8px' }}>
+                      <Select
+                        placeholder="All"
+                        size="xs"
+                        value={columnFilters.type}
+                        onChange={(value) =>
+                          handleFilterChange('type', value || '')
+                        }
+                        data={[
+                          { value: '', label: 'All' },
+                          { value: 'S', label: 'Super Admin' },
+                          { value: 'A', label: 'Admin' },
+                          { value: 'M', label: 'Merchant' },
+                          { value: 'R', label: 'Reseller' },
+                          { value: 'G', label: 'Agent' },
+                        ]}
+                        clearable
+                      />
+                    </Table.Th>
+                    <Table.Th style={{ padding: '8px' }}>
+                      <TextInput
+                        placeholder="Filter merchant..."
+                        size="xs"
+                        value={columnFilters.merchantcode}
+                        onChange={(e) =>
+                          handleFilterChange(
+                            'merchantcode',
+                            e.currentTarget.value
+                          )
+                        }
+                      />
+                    </Table.Th>
+                    <Table.Th style={{ padding: '8px' }}>
+                      <TextInput
+                        placeholder="Filter phone..."
+                        size="xs"
+                        value={columnFilters.phoneNumber}
+                        onChange={(e) =>
+                          handleFilterChange(
+                            'phoneNumber',
+                            e.currentTarget.value
+                          )
+                        }
+                      />
+                    </Table.Th>
+                    <Table.Th style={{ padding: '8px' }}>
+                      <TextInput
+                        placeholder="Filter agent..."
+                        size="xs"
+                        value={columnFilters.agentName}
+                        onChange={(e) =>
+                          handleFilterChange('agentName', e.currentTarget.value)
+                        }
+                      />
+                    </Table.Th>
+                    <Table.Th style={{ padding: '8px' }}>
+                      <TextInput
+                        placeholder="Filter alias..."
+                        size="xs"
+                        value={columnFilters.alias}
+                        onChange={(e) =>
+                          handleFilterChange('alias', e.currentTarget.value)
+                        }
+                      />
+                    </Table.Th>
+                    <Table.Th style={{ padding: '8px' }}>
+                      <Select
+                        placeholder="All"
+                        size="xs"
+                        value={columnFilters.isdm}
+                        onChange={(value) =>
+                          handleFilterChange('isdm', value || '')
+                        }
+                        data={[
+                          { value: '', label: 'All' },
+                          { value: 'Y', label: 'Yes' },
+                          { value: 'N', label: 'No' },
+                        ]}
+                        clearable
+                      />
+                    </Table.Th>
+                    <Table.Th style={{ padding: '8px' }}>
+                      <Select
+                        placeholder="All"
+                        size="xs"
+                        value={columnFilters.issetmerchant}
+                        onChange={(value) =>
+                          handleFilterChange('issetmerchant', value || '')
+                        }
+                        data={[
+                          { value: '', label: 'All' },
+                          { value: 'Y', label: 'Yes' },
+                          { value: 'N', label: 'No' },
+                        ]}
+                        clearable
+                      />
+                    </Table.Th>
+                    <Table.Th style={{ padding: '8px' }}>
+                      {/* No filter for Action column */}
+                    </Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -418,8 +629,10 @@ const AccountList = () => {
                             size="sm"
                             c="dimmed"
                           >
-                            {searchQuery
-                              ? 'Try adjusting your search terms'
+                            {Object.values(columnFilters).some(
+                              (val) => val !== ''
+                            )
+                              ? 'Try adjusting your filters'
                               : 'Click "Add New User" to create your first user'}
                           </Text>
                         </Stack>
@@ -453,7 +666,8 @@ const AccountList = () => {
                       {Math.min(endIndex, filteredData.length)} of{' '}
                       {filteredData.length}{' '}
                       {filteredData.length === 1 ? 'record' : 'records'}
-                      {searchQuery && ` (filtered from ${data.length} total)`}
+                      {Object.values(columnFilters).some((val) => val !== '') &&
+                        ` (filtered from ${data.length} total)`}
                     </Text>
                     <Group
                       gap="xs"

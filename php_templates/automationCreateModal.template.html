@@ -1,0 +1,87 @@
+<div class="modal-header">
+  <h3 class="modal-title">Add Automation account</h3>
+</div>
+<div class="modal-body">
+  <form>
+    <div class="form-group">
+      <label for="merchantcode">Main user :</label>
+      <input
+        type="text"
+        class="form-control form-control-sm"
+        ng-model="searchText"
+        list="loginAccount"
+        ng-keyup="isShow = true"
+        placeholder="Search main user..."
+      />
+      <div
+        style="
+          position: absolute;
+          width: 100%;
+          top: 60px;
+          max-height: 400px;
+          overflow: auto;
+          display: none;
+          z-index: 2000;
+          background-color: #fff;
+          border: 1px solid #999;
+        "
+        ng-class="{ishide: !isShow, isshow: isShow}"
+      >
+        <div
+          ng-repeat="item in loginAccount | filter:searchText"
+          ng-click="pick(item)"
+          class="optionItem"
+          style="padding: 5px"
+        >
+          {{item.user}} ({{item.phonenumber}})
+        </div>
+    </div>
+    <div class="form-group">
+      <label for="merchantcode">Username:</label>
+      <input
+        type="text"
+        class="form-control form-control-sm"
+        ng-model="username"
+      />
+    </div>
+    <div class="form-group">
+      <label for="merchantcode">Bank Code:</label>
+      <select class="form-control form-control-sm" ng-model="bankCode">
+        <option value="BKASH">BKASH</option>
+        <option value="NAGAD">NAGAD</option>
+        <option value="BKASHM">BKASHM</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="merchantcode">System :</label>
+      <select class="form-control form-control-sm" ng-model="system">
+        <option value="AUTOMATION">AUTOMATION</option>
+        <option value="COM GETTER">COM GETTER</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Appium Online :</label>
+      <select class="form-control" ng-model="useappium">
+        <option value="0">No</option>
+        <option value="1">Yes</option>
+      </select>
+    </div>
+    <div class="form-group">
+        <label for="provider">Set Provider:</label>
+        <select class="form-control" ng-model="provider" id="provider">
+            <option value="Airtel">Airtel</option>
+            <option value="Banglalink">Banglalink</option>
+            <option value="Grameenphone">Grameenphone</option>
+            <option value="Robi">Robi</option>
+        </select>
+    </div>
+  </form>
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-primary btn-sm" ng-click="save()">
+    Add
+  </button>
+  <button type="button" class="btn btn-default btn-sm" ng-click="cancel()">
+    {{globallang.cancel}}
+  </button>
+</div>

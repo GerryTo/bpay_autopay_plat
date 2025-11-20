@@ -1,0 +1,24 @@
+<div>
+    <div class="page-header-container box">Agent Group Form</div>
+    <div class="page-body box">
+        <form>
+            <div class="row">
+                <div class="col-md-4 mb-2">
+                    <label>Group Name :</label>
+                    <input type="text" class="form-control form-control-sm" placeholder="Group name" ng-model="data.name" />
+                </div>               
+				<div class="col-md-4 mb-2">
+                    <label>Is Active :</label>
+                    <select class="form-control" ng-model="data.status">
+                        <option value="Yes">Yes</option>
+						<option value="No">No</option>
+                    </select>
+                </div>                
+            </div>
+            <div class="form-section-footer">
+                <button type="button" class="btn btn-primary btn-sm" ng-click="save()">{{globallang.save}}</button>
+                <button type="button" class="btn btn-default btn-sm" ng-click="cancel()">{{globallang.cancel}}</button>
+            </div>
+        </form>
+    </div>
+</div>

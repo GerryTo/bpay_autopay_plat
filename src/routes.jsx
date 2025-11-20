@@ -20,6 +20,19 @@ import {
 import Dashboard from './layouts/dashboardPage';
 import AccountList from './layouts/userManagement/accountList';
 import AccountForm from './layouts/userManagement/accountForm';
+import AutomationList from './layouts/userManagement/automationList';
+import AutomationListAdmin from './layouts/userManagement/automationListAdmin';
+import AutomationForm from './layouts/userManagement/automationForm';
+import ServerList from './layouts/userManagement/serverList';
+import ServerForm from './layouts/userManagement/serverForm';
+import AutomationError from './layouts/userManagement/automationError';
+import AgentGroupList from './layouts/Agent/agentGroupList';
+import AgentGroupForm from './layouts/Agent/agentGroupForm';
+import AgentCommissionSettlement from './layouts/Agent/agentCommissionSettlement';
+import AgentCredit from './layouts/Agent/agentCredit';
+import AgentCreditRequest from './layouts/Agent/agentCreditRequest';
+import AgentCurrentBalance from './layouts/Agent/agentCurrentBalance';
+import AgentTransactionSummary from './layouts/Agent/agentTransactionSummary';
 
 export const mockdataRoutes = [
   {
@@ -429,34 +442,28 @@ export const mockdataRoutes = [
         element: <AccountList />,
       },
       {
-        label: 'Account Form',
-        icon: <IconUsers />,
-        link: '/login-form',
-        element: <AccountForm />,
-      },
-      {
         label: 'Automation List',
         icon: <IconRobot />,
         link: '/automation-create-list',
-        element: '',
+        element: <AutomationList />,
       },
       {
         label: 'Automation List Admin',
         icon: <IconRobot />,
         link: '/automation-create-list-admin',
-        element: '',
+        element: <AutomationListAdmin />,
       },
       {
         label: 'Server List',
         icon: <IconSettings />,
         link: '/server-list',
-        element: '',
+        element: <ServerList />,
       },
       {
         label: 'Automation Error',
         icon: <IconAlertTriangle />,
         link: '/automation-error-list',
-        element: '',
+        element: <AutomationError />,
       },
     ],
   },
@@ -467,19 +474,19 @@ export const mockdataRoutes = [
         label: 'Agent Group',
         icon: <IconUsers />,
         link: '/agentgroup',
-        element: '',
+        element: <AgentGroupList />,
       },
       {
         label: 'Agent Comm. Settlement',
         icon: <IconCash />,
         link: '/agent-commission-settlement',
-        element: '',
+        element: <AgentCommissionSettlement />,
       },
       {
         label: 'Agent Credit',
         icon: <IconCash />,
         link: '/agent-credit',
-        element: '',
+        element: <AgentCredit />,
       },
       {
         label: 'Agent Credit Monitoring',
@@ -491,7 +498,7 @@ export const mockdataRoutes = [
         label: 'Agent Credit Request',
         icon: <IconCash />,
         link: '/agent-credit-request',
-        element: '',
+        element: <AgentCreditRequest />,
       },
       {
         label: 'Agent Report Transaction',
@@ -509,13 +516,13 @@ export const mockdataRoutes = [
         label: 'Agent Current Balance GMT+6 NEW',
         icon: <IconCash />,
         link: '/current-balance-by-agent-live-latest',
-        element: '',
+        element: <AgentCurrentBalance />,
       },
       {
         label: 'Transaction Summary by Agent NEW (GMT +6)',
         icon: <IconReportMoney />,
         link: '/transaction-summary-by-agent-new',
-        element: '',
+        element: <AgentTransactionSummary />,
       },
     ],
   },
@@ -1001,7 +1008,7 @@ export const mockdataRoutes = [
         label: 'Automation Error',
         icon: <IconAlertTriangle />,
         link: '/automation-error-list',
-        element: '',
+        element: <AutomationError />,
       },
       {
         label: 'Error Log',
@@ -1150,6 +1157,36 @@ export const mockdataRoutes = [
         icon: <IconBrandTelegram />,
         link: '/service-resend-callback',
         element: '',
+      },
+    ],
+  },
+  {
+    title: 'Hidden Routes',
+    hidden: true, // This section won't be displayed in navbar
+    links: [
+      {
+        label: 'Account Form',
+        icon: <IconUsers />,
+        link: '/login-form',
+        element: <AccountForm />,
+      },
+      {
+        label: 'Automation Form',
+        icon: <IconRobot />,
+        link: '/automation-create-form',
+        element: <AutomationForm />,
+      },
+      {
+        label: 'Server Form',
+        icon: <IconSettings />,
+        link: '/server-form',
+        element: <ServerForm />,
+      },
+      {
+        label: 'Agent Group Form',
+        icon: <IconUsers />,
+        link: '/agentgroup-form',
+        element: <AgentGroupForm />,
       },
     ],
   },

@@ -31,9 +31,7 @@ const NavigationSection = ({ opened, toggle }) => {
   const loginUser = useSelector((state) => state.loginUser);
   const activeLink = breadcrumbState.activeLink || location.pathname;
   const [openedLinks, setOpenedLinks] = useState({});
-  const [openedSections, setOpenedSections] = useState({
-    'Quick Menu': true, // Default Quick Menu terbuka
-  });
+  const [openedSections, setOpenedSections] = useState({});
 
   function handleLogout() {
     try {
@@ -414,7 +412,9 @@ const NavigationSection = ({ opened, toggle }) => {
                         <>
                             <Box>
                                 <Stack gap={4}>
-                                    {mockdataRoutes.map((item) =>
+                                    {mockdataRoutes
+                                        .filter((item) => !item.hidden)
+                                        .map((item) =>
                                         renderNavLink(item)
                                     )}
                                 </Stack>
@@ -423,7 +423,9 @@ const NavigationSection = ({ opened, toggle }) => {
                         </>
                     )} */}
 
-          {mockdataRoutes.map((dt, i) => {
+          {mockdataRoutes
+            .filter((dt) => !dt.hidden) // Filter out hidden sections
+            .map((dt, i) => {
             const isSectionOpen = openedSections[dt.title] === true;
             const menuCount = dt.links.length;
             return (
@@ -502,7 +504,7 @@ const NavigationSection = ({ opened, toggle }) => {
                     {dt.links.map((dt) => renderNavLink(dt))}
                   </Stack>
                 </Collapse>
-                {i < mockdataRoutes.length - 1 && <Divider mt="sm" />}
+                {i < mockdataRoutes.filter((dt) => !dt.hidden).length - 1 && <Divider mt="sm" />}
               </Box>
             );
           })}
