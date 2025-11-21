@@ -852,5 +852,354 @@ export const agentCommissionAPI = {
   },
 };
 
+// Merchant Management API calls
+export const merchantAPI = {
+  /**
+   * Get merchant list
+   * Note: This endpoint returns encrypted data
+   */
+  getMerchantList: async () => {
+    return await apiCall('/masterMerchant_getList.php', {});
+  },
+
+  /**
+   * Get merchant detail by merchantcode
+   * @param {String} merchantcode - Merchant code
+   */
+  getMerchantDetail: async (merchantcode) => {
+    return await apiCall('/getMasterMerchantDetail.php', { merchantcode });
+  },
+
+  /**
+   * Save merchant (create or update)
+   * @param {Object} merchantData - Merchant data
+   */
+  saveMerchant: async (merchantData) => {
+    try {
+      const jsonData = CRYPTO.encrypt(merchantData);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/saveMasterMerchant.php', formData);
+
+      // Decrypt response
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Save error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to save merchant',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Delete merchant
+   * @param {String} merchantcode - Merchant code to delete
+   */
+  deleteMerchant: async (merchantcode) => {
+    try {
+      const data = { merchantcode };
+      const jsonData = CRYPTO.encrypt(data);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/deleteMasterMerchant.php', formData);
+
+      // Decrypt response
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Delete error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to delete merchant',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get reseller list
+   */
+  getResellerList: async () => {
+    return await apiCall('/getMasterBank2.php', {});
+  },
+
+  /**
+   * Get country list
+   */
+  getCountryList: async () => {
+    return await apiCall('/getMasterCountry.php', {});
+  },
+
+  /**
+   * Get currency list
+   */
+  getCurrencyList: async () => {
+    return await apiCall('/getMasterCurrency.php', {});
+  },
+
+  /**
+   * Get bank list
+   */
+  getBankList: async () => {
+    return await apiCall('/getMasterBank.php', {});
+  },
+
+  /**
+   * Get merchant bank account list
+   * @param {String} merchant - Merchant code or 'ALL'
+   */
+  getMerchantBankAccList: async (merchant) => {
+    try {
+      const data = { merchant };
+      const jsonData = CRYPTO.encrypt(data);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/merchantBankAcc_getList.php', formData);
+
+      // Decrypt response
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+
+        // Decode rawurl if records exist
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('API call error:', error);
+      return {
+        success: false,
+        error: error.message || 'An error occurred',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get merchant transactions by date range
+   * @param {String} datefrom - From date (YYYY-MM-DD HH:mm:ss)
+   * @param {String} dateto - To date (YYYY-MM-DD HH:mm:ss)
+   * @param {String} statusValue - Optional status filter ('9'=pending, '0'=accepted, '8'=failed)
+   */
+  getTransactionByMerchant: async (datefrom, dateto, statusValue = null) => {
+    try {
+      const data = statusValue
+        ? { datefrom, dateto, statusValue }
+        : { datefrom, dateto };
+      const jsonData = CRYPTO.encrypt(data);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/getTransactionByMerchant.php', formData);
+
+      // Decrypt response
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+
+        // Decode rawurl if records exist
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('API call error:', error);
+      return {
+        success: false,
+        error: error.message || 'An error occurred',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get merchant balance (opening balance)
+   * @param {String} datefrom - From date (YYYY-MM-DD HH:mm:ss)
+   */
+  getMerchantBalance: async (datefrom) => {
+    try {
+      const data = { datefrom };
+      const jsonData = CRYPTO.encrypt(data);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/getMasterMerchantBalance.php', formData);
+
+      // Decrypt response
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('API call error:', error);
+      return {
+        success: false,
+        error: error.message || 'An error occurred',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get merchant transaction history by date range
+   * @param {String} datefrom - From date (YYYY-MM-DD HH:mm:ss)
+   * @param {String} dateto - To date (YYYY-MM-DD HH:mm:ss)
+   * @param {String} statusValue - Optional status filter ('9'=pending, '0'=accepted, '8'=failed)
+   */
+  getTransactionByMerchantHistory: async (datefrom, dateto, statusValue = null) => {
+    try {
+      const data = statusValue
+        ? { datefrom, dateto, statusValue }
+        : { datefrom, dateto };
+      const jsonData = CRYPTO.encrypt(data);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/getTransactionByMerchantHistory.php', formData);
+
+      // Decrypt response
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+
+        // Decode rawurl if records exist
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('API call error:', error);
+      return {
+        success: false,
+        error: error.message || 'An error occurred',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get merchant report files
+   * @param {String} report - Report type
+   * @param {String} category - Category (daily/weekly/monthly)
+   * @param {String} merchantCode - Merchant code
+   */
+  getMerchantReportFiles: async (report, category, merchantCode) => {
+    try {
+      const data = { report, category, merchantCode };
+      const jsonData = CRYPTO.encrypt(data);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/report_merchant_getFiles.php', formData, {
+        timeout: 2 * 60 * 1000, // 2 minutes timeout
+      });
+
+      // Response is not encrypted, but records need url decoding
+      if (response.data) {
+        const responseData = response.data;
+
+        // Decode rawurl if records exist
+        if (responseData.records && Array.isArray(responseData.records)) {
+          responseData.records = responseData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+
+        return {
+          success: true,
+          data: responseData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('API call error:', error);
+      return {
+        success: false,
+        error: error.message || 'An error occurred',
+        details: error.response?.data || null,
+      };
+    }
+  },
+};
+
 // Export default API client for custom calls
 export default apiClient;

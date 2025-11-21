@@ -1,0 +1,15 @@
+<div>
+    <div class="page-header-container box">{{pagelang.pagetitle}}</div>
+    <div class="page-body box">
+        <div class="button-container">
+            <button type="button" class="btn btn-primary btn-sm" ng-click="new()">{{globallang.addnew}}</button>
+            <button type="button" class="btn btn-default btn-sm" ng-click="refresh()" ng-disabled="gridIsLoading==true">{{globallang.refresh}}</button>
+        </div>
+        <div id="grid1" ui-grid="gridOptions" class="grid">
+            <div class="grid-nodata-container" ng-show="gridOptions.data.length == 0 && !gridIsLoading">No Data Available</div>
+            <div class="grid-loading-container" ng-show="gridIsLoading">
+                <img src="images/loading.gif" />
+            </div>
+        </div>
+    </div>
+</div>

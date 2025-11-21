@@ -33,6 +33,12 @@ import AgentCredit from './layouts/Agent/agentCredit';
 import AgentCreditRequest from './layouts/Agent/agentCreditRequest';
 import AgentCurrentBalance from './layouts/Agent/agentCurrentBalance';
 import AgentTransactionSummary from './layouts/Agent/agentTransactionSummary';
+import MerchantMaster from './layouts/Merchant/MerchantMaster';
+import MerchantForm from './layouts/Merchant/MerchantForm';
+import MerchantBankAcc from './layouts/Merchant/MerchantBankAcc';
+import MerchantTransaction from './layouts/Merchant/MerchantTransaction';
+import MerchantTransactionHistory from './layouts/Merchant/MerchantTransactionHistory';
+import ReportMerchant from './layouts/Report/ReportMerchant';
 
 export const mockdataRoutes = [
   {
@@ -533,31 +539,31 @@ export const mockdataRoutes = [
         label: 'Merchant Master',
         icon: <IconShoppingCart />,
         link: '/master-merchant-superadmin',
-        element: '',
+        element: <MerchantMaster />,
       },
       {
         label: 'Merchant Bank Acc',
         icon: <IconBuildingBank />,
         link: '/merchant-bankacc',
-        element: '',
+        element: <MerchantBankAcc />,
       },
       {
         label: 'Merchant Transaction',
         icon: <IconTransfer />,
         link: '/transaction-merchant',
-        element: '',
+        element: <MerchantTransaction />,
       },
       {
         label: 'Merchant Transaction History',
         icon: <IconFileText />,
         link: '/transaction-merchant-history',
-        element: '',
+        element: <MerchantTransactionHistory />,
       },
       {
         label: 'Report Merchant',
         icon: <IconReportMoney />,
         link: '/report-merchant',
-        element: '',
+        element: <ReportMerchant />,
       },
     ],
   },
@@ -1187,6 +1193,12 @@ export const mockdataRoutes = [
         icon: <IconUsers />,
         link: '/agentgroup-form',
         element: <AgentGroupForm />,
+      },
+      {
+        label: 'Merchant Form',
+        icon: <IconShoppingCart />,
+        link: '/merchant-form',
+        element: <MerchantForm />,
       },
     ],
   },
