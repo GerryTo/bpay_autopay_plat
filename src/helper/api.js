@@ -1199,6 +1199,602 @@ export const merchantAPI = {
       };
     }
   },
+
+  /**
+   * Get merchant daily report (complete) - GMT+8
+   * @param {String} datefrom - From date (YYYY-MM-DD HH:mm:ss)
+   * @param {String} dateto - To date (YYYY-MM-DD HH:mm:ss)
+   * @param {String} merchant - Merchant code or 'ALL'
+   */
+  getMerchantDailyReport: async (datefrom, dateto, merchant) => {
+    try {
+      const data = { datefrom, dateto, merchant };
+      const jsonData = CRYPTO.encrypt(data);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/admin_reportDaily_complete.php', formData, {
+        timeout: 2 * 60 * 1000, // 2 minutes timeout
+      });
+
+      // Response is NOT encrypted according to AngularJS code
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('API call error:', error);
+      return {
+        success: false,
+        error: error.message || 'An error occurred',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get merchant daily report (complete) - GMT+6
+   * @param {String} datefrom - From date (YYYY-MM-DD HH:mm:ss)
+   * @param {String} dateto - To date (YYYY-MM-DD HH:mm:ss)
+   * @param {String} merchant - Merchant code or 'ALL'
+   */
+  getMerchantDailyReportGMT6: async (datefrom, dateto, merchant) => {
+    try {
+      const data = { datefrom, dateto, merchant };
+      const jsonData = CRYPTO.encrypt(data);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/admin_reportDaily_complete_gmt6.php', formData, {
+        timeout: 2 * 60 * 1000, // 2 minutes timeout
+      });
+
+      // Response is NOT encrypted according to AngularJS code
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('API call error:', error);
+      return {
+        success: false,
+        error: error.message || 'An error occurred',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get agent daily complete report - GMT+8
+   * @param {String} fromdate - From date (YYYY-MM-DD format)
+   * @param {String} todate - To date (YYYY-MM-DD format)
+   */
+  getAgentDailyComplete: async (fromdate, todate) => {
+    try {
+      const data = { fromdate, todate };
+      const jsonData = CRYPTO.encrypt(data);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/getAccountReportBetweenCompleteDate.php', formData);
+
+      // Response IS ENCRYPTED according to AngularJS code
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('API call error:', error);
+      return {
+        success: false,
+        error: error.message || 'An error occurred',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get agent daily complete report - GMT+6
+   * @param {String} fromdate - From date (YYYY-MM-DD format)
+   * @param {String} todate - To date (YYYY-MM-DD format)
+   */
+  getAgentDailyCompleteGMT6: async (fromdate, todate) => {
+    try {
+      const data = { fromdate, todate };
+      const jsonData = CRYPTO.encrypt(data);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/getAccountReportBetweenCompleteDate6.php', formData);
+
+      // Response IS ENCRYPTED according to AngularJS code
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('API call error:', error);
+      return {
+        success: false,
+        error: error.message || 'An error occurred',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get merchant list without demo accounts
+   */
+  getMerchantListNoDemo: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '');
+
+      const response = await apiClient.post('/masterMerchant_getListNoDemo.php', formData);
+
+      // Response IS ENCRYPTED according to AngularJS code
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('API call error:', error);
+      return {
+        success: false,
+        error: error.message || 'An error occurred',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get agent realtime report - GMT+8
+   * No parameters needed - returns current day realtime data
+   */
+  getAgentRealtimeReport: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '');
+
+      const response = await apiClient.post('/getAccountReportDailyRealtime.php', formData);
+
+      // Response is NOT encrypted according to AngularJS code
+      return {
+        success: true,
+        data: response.data.data || response.data,
+      };
+    } catch (error) {
+      console.error('API call error:', error);
+      return {
+        success: false,
+        error: error.message || 'An error occurred',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get agent realtime report - GMT+6
+   * No parameters needed - returns current day realtime data
+   */
+  getAgentRealtimeReportGMT6: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '');
+
+      const response = await apiClient.post('/getAccountReportDailyRealtime6.php', formData);
+
+      // Response is NOT encrypted according to AngularJS code
+      return {
+        success: true,
+        data: response.data.data || response.data,
+      };
+    } catch (error) {
+      console.error('API call error:', error);
+      return {
+        success: false,
+        error: error.message || 'An error occurred',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get Balance Difference report
+   * Shows discrepancies between actual and reported transactions
+   * @param {String} datefrom - From date with time (e.g., "2024-01-01 00:00:00")
+   * @param {String} dateto - To date with time (e.g., "2024-01-01 23:59:59")
+   * @param {String} merchant - Merchant code or "ALL"
+   */
+  getBalanceDifference: async (datefrom, dateto, merchant) => {
+    try {
+      const data = {
+        datefrom,
+        dateto,
+        merchant,
+      };
+
+      const jsonData = CRYPTO.encrypt(data);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/getBalanceDifference.php', formData);
+
+      // Response IS ENCRYPTED
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('API call error:', error);
+      return {
+        success: false,
+        error: error.message || 'An error occurred',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get SMS Log By Agent Report
+   * Shows agent account transactions by SMS (cash in, deposit, B2B transfers)
+   * @param {String} date - Date string (e.g., "2024-01-01")
+   */
+  getSmsLogByAgentReport: async (date) => {
+    try {
+      const data = { date };
+
+      const jsonData = CRYPTO.encrypt(data);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/getSmsLogByAgentReport.php', formData);
+
+      // Response IS ENCRYPTED
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('API call error:', error);
+      return {
+        success: false,
+        error: error.message || 'An error occurred',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get Report List (types)
+   * Gets available report types for download
+   */
+  getReportList: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '');
+
+      const response = await apiClient.post('/report_getReportList.php', formData);
+
+      // Response IS ENCRYPTED
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('API call error:', error);
+      return {
+        success: false,
+        error: error.message || 'An error occurred',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get Report Files
+   * Gets list of available report files for download
+   * @param {String} report - Report type
+   * @param {String} category - Report category (daily, weekly, monthly)
+   * @param {String} merchantCode - Merchant code or "ALL" or "SMS"
+   */
+  getReportFiles: async (report, category, merchantCode) => {
+    try {
+      const data = {
+        report,
+        category,
+        merchantCode,
+      };
+
+      const jsonData = CRYPTO.encrypt(data);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/report_getFiles.php', formData, {
+        timeout: 2 * 60 * 1000, // 2 minutes timeout
+      });
+
+      // Response is NOT encrypted but needs urlDecode
+      if (response.data && response.data.records) {
+        const records = response.data.records.map((record) =>
+          CRYPTO.decodeRawUrl(record)
+        );
+        return {
+          success: true,
+          data: {
+            ...response.data,
+            records,
+          },
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('API call error:', error);
+      return {
+        success: false,
+        error: error.message || 'An error occurred',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  // MCO / Flag Customer Report
+  getFlagCustomerList: async (includeBlacklist = 0) => {
+    try {
+      const data = { includeBlacklist };
+      const jsonData = CRYPTO.encrypt(data);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post(
+        '/report_flagCustomer.php',
+        formData
+      );
+
+      // Response IS ENCRYPTED
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('API call error:', error);
+      return {
+        success: false,
+        error: error.message || 'An error occurred',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  blacklistFlagCustomer: async (merchantCode, customerCode) => {
+    try {
+      const data = { merchantCode, customerCode };
+      const jsonData = CRYPTO.encrypt(data);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post(
+        '/report_flagCustomer_blacklist.php',
+        formData
+      );
+
+      // Response IS ENCRYPTED
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('API call error:', error);
+      return {
+        success: false,
+        error: error.message || 'An error occurred',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  // Blacklist List
+  getBlacklistList: async () => {
+    try {
+      const data = { includeBlacklist: 0 };
+      const jsonData = CRYPTO.encrypt(data);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/report_blacklist.php', formData);
+
+      // Response IS ENCRYPTED
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('API call error:', error);
+      return {
+        success: false,
+        error: error.message || 'An error occurred',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  addBlacklistCustomer: async (merchantCode, customerCode) => {
+    try {
+      const params = {
+        customercode: customerCode,
+        merchantcode: merchantCode,
+      };
+      const formData = new URLSearchParams();
+      formData.append('data[customercode]', params.customercode);
+      formData.append('data[merchantcode]', params.merchantcode);
+
+      const response = await apiClient.post(
+        '/addBlackListCustomerCode.php',
+        formData
+      );
+
+      // Response is NOT ENCRYPTED
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('API call error:', error);
+      return {
+        success: false,
+        error: error.message || 'An error occurred',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  deleteBlacklist: async (merchantCode, customerCode) => {
+    try {
+      const data = { merchantCode, customerCode };
+      const jsonData = CRYPTO.encrypt(data);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post(
+        '/reportBlacklist_delete.php',
+        formData
+      );
+
+      // Response IS ENCRYPTED
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('API call error:', error);
+      return {
+        success: false,
+        error: error.message || 'An error occurred',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  // Summary Bkashm
+  getSummaryBkashm: async (datefrom, dateto) => {
+    try {
+      const response = await apiClient.post(
+        '/getSummaryBkashm.php',
+        {
+          data: {
+            datefrom,
+            dateto,
+          },
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      // Response is NOT ENCRYPTED
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('API call error:', error);
+      return {
+        success: false,
+        error: error.message || 'An error occurred',
+        details: error.response?.data || null,
+      };
+    }
+  },
 };
 
 // Export default API client for custom calls

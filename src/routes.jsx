@@ -38,7 +38,19 @@ import MerchantForm from './layouts/Merchant/MerchantForm';
 import MerchantBankAcc from './layouts/Merchant/MerchantBankAcc';
 import MerchantTransaction from './layouts/Merchant/MerchantTransaction';
 import MerchantTransactionHistory from './layouts/Merchant/MerchantTransactionHistory';
-import ReportMerchant from './layouts/Report/ReportMerchant';
+import ReportMerchant from './layouts/Merchant/ReportMerchant';
+import MerchantDailyReportGMT6 from './layouts/Report/MerchantDailyReportGMT6';
+import MerchantDailyReportGMT8 from './layouts/Report/MerchantDailyReportGMT8';
+import AgentDailyComplete from './layouts/Report/AgentDailyComplete';
+import AgentDailyCompleteGMT6 from './layouts/Report/AgentDailyCompleteGMT6';
+import AgentRealtimeReport from './layouts/Report/AgentRealtimeReport';
+import AgentRealtimeReportGMT6 from './layouts/Report/AgentRealtimeReportGMT6';
+import BalanceDifference from './layouts/Report/BalanceDifference';
+import SmsLogByAgentReport from './layouts/Report/SmsLogByAgentReport';
+import DownloadReport from './layouts/Report/DownloadReport';
+import MCO from './layouts/Report/MCO';
+import BlacklistList from './layouts/Report/BlacklistList';
+import SummaryBkashm from './layouts/Report/SummaryBkashm';
 
 export const mockdataRoutes = [
   {
@@ -128,7 +140,7 @@ export const mockdataRoutes = [
             label: 'MCO',
             icon: <IconAlertTriangle />,
             link: '/report-flag',
-            element: '',
+            element: <MCO />,
           },
           {
             label: 'Update MyBank Selected',
@@ -242,7 +254,7 @@ export const mockdataRoutes = [
             label: 'Download Report',
             icon: <IconFileText />,
             link: '/report',
-            element: '',
+            element: <DownloadReport />,
           },
           {
             label: 'Account Balance Log',
@@ -251,22 +263,28 @@ export const mockdataRoutes = [
             element: '',
           },
           {
+            label: 'Merchant Daily (GMT+6)',
+            icon: <IconReportMoney />,
+            link: '/master-report-daily-admin-complete',
+            element: <MerchantDailyReportGMT6 />,
+          },
+          {
             label: 'Merchant Daily (GMT+8)',
             icon: <IconReportMoney />,
             link: '/master-report-daily-admin-complete',
-            element: '',
+            element: <MerchantDailyReportGMT8 />,
           },
           {
             label: 'Agent Daily complete (GMT+8)',
             icon: <IconReportMoney />,
             link: '/acc-report-daily-complete',
-            element: '',
+            element: <AgentDailyComplete />,
           },
           {
             label: 'Agent success Trans Realtime (GMT+6)',
             icon: <IconReportMoney />,
             link: '/acc-report-daily-realtime-6',
-            element: '',
+            element: <AgentDailyCompleteGMT6 />,
           },
         ],
       },
@@ -290,14 +308,14 @@ export const mockdataRoutes = [
             label: 'Blacklist List',
             icon: <IconAlertTriangle />,
             link: '/report-blacklist',
-            element: '',
+            element: <BlacklistList />,
           },
-          {
-            label: 'Release Blacklist',
-            icon: <IconAlertTriangle />,
-            link: '/report-blacklist-release',
-            element: '',
-          },
+          // {
+          //   label: 'Release Blacklist',
+          //   icon: <IconAlertTriangle />,
+          //   link: '/report-blacklist-release',
+          //   element: '',
+          // },
         ],
       },
     ],
@@ -361,80 +379,80 @@ export const mockdataRoutes = [
       {
         label: 'Merchant Daily (GMT+8)',
         icon: <IconReportMoney />,
-        link: '/master-report-daily-admin-complete',
-        element: '',
+        link: '/master-report-daily-admin-complete-gmt8',
+        element: <MerchantDailyReportGMT8 />,
       },
       {
         label: 'Merchant Daily (GMT+6)',
         icon: <IconReportMoney />,
         link: '/master-report-daily-admin-complete-Gmt6',
-        element: '',
+        element: <MerchantDailyReportGMT6 />,
       },
       {
         label: 'Agent Daily complete (GMT+8)',
         icon: <IconReportMoney />,
         link: '/acc-report-daily-complete',
-        element: '',
+        element: <AgentDailyComplete />,
       },
       {
         label: 'Agent success Trans Realtime (GMT+8)',
         icon: <IconReportMoney />,
         link: '/acc-report-daily-realtime',
-        element: '',
+        element: <AgentRealtimeReport />,
       },
       {
         label: 'Agent Daily complete (GMT+6)',
         icon: <IconReportMoney />,
         link: '/acc-report-daily-complete-6',
-        element: '',
+        element: <AgentDailyCompleteGMT6 />,
       },
       {
         label: 'Agent success Trans Realtime (GMT+6)',
         icon: <IconReportMoney />,
         link: '/acc-report-daily-realtime-6',
-        element: '',
+        element: <AgentRealtimeReportGMT6 />,
       },
       {
         label: 'Balance Difference',
         icon: <IconCash />,
         link: '/balance-difference',
-        element: '',
+        element: <BalanceDifference />,
       },
       {
         label: 'Account Report By SMS Daily',
         icon: <IconMessage />,
         link: '/sms-log-by-agent-report',
-        element: '',
+        element: <SmsLogByAgentReport />,
       },
       {
         label: 'Download Report',
         icon: <IconFileText />,
         link: '/report',
-        element: '',
+        element: <DownloadReport />,
       },
       {
         label: 'MCO',
         icon: <IconAlertTriangle />,
         link: '/report-flag',
-        element: '',
+        element: <MCO />,
       },
       {
         label: 'Blacklist List',
         icon: <IconAlertTriangle />,
         link: '/report-blacklist',
-        element: '',
+        element: <BlacklistList />,
       },
-      {
-        label: 'Release Blacklist',
-        icon: <IconAlertTriangle />,
-        link: '/report-blacklist-release',
-        element: '',
-      },
+      // {
+      //   label: 'Release Blacklist',
+      //   icon: <IconAlertTriangle />,
+      //   link: '/report-blacklist-release',
+      //   element: '',
+      // },
       {
         label: 'Summary Bkashm',
         icon: <IconFileText />,
         link: '/summary-bkashm',
-        element: '',
+        element: <SummaryBkashm />,
       },
     ],
   },
