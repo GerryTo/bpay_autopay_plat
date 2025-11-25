@@ -1,0 +1,49 @@
+<div>
+  <div class="page-header-container box">Update Merchant Bank Account Selected</div>
+  <div class="page-body box">
+    <div class="row">
+      <div class="col-xs-12 col-sm-4 col-md-1 col-lg-1">
+        <p class="input-group">
+          <select class="form-control" ng-model="filter.merchantCode" id="merchant">
+            <option ng-repeat="item in merchantList" value="{{item.merchantcode}}">{{item.merchantcode}}</option>
+          </select>
+        </p>
+      </div>
+      <div style="margin-top: 4px;" class="col-xs-12 col-sm-4 col-md-1 col-lg-1">
+        <input class="form-check-input" ng-model="filter.isdeleted" type="checkbox">
+        <label class="form-check-label" style="margin-right: 12px;">
+          isNotLinked
+        </label>
+      </div>
+      <div class="col-xs-12 col-sm-2 col-md-1 col-lg-1">
+        <div class="button-container">
+          <button type="button" class="btn btn-default btn-sm" ng-click="refresh()"
+            ng-disabled="gridIsLoading==true">{{globallang.refresh}}</button>
+        </div>
+      </div>
+
+      <div class="col-xs-12 col-sm-4 col-md-1 col-lg-1">
+        <p class="input-group">
+          <select class="form-control" id="update" ng-model="filter.update" ng-init="filter.update = updateList[0]">
+            <option ng-repeat="item in updateList" value="{{item}}">
+              Set {{item}}
+            </option>
+          </select>
+        </p>
+      </div>
+      <button type="button" class="btn btn-default btn-sm" ng-click="submit()">
+        Set
+      </button>
+    </div>
+    <div id="grid1" ui-grid="gridOptions" class="grid" ui-grid-resize-columns ui-grid-auto-resize ui-grid-pinning
+            ui-grid-exporter ng-style="{'height': getHeight()+'px'}">
+            <div class="grid-nodata-container" ng-show="gridOptions.data.length == 0 && !gridIsLoading">No Data
+                Available</div>
+            <div class="grid-loading-container" ng-show="gridIsLoading">
+                <img src="images/loading.gif" />
+            </div>
+        </div>
+    </div>
+
+  </div>
+</div>

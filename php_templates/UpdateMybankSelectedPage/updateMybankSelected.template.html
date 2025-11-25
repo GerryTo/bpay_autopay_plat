@@ -1,0 +1,35 @@
+<div>
+  <div class="page-header-container box">Update MyBank Selected</div>
+  <div class="page-body box">
+    <div class="row">
+      <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+        <p class="input-group">
+          <select class="form-control" id="update" ng-model="filter.update" ng-change="handleChange()"
+            ng-init="filter.update = updateList[0]">
+            <option ng-repeat="item in updateList" value="{{item}}">
+              Set {{item}}
+            </option>
+          </select>
+        </p>
+      </div>
+      <button type="button" class="btn btn-default btn-sm" ng-click="submit()">
+        Set
+      </button>
+      <button type="button" class="btn btn-default btn-sm" ng-click="refresh()">
+        {{globallang.refresh}}
+      </button>
+      <button type="button" class="btn btn-default btn-sm" ng-click="group()">{{globallang.group}}</button>
+      <button type="button" class="btn btn-default btn-sm" ng-click="upline()">Upline</button>
+      <button type="button" class="btn btn-default btn-sm" ng-click="issue()">Issue</button>
+    </div>
+    <div id="grid1" ui-grid="gridOptions" class="grid" ui-grid-resize-columns ui-grid-auto-resize ui-grid-selection
+      ui-grid-exporter ng-style="{'height': getHeight()+'px'}">
+      <div class="grid-nodata-container" ng-show="gridOptions.data.length == 0 && !gridIsLoading">
+        No Data Available
+      </div>
+      <div class="grid-loading-container" ng-show="gridIsLoading">
+        <img src="images/loading.gif" />
+      </div>
+    </div>
+  </div>
+</div>

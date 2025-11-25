@@ -1,0 +1,358 @@
+<div>
+  <div class="page-header-container box">{{pagelang.pagetitle}}</div>
+  <div class="page-body box">
+    <form>
+      <div class="form-section-header">My Bank data</div>
+      <div class="row">
+        <div class="col-md-4 mb-2">
+          <label>Account No :</label>
+          <input
+            type="text"
+            class="form-control form-control-sm"
+            placeholder="Bank Acc. No"
+            ng-model="data.bankAccNo"
+            ng-readonly="edit.mode"
+          />
+        </div>
+        <div class="col-md-4 mb-2">
+          <label>Account Name :</label>
+          <input
+            type="text"
+            class="form-control form-control-sm"
+            placeholder="Bank Acc. Name"
+            ng-model="data.bankAccName"
+          />
+        </div>
+        <div class="col-md-2 mb-2">
+          <label>Alias :</label>
+          <input
+            type="text"
+            class="form-control form-control-sm"
+            placeholder="Alias"
+            ng-model="data.alias"
+          />
+        </div>
+        <div class="col-md-4 mb-2">
+          <label>Account ID :</label>
+          <input
+            type="text"
+            class="form-control form-control-sm"
+            placeholder="Account ID ex: account@test"
+            ng-model="data.accountId"
+          />
+        </div>
+        <div class="col-md-4 mb-2">
+          <label>IFSC :</label>
+          <input
+            type="text"
+            class="form-control form-control-sm"
+            placeholder="IFSC"
+            ng-model="data.ifsc"
+          />
+        </div>
+        <div class="col-md-4 mb-2">
+          <label>Bank :</label>
+          <select
+            class="form-control"
+            ng-model="data.bankCode"
+            ng-readonly="edit.mode"
+            ng-change="onBankChange()"
+          >
+            <option value="">-- Select Bank --</option>
+            <option ng-repeat="item in bank" value="{{item.bankCode}}">
+              {{item.bankName}}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-4 mb-2">
+          <label>Branch :</label>
+          <input
+            type="text"
+            class="form-control form-control-sm"
+            placeholder="Bank Branch"
+            ng-model="data.branch"
+          />
+        </div>
+        <div class="col-md-4 mb-2">
+          <label>User Login :</label>
+          <input
+            type="text"
+            class="form-control form-control-sm"
+            placeholder="User Login"
+            ng-model="data.login"
+          />
+        </div>
+        <div class="col-md-4 mb-2">
+          <label>User Password :</label>
+          <input
+            type="password"
+            class="form-control form-control-sm"
+            placeholder="User Password"
+            ng-model="data.pass"
+          />
+        </div>
+        <div class="col-md-4 mb-2">
+          <label>Status :</label>
+          <select class="form-control" ng-model="data.active">
+            <option value="Y">Active</option>
+            <option value="N">InActive</option>
+            <option value="D">Deactive</option>
+          </select>
+        </div>
+        <div class="col-md-4 mb-2">
+          <label>Type :</label>
+          <select class="form-control" ng-model="data.type">
+            <option value="D">Deposit Account</option>
+            <option value="W">Withdraw Account</option>
+            <option value="A">Deposit &amp; Withdraw</option>
+            <option value="P">Penampungan</option>
+            <option value="B">Big Balance</option>
+          </select>
+        </div>
+        <div class="col-md-4 mb-2">
+          <label>Daily Deposit Limit :</label>
+          <input
+            type="number"
+            class="form-control form-control-sm"
+            placeholder="Daily Deposit Limit"
+            ng-model="data.dailydepositlimit"
+          />
+        </div>
+        <div class="col-md-4 mb-2">
+          <label>Daily Withdraw Limit :</label>
+          <input
+            type="number"
+            class="form-control form-control-sm"
+            placeholder="Daily Withdrawal Limit"
+            ng-model="data.dailywithdrawallimit"
+          />
+        </div>
+        
+        <!-- PHONE NUMBER DROPDOWN - FIXED VERSION -->
+        <div class="col-md-4 mb-2" style="position: relative;">
+          <label>Phone Number :</label>
+          <input
+            type="text"
+            class="form-control"
+            ng-model="data.phoneNumber"
+            ng-focus="isShow = true"
+            ng-blur="hideDropdown()"
+            ng-change="isShow = true"
+            placeholder="Search Login Phonenumber"
+          />
+          <div
+            ng-show="isShow"
+            style="
+              position: absolute;
+              width: 100%;
+              max-height: 200px;
+              overflow-y: auto;
+              background-color: white;
+              border: 1px solid #ccc;
+              z-index: 9999;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            "
+          >
+            <div
+              ng-repeat="item in phoneNumber | filter:data.phoneNumber track by $index"
+              ng-mousedown="pick(item, $event)"
+              style="padding: 8px; cursor: pointer; transition: background-color 0.2s;"
+              onmouseover="this.style.backgroundColor='#f0f0f0'"
+              onmouseout="this.style.backgroundColor='white'"
+            >
+              {{item.phoneNumber}} || {{item.user}}
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-4 mb-2">
+          <label>Min. Deposit :</label>
+          <input
+            type="number"
+            class="form-control form-control-sm"
+            placeholder="Minimum Deposit Amount"
+            ng-model="data.minDeposit"
+            min="0"
+          />
+        </div>
+        <div class="col-md-4 mb-2">
+          <label>Max. Deposit :</label>
+          <input
+            type="number"
+            class="form-control form-control-sm"
+            placeholder="Maximum Deposit Amount"
+            ng-model="data.maxDeposit"
+            min="0"
+          />
+        </div>
+        <div class="col-md-4 mb-2">
+          <label>Agent Commission Deposit (%) :</label>
+          <input
+            type="number"
+            class="form-control form-control-sm"
+            placeholder="Agent Commission Deposit"
+            ng-model="data.agentCommission"
+            min="0"
+            max="100"
+          />
+        </div>
+        <div class="col-md-4 mb-2">
+          <label>Agent Commission Withdraw (%) :</label>
+          <input
+            type="number"
+            class="form-control form-control-sm"
+            placeholder="Agent Commission Withdraw"
+            ng-model="data.agentCommissionWithdraw"
+            min="0"
+            max="100"
+          />
+        </div>
+        <div class="col-md-4 mb-2">
+          <label>Balance Different Criteria :</label>
+          <input
+            type="number"
+            class="form-control form-control-sm"
+            placeholder="Balance Different"
+            ng-model="data.balanceDifferent"
+            min="0"
+          />
+        </div>
+        <div class="col-md-4 mb-2">
+          <label>Always Chosen for Available Account :</label>
+          <select class="form-control" ng-model="data.alwaysRoundRobin">
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+          </select>
+        </div>
+        <div class="col-md-4 mb-2">
+          <label>Appium Online :</label>
+          <select class="form-control" ng-model="data.useAppium" ng-disabled="session_type !== 'S'">
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+          </select>
+        </div>
+        <div class="col-md-4 mb-2">
+          <label>Operation Hour :</label>
+          <select class="form-control" ng-model="data.opentype">
+            <option value="P">Pending</option>
+            <option value="16">16 Hour</option>
+            <option value="24CI">24 Hour CI</option>
+            <option value="24CO">24 Hour CO</option>
+          </select>
+        </div>
+        <div class="col-md-4 mb-2">
+          <label>Automation Status :</label>
+          <select class="form-control" ng-model="data.automationStatus">
+            <option value="0">No</option>
+            <option value="1">Yes</option>
+            <option value="2">OTP Error</option>
+            <option value="N">Inactive</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- MERCHANT LIST WITH GROUPING -->
+      <div class="row" style="margin-top:10px;">
+        <div class="col-md-12" style="font-weight:bold;">List Merchant :</div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <input
+            type="checkbox"
+            ng-model="checkall"
+            ng-change="toggleCheck()"
+            ng-disabled="isSetMerchant == '1' ? false : true"
+          />
+          check all
+        </div>
+      </div>
+
+      <!-- BANK NON-BKASHM: GROUPED MERCHANTS -->
+      <div ng-if="data.bankCode.toLowerCase() !== 'bkashm'">
+        <!-- Frequently Used -->
+        <div class="row" ng-if="(merchants | filter:{group:'Frequently Used'}:true).length > 0">
+          <div class="col-md-12" style="font-weight:bold; margin-top:8px;">Frequently Used</div>
+          <div
+            class="col-md-4"
+            style="margin-top:4px;"
+            ng-repeat="item in merchants | filter:{group:'Frequently Used'}:true"
+          >
+            <input
+              type="checkbox"
+              ng-model="item.check"
+              ng-disabled="isSetMerchant == '1' ? false : true"
+            />
+            {{item.merchantcode}} - {{item.merchantname}}
+          </div>
+        </div>
+
+        <!-- V2 / Less Used -->
+        <div class="row" ng-if="(merchants | filter:{group:'Less Used'}:true).length > 0">
+          <div class="col-md-12" style="font-weight:bold; margin-top:8px;">V2</div>
+          <div
+            class="col-md-4"
+            style="margin-top:4px;"
+            ng-repeat="item in merchants | filter:{group:'Less Used'}:true"
+          >
+            <input
+              type="checkbox"
+              ng-model="item.check"
+              ng-disabled="isSetMerchant == '1' ? false : true"
+            />
+            {{item.merchantcode}} - {{item.merchantname}}
+          </div>
+        </div>
+
+        <!-- Useless / Other -->
+        <div class="row" ng-if="(merchants | filter:{group:'Other'}:true).length > 0">
+          <div class="col-md-12" style="font-weight:bold; margin-top:8px;">Useless</div>
+          <div
+            class="col-md-4"
+            style="margin-top:4px;"
+            ng-repeat="item in merchants | filter:{group:'Other'}:true"
+          >
+            <input
+              type="checkbox"
+              ng-model="item.check"
+              ng-disabled="isSetMerchant == '1' ? false : true"
+            />
+            {{item.merchantcode}} - {{item.merchantname}}
+          </div>
+        </div>
+      </div>
+
+      <!-- BKASHM: SPECIAL MERCHANT LIST -->
+      <div ng-if="data.bankCode.toLowerCase() === 'bkashm'">
+        <div class="row">
+          <div class="col-md-12" style="font-weight:bold; margin-top:8px;">Frequently Used</div>
+          <div
+            class="col-md-4"
+            style="margin-top:4px;"
+            ng-repeat="item in merchants | filter:{group:'BkashM Special'}:true"
+          >
+            <input
+              type="checkbox"
+              ng-model="item.check"
+              ng-disabled="isSetMerchant == '1' ? false : true"
+            />
+            {{item.merchantcode}} - {{item.merchantname}}
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section-footer">
+        <button type="button" class="btn btn-primary btn-sm" ng-click="save()">
+          {{globallang.save}}
+        </button>
+        <button
+          type="button"
+          class="btn btn-default btn-sm"
+          ng-click="cancel()"
+        >
+          {{globallang.cancel}}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

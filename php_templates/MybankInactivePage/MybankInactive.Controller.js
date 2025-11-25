@@ -1,0 +1,297 @@
+app.controller('MybankInactiveCtrl', ['$state', '$scope', '$http', '$timeout', '$uibModal', 'uiGridConstants', function ($state, $scope, $http, $timeout, $uibModal, uiGridConstants) {
+
+    //$scope.products = [];
+    $scope.gridIsLoading = false;
+    $scope.getHeight = function () {
+        return window.innerHeight - 180;
+    }
+
+    $scope.gridOptions = {
+        enableSorting: true,
+        showColumnFooter: true,
+        enableColumnResizing: true,
+        enableGridMenu: true,
+        enableFiltering: true,
+        rowTemplate: 'templates/rowTemplate.html',
+        columnDefs: [
+            { name: 'Group', field: 'groupname', width: 100, aggregationType: uiGridConstants.aggregationTypes.count },
+            { name: 'Status', field: 'action', width: 80},
+            { name: 'Alias', field: 'alias', width: 100 },
+            { name: 'Account No', field: 'bankaccountno', width: 120 },
+            { name: 'Account Name', field: 'bankaccountname', width: 80 },
+            { name: 'Bank', field: 'bankcode', width: 80 },
+            { name: 'Login', field: 'userlogin', width: 80 },
+            { name: 'Type', field: 'type', width: 60 },
+            { name: 'Active', field: 'isactive', width: 80 },
+            { name: 'Locked', field: 'islocked', width: 80 },
+            { name: 'Last Used', field: 'lastused', width: 120 },
+            { name: 'Agent Commission', field: 'agentCommission', width: 80, cellFilter: 'number: ' + decimalDigit, cellClass: 'grid-alignright', type: 'number' },
+            { name: 'Date Insert', field: 'insert', width: 100 },
+            {
+                name: 'Last Balance',
+                field: 'lastBalance',
+                width: 100,
+                cellFilter: "number: " + decimalDigit,
+                cellClass: "grid-alignright",
+                type: "number", aggregationType: uiGridConstants.aggregationTypes.sum, footerCellTemplate: '<div class="ui-grid-cell-contents" style="text-align:right">{{col.getAggregationValue() | number:2 }}</div>'
+            },
+            // { name: 'Balance', field: 'curr', width:80, cellFilter: 'number: '+decimalDigit, cellClass: 'grid-alignright', type:'number',aggregationType: uiGridConstants.aggregationTypes.sum, footerCellTemplate: '<div class="ui-grid-cell-contents" style="text-align:right">{{col.getAggregationValue() | number:0 }}</div>' },
+            //{ name: 'Daily Limit', field: 'dailylimit', width:80, cellFilter: 'number: '+decimalDigit, cellClass: 'grid-alignright', type:'number',aggregationType: uiGridConstants.aggregationTypes.sum, footerCellTemplate: '<div class="ui-grid-cell-contents" style="text-align:right">{{col.getAggregationValue() | number:0 }}</div>' },
+            // { name: 'Daily', field: 'daily', width:80, cellFilter: 'number: '+decimalDigit, cellClass: 'grid-alignright', type:'number',aggregationType: uiGridConstants.aggregationTypes.sum, footerCellTemplate: '<div class="ui-grid-cell-contents" style="text-align:right">{{col.getAggregationValue() | number:0 }}</div>' },
+            // { name: 'Daily Withdrawal Limit', field: 'dailywithdrawallimit', width:100, cellFilter: 'number: '+decimalDigit, cellClass: 'grid-alignright', type:'number',aggregationType: uiGridConstants.aggregationTypes.sum, footerCellTemplate: '<div class="ui-grid-cell-contents" style="text-align:right">{{col.getAggregationValue() | number:0 }}</div>' },
+            // { name: 'Daily Withdrawal', field: 'withdrawaldaily', width:100, cellFilter: 'number: '+decimalDigit, cellClass: 'grid-alignright', type:'number',aggregationType: uiGridConstants.aggregationTypes.sum, footerCellTemplate: '<div class="ui-grid-cell-contents" style="text-align:right">{{col.getAggregationValue() | number:0 }}</div>' },
+            {
+                name: 'Action', field: 'bankAccNo', width: 350, enableFiltering: false,
+                //cellTemplate: '<button type="button" class="btn btn-primary btn-sm" ng-click="grid.appScope.edit(row.entity)">' + $scope.globallang.edit + '</button> <button type="button" class="btn btn-warning btn-sm" ng-click="grid.appScope.delete(row.entity)">' + $scope.globallang.delete + '</button>'
+                //cellTemplate: '<button type="button" class="btn btn-primary btn-sm" ng-click="grid.appScope.edit(row.entity)">' + $scope.globallang.edit + '</button> <button type="button" class="btn btn-warning btn-sm" ng-click="grid.appScope.lastTRX(row.entity)">' + $scope.globallang.lasttrx + '</button> <button type="button" class="btn btn-success btn-sm" ng-click="grid.appScope.more(row.entity)">' + $scope.globallang.more+ '</button></button> <button type="button" class="btn btn-success btn-sm" ng-click="grid.appScope.show(row.entity)">Show</button>'
+                cellTemplate: '<button type="button" class="btn btn-primary btn-sm" ng-click="grid.appScope.edit(row.entity)">' + $scope.globallang.edit + '</button> <button type="button" class="btn btn-warning btn-sm" ng-click="grid.appScope.lastTRX(row.entity)">' + $scope.globallang.lasttrx + '</button> <button type="button" class="btn btn-success btn-sm" ng-click="grid.appScope.more(row.entity)">' + $scope.globallang.more + '</button></button> <button type="button" class="btn btn-success btn-sm" ng-click="grid.appScope.show(row.entity)">Show</button> </button></button> <button type="button" class="btn btn-success btn-sm" ng-click="grid.appScope.secret(row.entity)">Secret</button>'
+            }
+        ],
+        onRegisterApi: function (gridApi) {
+            $scope.gridApi = gridApi;
+        },
+        data: []
+    };
+
+    $scope.updateList = [
+      "active",
+      "inactive",
+      "deactive",
+    ];
+    $scope.handleChange = function () {
+      console.log($scope.filter.update);
+      if ($scope.filter.update === "active") {
+        $scope.typeUpdate = "active";
+      } else if ($scope.filter.update === "inactive") {
+        $scope.typeUpdate = "inactive";
+      } else if ($scope.filter.update === "deactive") {
+        $scope.typeUpdate = "deactive";
+      } else if ($scope.filter.update === "deposit only") {
+        $scope.typeUpdate = "deposit";
+      } else if ($scope.filter.update === "withdraw only") {
+        $scope.typeUpdate = "withdraw";
+      } else if ($scope.filter.update === "withdraw and deposit") {
+        $scope.typeUpdate = "withdraw and deposit";
+      }
+    };
+
+    $scope.submit = function () {
+      var arr = $scope.gridApi.selection.getSelectedRows();
+      if (arr.length > 0 && arr.length <= 50) {
+        if (
+          confirm(
+            `Are you sure you want to set ${$scope.typeUpdate} selected items?`
+          )
+        ) {
+          var selectedAcc = [];
+          for (var i = 0; i < arr.length; i++) {
+            var temp = {
+              account: arr[i].bankAccNo,
+              bank: arr[i].bankCode,
+            };
+            selectedAcc.push(temp);
+          }
+          var obj = {
+            button: $scope.typeUpdate,
+            items: selectedAcc,
+          };
+          $http({
+            method: "POST",
+            url: webservicesUrl + "/updateStatusMyBank.php",
+            data: { data: obj },
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+            },
+          }).then(
+            function mySuccess(response) {
+              var data = response.data;
+              if (data.status.toLowerCase() === "ok") {
+                $scope.getListData();
+              } else {
+                alert(data.message);
+              }
+            },
+            function myError(response) {
+              console.log(response.data.message);
+            }
+          );
+        }
+      } else {
+        alert("please select beetwen 1 - 50 record");
+      }
+    };
+
+    $scope.secret = function (data) {
+        //alert(data.bankAccName);
+        $state.go('secret-page', { data: { bankAccNo: data.bankaccountno, bankAccName: data.bankaccountname, bankCode: data.bankcode, } });
+    }
+
+
+    $scope.getListData = function () {
+        $scope.gridIsLoading = true;
+        $http({
+            method: "POST",
+            url: webservicesUrl + "/newGetMasterBankInactive.php",
+            data: { 'data': '' },
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
+        }).then(function mySuccess(response) {
+            $scope.gridIsLoading = false;
+            // console.log(response);
+            // var data = CRYPTO.decrypt(response.data.data);
+            var data = response.data.data;
+            console.log(data.records);
+            data.records = $scope.urlDecode(data.records);
+            if (data.status.toLowerCase() == 'ok') {
+                $scope.gridOptions.data = data.records;
+            } else {
+                alert(data.message);
+            }
+        }, function myError(response) {
+            $scope.gridIsLoading = false;
+            console.log(response.status);
+            // console.log(response)
+        });
+    }
+    $scope.lastTRX = function (data) {
+        var modalInstance = $uibModal.open({
+            animation: true,
+            templateUrl: 'templates/lasttransaction.html',
+            controller: 'LastTrxModalCtrl',
+            size: 'lg',
+            scope: $scope,
+            resolve: {
+                items: function () {
+                    return data;
+                }
+            }
+        });
+
+        modalInstance.result.then(function (returnValue) {
+
+        }, function () {
+            console.log('Modal dismissed at: ' + new Date());
+        });
+    }
+
+    $scope.more = function (param) {
+        console.log(param);
+        $state.go('transaction-account-by-company', { data: { accountno: param.bankaccountno } });
+    }
+
+    $scope.refresh = function () {
+        $scope.getListData();
+    }
+
+    $scope.edit = function (data) {
+        // console.log(data);
+        var params = {
+            data: {
+                bankAccNo: data.bankaccountno,
+                bankCode: data.bankcode,
+                type: data.type,
+                active: data.isactive,
+                dailylimit: data.dailylimit,
+                dailywithdrawallimit: data.dailywithdrawallimit,
+                dailydepositlimit: data.dailydepositlimit
+            }
+        };
+        // console.log(params);    
+        $state.go('master-mybank-form', params);
+    }
+    $scope.show = function (data) {
+        //alert(data.bankAccName);
+        $state.go('list-merchant-group', { data: { bankAccNo: data.bankaccountno, bankAccName: data.bankaccountname, } });
+    }
+    $scope.delete = function (data) {
+        if (confirm('Are you sure want to delete [' + data.bankAccNo + ']?')) {
+            var data = { bankAccNo: data.bankAccNo, bankCode: data.bankCode };
+            var jsonData = CRYPTO.encrypt(data);
+
+            $http({
+                method: "POST",
+                url: webservicesUrl + "/deleteMasterMyBank.php",
+                data: { 'data': jsonData },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
+            }).then(function mySuccess(response) {
+                var data = CRYPTO.decrypt(response.data.data);
+                if (data.status.toLowerCase() == 'ok') {
+                    $scope.getListData();
+                } else {
+                    alert(data.message);
+                }
+            }, function myError(response) {
+                console.log(response);
+            });
+        }
+    }
+
+    $scope.init = function () {
+        $scope.getListData();
+    }
+    $scope.init();
+}]);
+
+app.controller('LastTrxModalCtrl', ['$scope', '$uibModalInstance', '$uibModal', 'items', '$http', function ($scope, $uibModalInstance, $uibModal, items, $http) {
+    $scope.data = {
+        bank: '',
+        account: '',
+        name: ''
+    };
+    $scope.gridIsLoading = false;
+    $scope.gridOptions = {
+        enableSorting: true,
+        showColumnFooter: true,
+        enableColumnResizing: true,
+        enableGridMenu: true,
+        rowTemplate: 'templates/rowTemplate.html',
+        columnDefs: [
+            { name: 'FutureId', field: 'futuretrxid', width: 100 },
+            { name: 'Insert', field: 'timestamp', width: 150 },
+            { name: 'MerchantCode', field: 'merchantcode', width: 150 },
+            { name: 'CustomerCode', field: 'customercode', width: 150 },
+            { name: 'Type', field: 'transactiontype', width: 100 },
+            { name: 'Amount', field: 'amount', width: 120 },
+            { name: 'Fee', field: 'Fee', width: 100 },
+            { name: 'Account Src', field: 'accountno', width: 150 },
+            { name: 'Account Dst', field: 'accountdst', width: 150 },
+            { name: 'TransactionID', field: 'transactionid', width: 150 }
+        ],
+        onRegisterApi: function (gridApi) {
+            $scope.gridApi = gridApi;
+        },
+        data: []
+    };
+    $scope.getLastTrx = function () {
+        if ($scope.data.account != '' && $scope.data.bank != '') {
+            var data = { account: $scope.data.account, bank: $scope.data.bank };
+            var jsonData = CRYPTO.encrypt(data);
+            $scope.gridIsLoading = true;
+            $http({
+                method: "POST",
+                url: webservicesUrl + "/getLastTransaction.php",
+                data: { 'data': jsonData },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
+            }).then(function mySuccess(response) {
+                $scope.gridIsLoading = false;
+                var data = CRYPTO.decrypt(response.data.data);
+                if (data.status.toLowerCase() == 'ok') {
+                    $scope.gridOptions.data = $scope.urlDecode(data.records);
+                } else {
+                }
+            }, function myError(response) {
+                $scope.gridIsLoading = false;
+                console.log(response.status);
+            });
+        }
+    }
+    $scope.init = function () {
+        $scope.data.bank = items.bankcode;
+        $scope.data.account = items.bankaccountno;
+        $scope.data.name = items.bankaccountname;
+        $scope.getLastTrx();
+    }
+    $scope.cancel = function () {
+        $uibModalInstance.dismiss('cancel');
+    };
+    $scope.init();
+}]);

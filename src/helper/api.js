@@ -517,6 +517,589 @@ export const serverAPI = {
   },
 };
 
+// Master MyBank API calls
+export const myBankAPI = {
+  /**
+   * Get master mybank list
+   */
+  getMasterMyBank: async () => {
+    return await apiCall('/getMasterMyBank.php', {});
+  },
+
+  /**
+   * Delete mybank record
+   * @param {String} bankAccNo - Account number
+   * @param {String} bankCode - Bank code
+   */
+  deleteMasterMyBank: async (bankAccNo, bankCode) => {
+    try {
+      const payload = { bankAccNo, bankCode };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/deleteMasterMyBank.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Delete mybank error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to delete mybank',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Create or update mybank record
+   * @param {Object} payload - Form data payload
+   */
+  saveMasterMyBank: async (payload) => {
+    try {
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/saveMasterMyBank.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Save mybank error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to save mybank',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get merchant list for a bank account/bank code (grouped)
+   * @param {String} bankaccountno
+   * @param {String} bankcode
+   */
+  getMasterMerchantForBank: async (bankaccountno = '', bankcode = '') => {
+    try {
+      const payload = { bankaccountno, bankcode };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post(
+        '/mybank_getMasterMerchant.php',
+        formData
+      );
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Get master merchant error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load merchants',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Group selected accounts
+   * @param {String} groupname - Target group name
+   * @param {Array} items - Array of { account, bank }
+   */
+  groupAccounts: async (groupname, items) => {
+    try {
+      const payload = { groupname, items };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/groupMyBank.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Group mybank error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to group accounts',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Assign upline to selected accounts
+   */
+  setUpline: async (groupname, items) => {
+    try {
+      const payload = { groupname, items };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/groupMyBank2.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Set upline error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to set upline',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Mark issue for selected accounts
+   */
+  setIssue: async (groupname, items) => {
+    try {
+      const payload = { groupname, items };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/groupMyBank3.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Set issue error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to set issue',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get last transactions by account and bank
+   */
+  getLastTransaction: async (account, bank) => {
+    try {
+      const payload = { account, bank };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/getLastTransaction.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Get last transaction error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load last transaction',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get MyBank balance list (response is plain JSON string inside data.data)
+   */
+  getMyBankBalance: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '');
+
+      const response = await apiClient.post('/getMasterMyBankBalance.php', formData, {
+        // Balance endpoint can be slow; give it more time
+        timeout: 120_000,
+      });
+
+      // Some responses wrap JSON string in data.data, others return object directly
+      if (response.data) {
+        if (response.data.data) {
+          try {
+            const parsed = JSON.parse(response.data.data);
+            return { success: true, data: parsed };
+          } catch (e) {
+            // Fallback: if already parsed object
+            if (typeof response.data.data === 'object') {
+              return { success: true, data: response.data.data };
+            }
+            return {
+              success: false,
+              error: 'Failed to parse balance response',
+              details: response.data,
+            };
+          }
+        }
+        // Already usable shape
+        return { success: true, data: response.data };
+      }
+
+      return {
+        success: false,
+        error: 'Empty response',
+        details: null,
+      };
+    } catch (error) {
+      console.error('Get mybank balance error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load mybank balance',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get inactive mybank list
+   */
+  getInactiveList: async () => {
+    try {
+      const response = await apiClient.post(
+        '/newGetMasterBankInactive.php',
+        { data: '' },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.data && response.data.data) {
+        const payload = response.data.data;
+        const records = Array.isArray(payload.records)
+          ? payload.records.map((rec) => CRYPTO.decodeRawUrl(rec))
+          : [];
+        return {
+          success: true,
+          data: {
+            ...payload,
+            records,
+          },
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Get inactive mybank error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load inactive mybank',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Update inactive/active status for selected accounts
+   * @param {String} button - active | inactive | deactive | deposit | withdraw | withdraw and deposit
+   * @param {Array} items - Array of { account, bank }
+   */
+  updateInactiveStatus: async (button, items) => {
+    try {
+      const response = await apiClient.post(
+        '/updateStatusMyBank.php',
+        { data: { button, items } },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Update inactive status error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to update status',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get master bank list (encrypted response)
+   */
+  getMasterBank: async () => {
+    return await apiCall('/getMasterBank.php', {});
+  },
+
+  /**
+   * Update bank active status (turn on/off all agents)
+   * @param {Object} payload - { bank, merchant, status }
+   */
+  updateBankStatus: async (payload) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', JSON.stringify(payload));
+
+      const response = await apiClient.post('/updateMybank.php', formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Update bank status error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to update bank status',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Update merchant selection for bank
+   * @param {Object} payload - { merchant, bank, merchantStatus }
+   */
+  updateMerchantStatus: async (payload) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', JSON.stringify(payload));
+
+      const response = await apiClient.post('/updateMybankMerchant.php', formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Update merchant status error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to update merchant status',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Update agent type (deposit/withdraw/both)
+   * @param {Object} payload - { bank, type }
+   */
+  updateAgentType: async (payload) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', JSON.stringify(payload));
+
+      const response = await apiClient.post('/updateMybankType.php', formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Update agent type error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to update agent type',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Update status for selected mybank records
+   * @param {Object} payload - { button, items }
+   */
+  updateStatusSelected: async (payload) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', JSON.stringify(payload));
+
+      const response = await apiClient.post('/updateStatusMyBankSelected.php', formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Update status selected error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to update selected status',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get MyBank limit list (encrypted)
+   */
+  getMyBankLimit: async () => {
+    return await apiCall('/getMasterMyBankLimit.php', {});
+  },
+
+  /**
+   * Get MyBank deactive list (encrypted)
+   */
+  getDeactiveBankList: async () => {
+    return await apiCall('/getMasterMyDeactiveBank.php', {});
+  },
+};
+
+// Agent Onboard API calls
+export const onboardAPI = {
+  /**
+   * Get onboard agent list (not encrypted)
+   */
+  getOnboardAgents: async () => {
+    try {
+      const response = await apiClient.post(
+        '/getOnboardAgent.php',
+        { data: '' },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Get onboard agent error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load onboard agents',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Update onboard date for selected agents (encrypted)
+   * @param {String} date - YYYY-MM-DD
+   * @param {Array} items - Array of { account, bank }
+   */
+  updateOnboardDate: async (date, items) => {
+    try {
+      const payload = { date, items };
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/updateOnboardAgent.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Update onboard date error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to update onboard date',
+        details: error.response?.data || null,
+      };
+    }
+  },
+};
+
 // Agent Commission Settlement API calls
 export const agentCommissionAPI = {
   /**
@@ -860,6 +1443,60 @@ export const merchantAPI = {
    */
   getMerchantList: async () => {
     return await apiCall('/masterMerchant_getList.php', {});
+  },
+
+  /**
+   * Get merchant bank account list (not encrypted)
+   * @param {String} merchant - merchant code or 'ALL'
+   * @param {Number} isdeleted - 0 or 1 (isNotLinked)
+   */
+  getMerchantBankAccList: async (merchant = 'ALL', isdeleted = 0) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', JSON.stringify({ merchant, isdeleted }));
+
+      const response = await apiClient.post('/getMerchantBankAccList.php', formData, {
+        timeout: 2 * 60 * 1000,
+      });
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Get merchant bank acc list error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load merchant bank accounts',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Update merchant bank link status for selected rows (not encrypted)
+   * @param {String} setUpdate - linked | notLinked
+   * @param {Array} items - selected rows
+   */
+  updateMerchantBankSelected: async (setUpdate, items) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', JSON.stringify({ setUpdate, items }));
+
+      const response = await apiClient.post('/updateMerchantBankSelected.php', formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Update merchant bank selected error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to update merchant bank selection',
+        details: error.response?.data || null,
+      };
+    }
   },
 
   /**

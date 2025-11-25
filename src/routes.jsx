@@ -51,6 +51,16 @@ import DownloadReport from './layouts/Report/DownloadReport';
 import MCO from './layouts/Report/MCO';
 import BlacklistList from './layouts/Report/BlacklistList';
 import SummaryBkashm from './layouts/Report/SummaryBkashm';
+import MasterMyBankList from './layouts/MyBank/masterMyBankList';
+import MyBankInactiveList from './layouts/MyBank/myBankInactiveList';
+import ListOnboardAgent from './layouts/MyBank/listOnboardAgent';
+import UpdateMyBank from './layouts/MyBank/updateMyBank';
+import UpdateMyBankSelected from './layouts/MyBank/updateMyBankSelected';
+import UpdateMerchantBankSelected from './layouts/MyBank/updateMerchantBankSelected';
+import MyBankBalance from './layouts/MyBank/myBankBalance';
+import MyBankLimit from './layouts/MyBank/myBankLimit';
+import MyBankDeactive from './layouts/MyBank/myBankDeactive';
+import MasterMyBankForm from './layouts/MyBank/masterMyBankForm';
 
 export const mockdataRoutes = [
   {
@@ -146,7 +156,7 @@ export const mockdataRoutes = [
             label: 'Update MyBank Selected',
             icon: <IconBuildingBank />,
             link: '/update-mybank-selected',
-            element: '',
+            element: <UpdateMyBankSelected />,
           },
           {
             label: 'Transaction Resend Callback',
@@ -327,49 +337,49 @@ export const mockdataRoutes = [
         label: 'Data List',
         icon: <IconBuildingBank />,
         link: '/master-mybank',
-        element: '',
+        element: <MasterMyBankList />,
       },
       {
         label: 'Data List Inactive',
         icon: <IconBuildingBank />,
         link: '/mybank-inactive',
-        element: '',
+        element: <MyBankInactiveList />,
       },
       {
         label: 'List Onboard Agent',
         icon: <IconUsers />,
         link: '/list-onboard-agent',
-        element: '',
+        element: <ListOnboardAgent />,
       },
       {
         label: 'Update MyBank',
         icon: <IconBuildingBank />,
         link: '/update-mybank',
-        element: '',
+        element: <UpdateMyBank />,
       },
       {
         label: 'Update MyBank Selected',
         icon: <IconBuildingBank />,
         link: '/update-mybank-selected',
-        element: '',
+        element: <UpdateMyBankSelected />,
       },
       {
         label: 'Update Merchant Bank Acc Selected',
         icon: <IconShoppingCart />,
         link: '/update-merchant-bank-selected',
-        element: '',
+        element: <UpdateMerchantBankSelected />,
       },
       {
         label: 'MyBank Balance',
         icon: <IconCash />,
         link: '/mybank-balance',
-        element: '',
+        element: <MyBankBalance />,
       },
       {
         label: 'MyBank Limit',
         icon: <IconCash />,
         link: '/mybank-limit',
-        element: '',
+        element: <MyBankLimit />,
       },
     ],
   },
@@ -1217,6 +1227,18 @@ export const mockdataRoutes = [
         icon: <IconShoppingCart />,
         link: '/merchant-form',
         element: <MerchantForm />,
+      },
+      {
+        label: 'Deactive Bank',
+        icon: <IconAlertTriangle />,
+        link: '/master-mybank-deactive',
+        element: <MyBankDeactive />,
+      },
+      {
+        label: 'Master MyBank Form',
+        icon: <IconBuildingBank />,
+        link: '/master-mybank-form',
+        element: <MasterMyBankForm />,
       },
     ],
   },
