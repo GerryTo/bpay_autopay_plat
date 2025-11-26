@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActionIcon,
   Badge,
   Box,
   Button,
@@ -28,10 +27,13 @@ import {
   IconPlus,
   IconRefresh,
   IconUsers,
+  IconAdjustments,
 } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import { myBankAPI } from '../../helper/api';
 import { showNotification } from '../../helper/showNotification';
+import ColumnActionMenu from '../../components/ColumnActionMenu';
+import { useTableControls } from '../../hooks/useTableControls';
 
 const defaultFilters = {
   group: '',
@@ -67,6 +69,278 @@ const MasterMyBankList = () => {
     bankAccName: '',
   });
   const [lastTrxRecords, setLastTrxRecords] = useState([]);
+  const handleFilterChange = useCallback((column, value) => {
+    setColumnFilters((prev) => ({
+      ...prev,
+      [column]: value,
+    }));
+  }, []);
+
+  const handleClearFilters = useCallback(() => {
+    setColumnFilters(defaultFilters);
+  }, []);
+
+  const columns = useMemo(
+    () => [
+      {
+        key: 'group',
+        label: 'Group',
+        minWidth: 110,
+        render: (item) => (
+          <Text fw={600} size="sm">
+            {item.group || '-'}
+          </Text>
+        ),
+        filter: (
+          <TextInput
+            placeholder="Filter group..."
+            size="xs"
+            value={columnFilters.group}
+            onChange={(e) => handleFilterChange('group', e.currentTarget.value)}
+          />
+        ),
+      },
+      {
+        key: 'upline',
+        label: 'Upline',
+        minWidth: 110,
+        render: (item) => <Text size="sm">{item.upline || '-'}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter upline..."
+            size="xs"
+            value={columnFilters.upline}
+            onChange={(e) => handleFilterChange('upline', e.currentTarget.value)}
+          />
+        ),
+      },
+      {
+        key: 'issue',
+        label: 'Issue',
+        minWidth: 110,
+        render: (item) => <Text size="sm">{item.issue || '-'}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter issue..."
+            size="xs"
+            value={columnFilters.issue}
+            onChange={(e) => handleFilterChange('issue', e.currentTarget.value)}
+          />
+        ),
+      },
+      {
+        key: 'alias',
+        label: 'Alias',
+        minWidth: 160,
+        render: (item) => <Text size="sm">{item.alias || '-'}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter alias..."
+            size="xs"
+            value={columnFilters.alias}
+            onChange={(e) => handleFilterChange('alias', e.currentTarget.value)}
+          />
+        ),
+      },
+      {
+        key: 'bankAccNo',
+        label: 'Account No',
+        minWidth: 140,
+        render: (item) => (
+          <Text fw={600} size="sm" c="blue">
+            {item.bankAccNo}
+          </Text>
+        ),
+        filter: (
+          <TextInput
+            placeholder="Filter account..."
+            size="xs"
+            value={columnFilters.bankAccNo}
+            onChange={(e) =>
+              handleFilterChange('bankAccNo', e.currentTarget.value)
+            }
+          />
+        ),
+      },
+      {
+        key: 'bankCode',
+        label: 'Bank',
+        minWidth: 110,
+        render: (item) => (
+          <Badge color="blue" variant="light">
+            {item.bankCode}
+          </Badge>
+        ),
+        filter: (
+          <TextInput
+            placeholder="Filter bank..."
+            size="xs"
+            value={columnFilters.bankCode}
+            onChange={(e) =>
+              handleFilterChange('bankCode', e.currentTarget.value)
+            }
+          />
+        ),
+      },
+      {
+        key: 'type',
+        label: 'Type',
+        minWidth: 90,
+        render: (item) => (
+          <Badge color="gray" variant="outline">
+            {item.type}
+          </Badge>
+        ),
+        filter: (
+          <TextInput
+            placeholder="Filter type..."
+            size="xs"
+            value={columnFilters.type}
+            onChange={(e) => handleFilterChange('type', e.currentTarget.value)}
+          />
+        ),
+      },
+      {
+        key: 'active',
+        label: 'Active',
+        minWidth: 100,
+        render: (item) => (
+          <Badge color={item.active === 'Y' ? 'green' : 'red'} variant="light">
+            {item.active === 'Y' ? 'Active' : 'Inactive'}
+          </Badge>
+        ),
+        filter: (
+          <Select
+            placeholder="All"
+            size="xs"
+            data={[
+              { value: '', label: 'All' },
+              { value: 'Y', label: 'Active' },
+              { value: 'N', label: 'Inactive' },
+            ]}
+            value={columnFilters.active}
+            onChange={(value) => handleFilterChange('active', value || '')}
+            clearable
+          />
+        ),
+      },
+      {
+        key: 'opentype',
+        label: 'Open Type',
+        minWidth: 120,
+        render: (item) => <Text size="sm">{item.opentype ?? item.openType}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter open type..."
+            size="xs"
+            value={columnFilters.opentype}
+            onChange={(e) =>
+              handleFilterChange('opentype', e.currentTarget.value)
+            }
+          />
+        ),
+      },
+      {
+        key: 'automationStatus',
+        label: 'Automation Status',
+        minWidth: 160,
+        render: (item) => <Text size="sm">{automationLabel(item)}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter automation..."
+            size="xs"
+            value={columnFilters.automationStatus}
+            onChange={(e) =>
+              handleFilterChange('automationStatus', e.currentTarget.value)
+            }
+          />
+        ),
+      },
+      {
+        key: 'agentCommission',
+        label: 'Agent Commission',
+        minWidth: 140,
+        render: (item) => (
+          <Text size="sm" className="grid-alignright">
+            {formatNumber(item.agentCommission)}
+          </Text>
+        ),
+      },
+      {
+        key: 'dateinsert',
+        label: 'Date Insert',
+        minWidth: 130,
+        render: (item) => <Text size="sm">{item.dateinsert}</Text>,
+      },
+      {
+        key: 'lastbalance',
+        label: 'Last Balance',
+        minWidth: 140,
+        render: (item) => (
+          <Text size="sm" className="grid-alignright">
+            {formatNumber(item.lastbalance)}
+          </Text>
+        ),
+      },
+      {
+        key: 'action',
+        label: 'Action',
+        minWidth: 200,
+        render: (item) => (
+          <Group gap="xs" wrap="nowrap">
+            <Button
+              variant="light"
+              color="blue"
+              size="xs"
+              leftSection={<IconEdit size={16} />}
+              onClick={() => handleEdit(item)}
+            >
+              Edit
+            </Button>
+            <Button
+              variant="light"
+              color="orange"
+              size="xs"
+              leftSection={<IconClock size={16} />}
+              onClick={() => handleLastTransaction(item)}
+            >
+              Last TRX
+            </Button>
+            <Button
+              variant="light"
+              color="grape"
+              size="xs"
+              leftSection={<IconArrowRight size={16} />}
+              onClick={() => handleMore(item)}
+            >
+              More
+            </Button>
+            <Button
+              variant="light"
+              color="teal"
+              size="xs"
+              leftSection={<IconEye size={16} />}
+              onClick={() => handleShow(item)}
+            >
+              Show
+            </Button>
+          </Group>
+        ),
+      },
+    ],
+    [columnFilters, handleFilterChange]
+  );
+
+  const {
+    visibleColumns,
+    sortConfig,
+    handleHideColumn,
+    handleSort,
+    handleResetAll,
+  } = useTableControls(columns, {
+    onResetFilters: () => setColumnFilters(defaultFilters),
+    onResetSelection: () => setSelectedKeys([]),
+  });
 
   const makeKey = (item) => `${item.bankAccNo || ''}-${item.bankCode || ''}`;
 
@@ -99,10 +373,22 @@ const MasterMyBankList = () => {
     [data, columnFilters]
   );
 
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+  const sortedData = useMemo(() => {
+    if (!sortConfig) return filteredData;
+    const { key, direction } = sortConfig;
+    const dir = direction === 'desc' ? -1 : 1;
+    return [...filteredData].sort((a, b) => {
+      const av = a[key] ?? '';
+      const bv = b[key] ?? '';
+      if (av === bv) return 0;
+      return av > bv ? dir : -dir;
+    });
+  }, [filteredData, sortConfig]);
+
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedData = filteredData.slice(startIndex, endIndex);
+  const paginatedData = sortedData.slice(startIndex, endIndex);
 
   const selectedRecords = useMemo(
     () => data.filter((item) => selectedKeys.includes(makeKey(item))),
@@ -162,17 +448,6 @@ const MasterMyBankList = () => {
   useEffect(() => {
     getListData();
   }, []);
-
-  const handleFilterChange = (column, value) => {
-    setColumnFilters((prev) => ({
-      ...prev,
-      [column]: value,
-    }));
-  };
-
-  const handleClearFilters = () => {
-    setColumnFilters(defaultFilters);
-  };
 
   const toggleRow = (item) => {
     const key = makeKey(item);
@@ -443,14 +718,6 @@ const MasterMyBankList = () => {
                 Deactive Bank
               </Button>
               <Button
-                variant="light"
-                color="red"
-                size="sm"
-                onClick={handleClearFilters}
-              >
-                Clear Filters
-              </Button>
-              <Button
                 leftSection={<IconRefresh size={18} />}
                 onClick={getListData}
                 variant="light"
@@ -459,6 +726,16 @@ const MasterMyBankList = () => {
                 disabled={loading}
               >
                 Refresh
+              </Button>
+              <Button
+                variant="light"
+                color="gray"
+                radius="md"
+                size="sm"
+                leftSection={<IconAdjustments size={18} />}
+                onClick={handleResetAll}
+              >
+                Reset
               </Button>
             </Group>
 
@@ -562,24 +839,21 @@ const MasterMyBankList = () => {
                         aria-label="Select all rows"
                       />
                     </Table.Th>
-                    <Table.Th style={{ minWidth: 110 }}>Group</Table.Th>
-                    <Table.Th style={{ minWidth: 110 }}>Upline</Table.Th>
-                    <Table.Th style={{ minWidth: 110 }}>Issue</Table.Th>
-                    <Table.Th style={{ minWidth: 160 }}>Alias</Table.Th>
-                    <Table.Th style={{ minWidth: 140 }}>Account No</Table.Th>
-                    <Table.Th style={{ minWidth: 110 }}>Bank</Table.Th>
-                    <Table.Th style={{ minWidth: 90 }}>Type</Table.Th>
-                    <Table.Th style={{ minWidth: 100 }}>Active</Table.Th>
-                    <Table.Th style={{ minWidth: 120 }}>Open Type</Table.Th>
-                    <Table.Th style={{ minWidth: 160 }}>
-                      Automation Status
-                    </Table.Th>
-                    <Table.Th style={{ minWidth: 140 }}>
-                      Agent Commission
-                    </Table.Th>
-                    <Table.Th style={{ minWidth: 130 }}>Date Insert</Table.Th>
-                    <Table.Th style={{ minWidth: 140 }}>Last Balance</Table.Th>
-                    <Table.Th style={{ minWidth: 200 }}>Action</Table.Th>
+                    {visibleColumns.map((col) => (
+                      <Table.Th key={col.key} style={{ minWidth: col.minWidth }}>
+                        <Group gap={6} align="center" wrap="nowrap">
+                          <Text size="sm" fw={600}>
+                            {col.label}
+                          </Text>
+                          <ColumnActionMenu
+                            columnKey={col.key}
+                            sortConfig={sortConfig}
+                            onSort={handleSort}
+                            onHide={handleHideColumn}
+                          />
+                        </Group>
+                      </Table.Th>
+                    ))}
                   </Table.Tr>
 
                   <Table.Tr style={{ backgroundColor: '#e7f5ff' }}>
@@ -591,119 +865,11 @@ const MasterMyBankList = () => {
                         aria-label="Select all rows"
                       />
                     </Table.Th>
-                    <Table.Th>
-                      <TextInput
-                        placeholder="Filter group..."
-                        size="xs"
-                        value={columnFilters.group}
-                        onChange={(e) =>
-                          handleFilterChange('group', e.currentTarget.value)
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th>
-                      <TextInput
-                        placeholder="Filter upline..."
-                        size="xs"
-                        value={columnFilters.upline}
-                        onChange={(e) =>
-                          handleFilterChange('upline', e.currentTarget.value)
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th>
-                      <TextInput
-                        placeholder="Filter issue..."
-                        size="xs"
-                        value={columnFilters.issue}
-                        onChange={(e) =>
-                          handleFilterChange('issue', e.currentTarget.value)
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th>
-                      <TextInput
-                        placeholder="Filter alias..."
-                        size="xs"
-                        value={columnFilters.alias}
-                        onChange={(e) =>
-                          handleFilterChange('alias', e.currentTarget.value)
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th>
-                      <TextInput
-                        placeholder="Filter account..."
-                        size="xs"
-                        value={columnFilters.bankAccNo}
-                        onChange={(e) =>
-                          handleFilterChange('bankAccNo', e.currentTarget.value)
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th>
-                      <TextInput
-                        placeholder="Filter bank..."
-                        size="xs"
-                        value={columnFilters.bankCode}
-                        onChange={(e) =>
-                          handleFilterChange('bankCode', e.currentTarget.value)
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th>
-                      <TextInput
-                        placeholder="Filter type..."
-                        size="xs"
-                        value={columnFilters.type}
-                        onChange={(e) =>
-                          handleFilterChange('type', e.currentTarget.value)
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th>
-                      <Select
-                        placeholder="All"
-                        size="xs"
-                        data={[
-                          { value: '', label: 'All' },
-                          { value: 'Y', label: 'Active' },
-                          { value: 'N', label: 'Inactive' },
-                        ]}
-                        value={columnFilters.active}
-                        onChange={(value) =>
-                          handleFilterChange('active', value || '')
-                        }
-                        clearable
-                      />
-                    </Table.Th>
-                    <Table.Th>
-                      <TextInput
-                        placeholder="Filter open type..."
-                        size="xs"
-                        value={columnFilters.opentype}
-                        onChange={(e) =>
-                          handleFilterChange('opentype', e.currentTarget.value)
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th>
-                      <TextInput
-                        placeholder="Filter automation..."
-                        size="xs"
-                        value={columnFilters.automationStatus}
-                        onChange={(e) =>
-                          handleFilterChange(
-                            'automationStatus',
-                            e.currentTarget.value
-                          )
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th />
-                    <Table.Th />
-                    <Table.Th />
-                    <Table.Th />
+                    {visibleColumns.map((col) => (
+                      <Table.Th key={`filter-${col.key}`}>
+                        {col.filter}
+                      </Table.Th>
+                    ))}
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -711,7 +877,6 @@ const MasterMyBankList = () => {
                     paginatedData.map((item) => {
                       const key = makeKey(item);
                       const selected = selectedKeys.includes(key);
-                      const automation = automationLabel(item);
                       return (
                         <Table.Tr
                           key={key}
@@ -724,143 +889,17 @@ const MasterMyBankList = () => {
                               aria-label="Select row"
                             />
                           </Table.Td>
-                          <Table.Td>
-                            <Text
-                              fw={600}
-                              size="sm"
-                            >
-                              {item.group || '-'}
-                            </Text>
-                          </Table.Td>
-                          <Table.Td>
-                            <Text size="sm">{item.upline || '-'}</Text>
-                          </Table.Td>
-                          <Table.Td>
-                            <Text size="sm">{item.issue || '-'}</Text>
-                          </Table.Td>
-                          <Table.Td>
-                            <Text size="sm">{item.alias || '-'}</Text>
-                          </Table.Td>
-                          <Table.Td>
-                            <Text
-                              fw={600}
-                              size="sm"
-                              c="blue"
-                            >
-                              {item.bankAccNo}
-                            </Text>
-                          </Table.Td>
-                          <Table.Td>
-                            <Badge
-                              color="blue"
-                              variant="light"
-                            >
-                              {item.bankCode}
-                            </Badge>
-                          </Table.Td>
-                          <Table.Td>
-                            <Badge
-                              color="gray"
-                              variant="outline"
-                            >
-                              {item.type}
-                            </Badge>
-                          </Table.Td>
-                          <Table.Td>
-                            <Badge
-                              color={item.active === 'Y' ? 'green' : 'red'}
-                              variant="light"
-                            >
-                              {item.active === 'Y' ? 'Active' : 'Inactive'}
-                            </Badge>
-                          </Table.Td>
-                          <Table.Td>
-                            <Badge
-                              color="teal"
-                              variant="outline"
-                            >
-                              {item.opentype ?? item.openType ?? '-'}
-                            </Badge>
-                          </Table.Td>
-                          <Table.Td>
-                            <Badge
-                              color={automation ? 'indigo' : 'gray'}
-                              variant="light"
-                            >
-                              {automation || '-'}
-                            </Badge>
-                          </Table.Td>
-                          <Table.Td className="grid-alignright">
-                            <Text size="sm">
-                              {formatNumber(item.agentCommission)}
-                            </Text>
-                          </Table.Td>
-                          <Table.Td>
-                            <Text size="sm">{item.insert || '-'}</Text>
-                          </Table.Td>
-                          <Table.Td className="grid-alignright">
-                            <Text size="sm">
-                              {formatNumber(item.lastBalance)}
-                            </Text>
-                          </Table.Td>
-                          <Table.Td>
-                            <Group
-                              gap="xs"
-                              wrap="nowrap"
-                            >
-                              <Button
-                                variant="light"
-                                color="blue"
-                                size="xs"
-                                leftSection={<IconEdit size={16} />}
-                                onClick={() => handleEdit(item)}
-                              >
-                                Edit
-                              </Button>
-                              <Button
-                                variant="light"
-                                color="orange"
-                                size="xs"
-                                leftSection={<IconClock size={16} />}
-                                onClick={() => handleLastTransaction(item)}
-                              >
-                                Last TRX
-                              </Button>
-                              <Button
-                                variant="light"
-                                color="grape"
-                                size="xs"
-                                leftSection={<IconArrowRight size={16} />}
-                                onClick={() => handleMore(item)}
-                              >
-                                More
-                              </Button>
-                              <Button
-                                variant="light"
-                                color="teal"
-                                size="xs"
-                                leftSection={<IconEye size={16} />}
-                                onClick={() => handleShow(item)}
-                              >
-                                Show
-                              </Button>
-                              <Button
-                                variant="light"
-                                color="gray"
-                                size="xs"
-                                leftSection={<IconKey size={16} />}
-                                onClick={() => handleSecret(item)}
-                              >
-                                Secret
-                              </Button>
-                            </Group>
-                          </Table.Td>
+                          {visibleColumns.map((col) => (
+                            <Table.Td key={`${key}-${col.key}`}>
+                              {col.render(item)}
+                            </Table.Td>
+                          ))}
                         </Table.Tr>
                       );
                     })
                   ) : (
                     <Table.Tr>
-                      <Table.Td colSpan={15}>
+                      <Table.Td colSpan={visibleColumns.length + 1}>
                         <Stack
                           align="center"
                           py="xl"

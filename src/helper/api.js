@@ -1435,6 +1435,369 @@ export const agentCommissionAPI = {
   },
 };
 
+// Deposit Dashboard API calls
+export const depositAPI = {
+  /**
+   * Get deposit dashboard summary (not encrypted)
+   */
+  getDashboardMetrics: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '{}'); // send non-empty payload to match PHP expectations
+
+      const response = await apiClient.post('/depositDashboard.php', formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Deposit dashboard API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load deposit dashboard',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get deposit pending list (not encrypted)
+   * @param {String} date - YYYY-MM-DD
+   * @param {String} dateto - YYYY-MM-DD
+   * @param {String} filter - A | 9 | T | 0 | 1
+   */
+  getPendingList: async (date, dateto, filter) => {
+    try {
+      const payload = { data: { date, dateto, filter } };
+      const response = await apiClient.post('/GetDepositPendingList.php', payload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Deposit pending list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load deposit list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Bulk fail selected deposit items (not encrypted)
+   * @param {Array} items - Selected rows
+   */
+  failBulk: async (items = []) => {
+    try {
+      const formData = new URLSearchParams();
+      items.forEach((item, idx) => {
+        Object.entries(item).forEach(([key, value]) => {
+          formData.append(`data[items][${idx}][${key}]`, value ?? '');
+        });
+      });
+
+      const response = await apiClient.post('/failedBulkDepositList.php', formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Fail bulk deposit list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to fail selected items',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get deposit pending by transaction ID (encrypted)
+   * @param {String} transId - Transaction ID
+   */
+  getPendingByTransId: async (transId) => {
+    try {
+      const payload = { transId };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post(
+        '/depositPending_getTransactionByTransId.php',
+        formData
+      );
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Deposit pending by transId API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load deposit pending data',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get automation deposit list (not encrypted)
+   * @param {String} dateFrom - YYYY-MM-DD
+   * @param {String} dateTo - YYYY-MM-DD
+   * @param {String} filter - status filter
+   * @param {String} agent - account filter
+   */
+  getAutomationList: async (dateFrom, dateTo, filter, agent = '') => {
+    try {
+      const payload = { data: { dateFrom, dateTo, filter, agent } };
+      const response = await apiClient.post('/new_deposit_getList.php', payload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Automation deposit list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load automation deposit list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get automation agent list (deduplicated) - returns decrypted data
+   */
+  getAutomationAgents: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '');
+
+      const response = await apiClient.post('/getMasterMyBankNew.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Automation agent list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load agents',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get deposit queue today (encrypted)
+   * @param {Object} payload - { accountno, bank }
+   */
+  getDepositQueueToday: async ({ accountno = '', bank = '' } = {}) => {
+    try {
+      const jsonData = CRYPTO.encrypt({ accountno, bank });
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/depositQueue_getTransactionToday.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Deposit queue today API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load deposit queue today',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get deposit queue by date range (encrypted)
+   * @param {Object} payload - { accountno, bank, datefrom, dateto }
+   */
+  getDepositQueueByDate: async ({
+    accountno = '',
+    bank = '',
+    datefrom = '',
+    dateto = '',
+  } = {}) => {
+    try {
+      const jsonData = CRYPTO.encrypt({ accountno, bank, datefrom, dateto });
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post(
+        '/depositQueue_getTransaction.php',
+        formData
+      );
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Deposit queue by date API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load deposit queue',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get deposit queue today BDT (encrypted)
+   * @param {Object} payload - { accountno, bank }
+   */
+  getDepositQueueTodayBDT: async ({ accountno = '', bank = '' } = {}) => {
+    try {
+      const jsonData = CRYPTO.encrypt({ accountno, bank });
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post(
+        '/depositQueue_getTransactionTodayBDT.php',
+        formData
+      );
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Deposit queue today BDT API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load deposit queue today BDT',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get deposit queue alert (encrypted)
+   */
+  getDepositQueueAlert: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '');
+
+      const response = await apiClient.post(
+        '/depositQueueAlert_getData.php',
+        formData
+      );
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Deposit queue alert API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load deposit queue alert',
+        details: error.response?.data || null,
+      };
+    }
+  },
+};
+
 // Merchant Management API calls
 export const merchantAPI = {
   /**
@@ -1659,11 +2022,19 @@ export const merchantAPI = {
    * @param {String} dateto - To date (YYYY-MM-DD HH:mm:ss)
    * @param {String} statusValue - Optional status filter ('9'=pending, '0'=accepted, '8'=failed)
    */
-  getTransactionByMerchant: async (datefrom, dateto, statusValue = null) => {
+  getTransactionByMerchant: async (datefrom, dateto, statusValue = null, transactiontype = null) => {
     try {
-      const data = statusValue
-        ? { datefrom, dateto, statusValue }
-        : { datefrom, dateto };
+      const data = {
+        datefrom,
+        dateto,
+      };
+
+      if (statusValue) {
+        data.statusValue = statusValue;
+      }
+      if (transactiontype) {
+        data.transactiontype = transactiontype;
+      }
       const jsonData = CRYPTO.encrypt(data);
 
       const formData = new URLSearchParams();

@@ -1,0 +1,64 @@
+<div>
+  <div class="page-header-container box">Deposit List</div>
+  <div class="page-body box">
+    <div class="row">
+      <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+        <p class="input-group">
+          <input type="text" class="form-control input-sm" uib-datepicker-popup="{{datepickerConfig.format}}"
+            ng-model="filter.date" is-open="popup1.opened" datepicker-options="dateOptions" ng-required="true"
+            close-text="Close" alt-input-formats="datepickerConfig.altInputFormats" placeholder="Pick Date" />
+          <span class="input-group-btn">
+            <button type="button" class="btn btn-default btn-sm" ng-click="open1()">
+              <i class="glyphicon glyphicon-calendar"></i>
+            </button>
+          </span>
+        </p>
+      </div>
+      <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+        <p class="input-group">
+          <input type="text" class="form-control input-sm" uib-datepicker-popup="{{datepickerConfig.format}}"
+            ng-model="filter.dateto" is-open="popup2.opened" datepicker-options="dateOptions" ng-required="true"
+            close-text="Close" alt-input-formats="datepickerConfig.altInputFormats" placeholder="Pick Date" />
+          <span class="input-group-btn">
+            <button type="button" class="btn btn-default btn-sm" ng-click="open2()">
+              <i class="glyphicon glyphicon-calendar"></i>
+            </button>
+          </span>
+        </p>
+      </div>
+      <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+        <div></div>
+        <select class="form-control input-sm" ng-model="filter.filter" ng-init="filter.filter = '9'">
+          <option value="A">ALL</option>
+          <option value="9">Pending</option>
+          <option value="T">Order Need To Check</option>
+          <option value="0">Completed</option>
+          <option value="1">Failed</option>
+        </select>
+      </div>
+      <div class="col-xs-12 col-sm-4 col-md-1 col-lg-1">
+        <div class="button-container">
+          <button type="button" class="btn btn-default btn-sm" ng-click="refresh()" ng-disabled="gridIsLoading==true">
+            {{globallang.refresh}}
+          </button>
+        </div>
+      </div>
+      <!-- <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+        <div class="button-container">
+          <button type="button" class="btn btn-danger btn-sm" ng-click="failedBulk()" ng-disabled="gridIsLoading==true">
+            FAIL SELECTED
+          </button>
+        </div>
+      </div> -->
+    </div>
+    <div id="grid1" ui-grid="gridOptions" class="grid" ui-grid-resize-columns ui-grid-auto-resize ui-grid-exporter
+      ui-grid-selection ng-style="{'height': getHeight()+'px'}">
+      <div class="grid-nodata-container" ng-show="gridOptions.data.length == 0 && !gridIsLoading">
+        No Data Available
+      </div>
+      <div class="grid-loading-container" ng-show="gridIsLoading">
+        <img src="images/loading.gif" />
+      </div>
+    </div>
+  </div>
+</div>

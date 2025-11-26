@@ -1,0 +1,101 @@
+<div>
+    <div class="page-header-container box">Deposit Dashboard</div>
+    <div class="page-body box">
+    <div class="row" style="margin-right:2px; margin-left: 2px; border-bottom:1px solid #ddd;">
+        <!-- <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Agent HB Disconnected(From Live)</div>
+                <div class="dashboard-panel-value"><span>{{agentHbDisconnect}}</span></div>
+            </div>
+        </div> -->
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Last Deposit Time</div>
+                <div class="dashboard-panel-value"><span>{{lastDeposit}}</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Total Deposit Today</div>
+                <div class="dashboard-panel-value"><span>{{deposit}}</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Total Deposit Pending Today</div>
+                <div class="dashboard-panel-value"><span>{{depositPending}}</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Total Deposit Need Attention Today</div>
+                <div class="dashboard-panel-value"><span>{{depositNeedAttention}}</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Auto-order need to check</div>
+                <div class="dashboard-panel-value" ng-style="{'display': 'flex','justify-content': 'center'}"><span>{{pending5Minute}}</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Average NAGAD Deposit Time</div>
+                <div class="dashboard-panel-value" ng-style="{
+            'display': 'flex',
+            'justify-content': 'center',
+        }"><span> {{avg_minutes}}m {{avg_seconds}} s</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Average BKASH Deposit Time</div>
+                <div class="dashboard-panel-value" ng-style="{
+            'display': 'flex',
+            'justify-content': 'center',
+        }"><span> {{avg_minutesBkash}}m {{avg_secondsBkash}} s</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="row" style="margin-right:2px; margin-left: 2px; border-bottom:1px solid #ddd;">
+        
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Total NAGAD Deposit Today</div>
+                <div class="dashboard-panel-value"><span>{{nagadDeposit}}</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Total NAGAD Deposit Pending Today</div>
+                <div class="dashboard-panel-value"><span>{{nagadDepositPending}}</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Total NAGAD Deposit Need Attention Today</div>
+                <div class="dashboard-panel-value"><span>{{nagadDepositNeedAttention}}</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Total BKASH Deposit Today</div>
+                <div class="dashboard-panel-value"><span>{{bkashDeposit}}</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Total BKASH Deposit Pending Today</div>
+                <div class="dashboard-panel-value"><span>{{bkashDepositPending}}</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Total BKASH Deposit Need Attention Today</div>
+                <div class="dashboard-panel-value"><span>{{bkashDepositNeedAttention}}</span></div>
+            </div>
+        </div>
+        </div>
+    </div>
+    </div>
+</div>

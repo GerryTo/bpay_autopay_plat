@@ -7,6 +7,7 @@ import {
   Checkbox,
   Group,
   LoadingOverlay,
+  Menu,
   Pagination,
   ScrollArea,
   Select,
@@ -15,9 +16,11 @@ import {
   Text,
   TextInput,
 } from '@mantine/core';
-import { IconRefresh } from '@tabler/icons-react';
+import { IconAdjustments, IconArrowDown, IconArrowUp, IconEyeOff, IconRefresh } from '@tabler/icons-react';
 import { myBankAPI } from '../../helper/api';
 import { showNotification } from '../../helper/showNotification';
+import ColumnActionMenu from '../../components/ColumnActionMenu';
+import { useTableControls } from '../../hooks/useTableControls';
 
 const defaultFilters = {
   accountno: '',
@@ -34,6 +37,131 @@ const MyBankLimit = () => {
   const [columnFilters, setColumnFilters] = useState(defaultFilters);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const columns = [
+    {
+      key: 'accountno',
+      label: 'Account No',
+      minWidth: 140,
+      render: (item) => (
+        <Text fw={600} size="sm" c="blue">
+          {item.accountno}
+        </Text>
+      ),
+      filter: (
+        <TextInput
+          placeholder="Filter account..."
+          size="xs"
+          value={columnFilters.accountno}
+          onChange={(e) =>
+            handleFilterChange('accountno', e.currentTarget.value)
+          }
+        />
+      ),
+    },
+    {
+      key: 'accountname',
+      label: 'Account Name',
+      minWidth: 160,
+      render: (item) => <Text size="sm">{item.accountname || '-'}</Text>,
+      filter: (
+        <TextInput
+          placeholder="Filter name..."
+          size="xs"
+          value={columnFilters.accountname}
+          onChange={(e) =>
+            handleFilterChange('accountname', e.currentTarget.value)
+          }
+        />
+      ),
+    },
+    {
+      key: 'bankcode',
+      label: 'Bank',
+      minWidth: 100,
+      render: (item) => (
+        <Badge color="blue" variant="light">
+          {item.bankcode}
+        </Badge>
+      ),
+      filter: (
+        <TextInput
+          placeholder="Filter bank..."
+          size="xs"
+          value={columnFilters.bankcode}
+          onChange={(e) => handleFilterChange('bankcode', e.currentTarget.value)}
+        />
+      ),
+    },
+    {
+      key: 'type',
+      label: 'Type',
+      minWidth: 90,
+      render: (item) => (
+        <Badge color="gray" variant="outline">
+          {item.type}
+        </Badge>
+      ),
+      filter: (
+        <TextInput
+          placeholder="Filter type..."
+          size="xs"
+          value={columnFilters.type}
+          onChange={(e) => handleFilterChange('type', e.currentTarget.value)}
+        />
+      ),
+    },
+    {
+      key: 'isactive',
+      label: 'Is Active',
+      minWidth: 100,
+      render: (item) => (
+        <Badge color={item.isactive === 'Y' ? 'green' : 'red'} variant="light">
+          {item.isactive === 'Y' ? 'Active' : 'Inactive'}
+        </Badge>
+      ),
+      filter: (
+        <TextInput
+          placeholder="Filter active..."
+          size="xs"
+          value={columnFilters.isactive}
+          onChange={(e) =>
+            handleFilterChange('isactive', e.currentTarget.value)
+          }
+        />
+      ),
+    },
+    {
+      key: 'dailydepositlimit',
+      label: 'Daily Deposit Limit',
+      minWidth: 160,
+      render: (item) => (
+        <Text size="sm" className="grid-alignright">
+          {formatNumber(item.dailydepositlimit)}
+        </Text>
+      ),
+    },
+    {
+      key: 'dailydeposit',
+      label: 'Current Transaction',
+      minWidth: 160,
+      render: (item) => (
+        <Text size="sm" className="grid-alignright">
+          {formatNumber(item.dailydeposit)}
+        </Text>
+      ),
+    },
+  ];
+
+  const {
+    visibleColumns,
+    sortConfig,
+    handleHideColumn,
+    handleSort,
+    handleResetAll,
+  } = useTableControls(columns, {
+    onResetFilters: () => setColumnFilters(defaultFilters),
+    onResetSelection: () => setSelectedKeys([]),
+  });
 
   const makeKey = (item) => `${item.accountno || ''}-${item.bankcode || ''}`;
 
@@ -56,10 +184,21 @@ const MyBankLimit = () => {
     [data, columnFilters]
   );
 
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+  const sortedData = useMemo(() => {
+    if (!sortConfig) return filteredData;
+    const dir = sortConfig.direction === 'desc' ? -1 : 1;
+    return [...filteredData].sort((a, b) => {
+      const av = a[sortConfig.key] ?? '';
+      const bv = b[sortConfig.key] ?? '';
+      if (av === bv) return 0;
+      return av > bv ? dir : -dir;
+    });
+  }, [filteredData, sortConfig]);
+
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedData = filteredData.slice(startIndex, endIndex);
+  const paginatedData = sortedData.slice(startIndex, endIndex);
 
   const selectedRecords = useMemo(
     () => data.filter((item) => selectedKeys.includes(makeKey(item))),
@@ -265,12 +404,20 @@ const MyBankLimit = () => {
             <Button
               variant="light"
               color="gray"
-              size="md"
+              size="sm"
               leftSection={<IconRefresh size={16} />}
               onClick={loadData}
               disabled={loading}
             >
               Refresh
+            </Button>
+            <Button
+              variant="light"
+              color="gray"
+              size="sm"
+              onClick={handleResetAll}
+            >
+              Reset
             </Button>
             <Button
               variant="light"
@@ -335,17 +482,21 @@ const MyBankLimit = () => {
                         aria-label="Select all rows"
                       />
                     </Table.Th>
-                    <Table.Th style={{ minWidth: 140 }}>Account No</Table.Th>
-                    <Table.Th style={{ minWidth: 160 }}>Account Name</Table.Th>
-                    <Table.Th style={{ minWidth: 100 }}>Bank</Table.Th>
-                    <Table.Th style={{ minWidth: 90 }}>Type</Table.Th>
-                    <Table.Th style={{ minWidth: 100 }}>Is Active</Table.Th>
-                    <Table.Th style={{ minWidth: 160 }}>
-                      Daily Deposit Limit
-                    </Table.Th>
-                    <Table.Th style={{ minWidth: 160 }}>
-                      Current Transaction
-                    </Table.Th>
+                    {visibleColumns.map((col) => (
+                      <Table.Th key={col.key} style={{ minWidth: col.minWidth }}>
+                        <Group gap={6} align="center" wrap="nowrap">
+                          <Text size="sm" fw={600}>
+                            {col.label}
+                          </Text>
+                          <ColumnActionMenu
+                            columnKey={col.key}
+                            sortConfig={sortConfig}
+                            onSort={handleSort}
+                            onHide={handleHideColumn}
+                          />
+                        </Group>
+                      </Table.Th>
+                    ))}
                   </Table.Tr>
 
                   <Table.Tr style={{ backgroundColor: '#e7f5ff' }}>
@@ -357,61 +508,9 @@ const MyBankLimit = () => {
                         aria-label="Select all rows"
                       />
                     </Table.Th>
-                    <Table.Th>
-                      <TextInput
-                        placeholder="Filter account..."
-                        size="xs"
-                        value={columnFilters.accountno}
-                        onChange={(e) =>
-                          handleFilterChange('accountno', e.currentTarget.value)
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th>
-                      <TextInput
-                        placeholder="Filter name..."
-                        size="xs"
-                        value={columnFilters.accountname}
-                        onChange={(e) =>
-                          handleFilterChange(
-                            'accountname',
-                            e.currentTarget.value
-                          )
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th>
-                      <TextInput
-                        placeholder="Filter bank..."
-                        size="xs"
-                        value={columnFilters.bankcode}
-                        onChange={(e) =>
-                          handleFilterChange('bankcode', e.currentTarget.value)
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th>
-                      <TextInput
-                        placeholder="Filter type..."
-                        size="xs"
-                        value={columnFilters.type}
-                        onChange={(e) =>
-                          handleFilterChange('type', e.currentTarget.value)
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th>
-                      <TextInput
-                        placeholder="Filter active..."
-                        size="xs"
-                        value={columnFilters.isactive}
-                        onChange={(e) =>
-                          handleFilterChange('isactive', e.currentTarget.value)
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th />
-                    <Table.Th />
+                    {visibleColumns.map((col) => (
+                      <Table.Th key={`filter-${col.key}`}>{col.filter}</Table.Th>
+                    ))}
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -431,52 +530,11 @@ const MyBankLimit = () => {
                               aria-label="Select row"
                             />
                           </Table.Td>
-                          <Table.Td>
-                            <Text
-                              fw={600}
-                              size="sm"
-                              c="blue"
-                            >
-                              {item.accountno}
-                            </Text>
-                          </Table.Td>
-                          <Table.Td>
-                            <Text size="sm">{item.accountname || '-'}</Text>
-                          </Table.Td>
-                          <Table.Td>
-                            <Badge
-                              color="blue"
-                              variant="light"
-                            >
-                              {item.bankcode}
-                            </Badge>
-                          </Table.Td>
-                          <Table.Td>
-                            <Badge
-                              color="gray"
-                              variant="outline"
-                            >
-                              {item.type}
-                            </Badge>
-                          </Table.Td>
-                          <Table.Td>
-                            <Badge
-                              color={item.isactive === 'Y' ? 'green' : 'red'}
-                              variant="light"
-                            >
-                              {item.isactive === 'Y' ? 'Active' : 'Inactive'}
-                            </Badge>
-                          </Table.Td>
-                          <Table.Td className="grid-alignright">
-                            <Text size="sm">
-                              {formatNumber(item.dailydepositlimit)}
-                            </Text>
-                          </Table.Td>
-                          <Table.Td className="grid-alignright">
-                            <Text size="sm">
-                              {formatNumber(item.dailydeposit)}
-                            </Text>
-                          </Table.Td>
+                          {visibleColumns.map((col) => (
+                            <Table.Td key={`${key}-${col.key}`}>
+                              {col.render(item)}
+                            </Table.Td>
+                          ))}
                         </Table.Tr>
                       );
                     })

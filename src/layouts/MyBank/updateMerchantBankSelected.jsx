@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  ActionIcon,
   Box,
   Button,
   Card,
   Checkbox,
   Group,
   LoadingOverlay,
+  Menu,
   Pagination,
   ScrollArea,
   Select,
@@ -14,7 +16,13 @@ import {
   Text,
   TextInput,
 } from '@mantine/core';
-import { IconRefresh } from '@tabler/icons-react';
+import {
+  IconAdjustments,
+  IconArrowDown,
+  IconArrowUp,
+  IconEyeOff,
+  IconRefresh,
+} from '@tabler/icons-react';
 import { merchantAPI } from '../../helper/api';
 import { showNotification } from '../../helper/showNotification';
 
@@ -43,6 +51,94 @@ const UpdateMerchantBankSelected = () => {
   const [merchantOptions, setMerchantOptions] = useState([]);
   const [selectedMerchant, setSelectedMerchant] = useState('ALL');
   const [isNotLinked, setIsNotLinked] = useState(false);
+  const [sortConfig, setSortConfig] = useState(null); // { key, direction }
+  const columns = [
+    {
+      key: 'v_merchantcode',
+      label: 'Merchant Code',
+      minWidth: 160,
+      render: (item) => (
+        <Text fw={600} size="sm">
+          {item.v_merchantcode || '-'}
+        </Text>
+      ),
+      filter: (
+        <TextInput
+          placeholder="Filter merchant..."
+          size="xs"
+          value={columnFilters.v_merchantcode}
+          onChange={(e) =>
+            handleFilterChange('v_merchantcode', e.currentTarget.value)
+          }
+        />
+      ),
+    },
+    {
+      key: 'v_bankaccountno',
+      label: 'Account No',
+      minWidth: 140,
+      render: (item) => (
+        <Text fw={600} size="sm" c="blue">
+          {item.v_bankaccountno}
+        </Text>
+      ),
+      filter: (
+        <TextInput
+          placeholder="Filter account..."
+          size="xs"
+          value={columnFilters.v_bankaccountno}
+          onChange={(e) =>
+            handleFilterChange('v_bankaccountno', e.currentTarget.value)
+          }
+        />
+      ),
+    },
+    {
+      key: 'v_bankaccountname',
+      label: 'Account Name',
+      minWidth: 180,
+      render: (item) => <Text size="sm">{item.v_bankaccountname || '-'}</Text>,
+      filter: (
+        <TextInput
+          placeholder="Filter name..."
+          size="xs"
+          value={columnFilters.v_bankaccountname}
+          onChange={(e) =>
+            handleFilterChange('v_bankaccountname', e.currentTarget.value)
+          }
+        />
+      ),
+    },
+    {
+      key: 'n_isdeleted',
+      label: 'Is Linked',
+      minWidth: 120,
+      render: (item) => (
+        <Text size="sm">{item.n_isdeleted == 1 ? 'No' : 'Yes'}</Text>
+      ),
+      filter: (
+        <Select
+          placeholder="All"
+          size="xs"
+          data={[
+            { value: '', label: 'All' },
+            { value: '0', label: 'Yes' },
+            { value: '1', label: 'No' },
+          ]}
+          value={columnFilters.n_isdeleted}
+          onChange={(val) => handleFilterChange('n_isdeleted', val || '')}
+          clearable
+        />
+      ),
+    },
+  ];
+  const defaultVisibility = useMemo(() => {
+    return columns.reduce((acc, col) => {
+      acc[col.key] = true;
+      return acc;
+    }, {});
+  }, [columns]);
+  const [columnVisibility, setColumnVisibility] = useState(defaultVisibility);
 
   const makeKey = (item) =>
     `${item.v_merchantcode || ''}-${item.v_bankaccountno || ''}`;
@@ -68,10 +164,22 @@ const UpdateMerchantBankSelected = () => {
     [data, columnFilters]
   );
 
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+  const sortedData = useMemo(() => {
+    if (!sortConfig) return filteredData;
+    const { key, direction } = sortConfig;
+    const dir = direction === 'desc' ? -1 : 1;
+    return [...filteredData].sort((a, b) => {
+      const av = a[key] ?? '';
+      const bv = b[key] ?? '';
+      if (av === bv) return 0;
+      return av > bv ? dir : -dir;
+    });
+  }, [filteredData, sortConfig]);
+
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedData = filteredData.slice(startIndex, endIndex);
+  const paginatedData = sortedData.slice(startIndex, endIndex);
 
   const selectedRecords = useMemo(
     () => data.filter((item) => selectedKeys.includes(makeKey(item))),
@@ -195,6 +303,24 @@ const UpdateMerchantBankSelected = () => {
     }
   };
 
+  const handleSort = (key, direction) => {
+    setSortConfig({ key, direction });
+  };
+
+  const handleHideColumn = (key) => {
+    setColumnVisibility((prev) => ({ ...prev, [key]: false }));
+  };
+
+  const handleResetAll = () => {
+    setColumnVisibility(defaultVisibility);
+    setSortConfig(null);
+    setColumnFilters(defaultFilters);
+    setSelectedKeys([]);
+    setCurrentPage(1);
+  };
+
+  const visibleColumns = columns.filter((col) => columnVisibility[col.key]);
+
   const handleSubmit = async () => {
     if (selectedRecords.length === 0) {
       showNotification({
@@ -309,6 +435,15 @@ const UpdateMerchantBankSelected = () => {
             >
               Refresh
             </Button>
+            <Button
+              variant="light"
+              color="gray"
+              size="sm"
+              leftSection={<IconAdjustments size={16} />}
+              onClick={handleResetAll}
+            >
+              Reset
+            </Button>
             <Select
               label="Set Status"
               data={updateOptions}
@@ -380,10 +515,60 @@ const UpdateMerchantBankSelected = () => {
                         aria-label="Select all rows"
                       />
                     </Table.Th>
-                    <Table.Th style={{ minWidth: 160 }}>Merchant Code</Table.Th>
-                    <Table.Th style={{ minWidth: 140 }}>Account No</Table.Th>
-                    <Table.Th style={{ minWidth: 180 }}>Account Name</Table.Th>
-                    <Table.Th style={{ minWidth: 120 }}>Is Linked</Table.Th>
+                    {visibleColumns.map((col) => {
+                      const isSorted =
+                        sortConfig && sortConfig.key === col.key
+                          ? sortConfig.direction
+                          : null;
+                      return (
+                        <Table.Th key={col.key} style={{ minWidth: col.minWidth }}>
+                          <Group gap={6} align="center" wrap="nowrap">
+                            <Text size="sm" fw={600}>
+                              {col.label}
+                            </Text>
+                            <Menu shadow="sm" withinPortal>
+                              <Menu.Target>
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="gray"
+                                  size="sm"
+                                  radius="md"
+                                  title="Sort / Hide"
+                                >
+                                  {isSorted === 'asc' ? (
+                                    <IconArrowUp size={16} />
+                                  ) : isSorted === 'desc' ? (
+                                    <IconArrowDown size={16} />
+                                  ) : (
+                                    <IconAdjustments size={16} />
+                                  )}
+                                </ActionIcon>
+                              </Menu.Target>
+                              <Menu.Dropdown>
+                                <Menu.Item
+                                  leftSection={<IconArrowUp size={14} />}
+                                  onClick={() => handleSort(col.key, 'asc')}
+                                >
+                                  Sort Asc
+                                </Menu.Item>
+                                <Menu.Item
+                                  leftSection={<IconArrowDown size={14} />}
+                                  onClick={() => handleSort(col.key, 'desc')}
+                                >
+                                  Sort Desc
+                                </Menu.Item>
+                                <Menu.Item
+                                  leftSection={<IconEyeOff size={14} />}
+                                  onClick={() => handleHideColumn(col.key)}
+                                >
+                                  Hide Column
+                                </Menu.Item>
+                              </Menu.Dropdown>
+                            </Menu>
+                          </Group>
+                        </Table.Th>
+                      );
+                    })}
                   </Table.Tr>
 
                   <Table.Tr style={{ backgroundColor: '#e7f5ff' }}>
@@ -395,61 +580,11 @@ const UpdateMerchantBankSelected = () => {
                         aria-label="Select all rows"
                       />
                     </Table.Th>
-                    <Table.Th>
-                      <TextInput
-                        placeholder="Filter merchant..."
-                        size="xs"
-                        value={columnFilters.v_merchantcode}
-                        onChange={(e) =>
-                          handleFilterChange(
-                            'v_merchantcode',
-                            e.currentTarget.value
-                          )
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th>
-                      <TextInput
-                        placeholder="Filter account..."
-                        size="xs"
-                        value={columnFilters.v_bankaccountno}
-                        onChange={(e) =>
-                          handleFilterChange(
-                            'v_bankaccountno',
-                            e.currentTarget.value
-                          )
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th>
-                      <TextInput
-                        placeholder="Filter name..."
-                        size="xs"
-                        value={columnFilters.v_bankaccountname}
-                        onChange={(e) =>
-                          handleFilterChange(
-                            'v_bankaccountname',
-                            e.currentTarget.value
-                          )
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th>
-                      <Select
-                        placeholder="All"
-                        size="xs"
-                        data={[
-                          { value: '', label: 'All' },
-                          { value: '0', label: 'Yes' },
-                          { value: '1', label: 'No' },
-                        ]}
-                        value={columnFilters.n_isdeleted}
-                        onChange={(val) =>
-                          handleFilterChange('n_isdeleted', val || '')
-                        }
-                        clearable
-                      />
-                    </Table.Th>
+                    {visibleColumns.map((col) => (
+                      <Table.Th key={`filter-${col.key}`}>
+                        {col.filter}
+                      </Table.Th>
+                    ))}
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -469,33 +604,11 @@ const UpdateMerchantBankSelected = () => {
                               aria-label="Select row"
                             />
                           </Table.Td>
-                          <Table.Td>
-                            <Text
-                              fw={600}
-                              size="sm"
-                            >
-                              {item.v_merchantcode || '-'}
-                            </Text>
-                          </Table.Td>
-                          <Table.Td>
-                            <Text
-                              fw={600}
-                              size="sm"
-                              c="blue"
-                            >
-                              {item.v_bankaccountno}
-                            </Text>
-                          </Table.Td>
-                          <Table.Td>
-                            <Text size="sm">
-                              {item.v_bankaccountname || '-'}
-                            </Text>
-                          </Table.Td>
-                          <Table.Td>
-                            <Text size="sm">
-                              {item.n_isdeleted == 1 ? 'No' : 'Yes'}
-                            </Text>
-                          </Table.Td>
+                          {visibleColumns.map((col) => (
+                            <Table.Td key={`${key}-${col.key}`}>
+                              {col.render(item)}
+                            </Table.Td>
+                          ))}
                         </Table.Tr>
                       );
                     })

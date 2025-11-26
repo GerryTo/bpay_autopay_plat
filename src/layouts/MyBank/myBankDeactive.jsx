@@ -18,6 +18,7 @@ import {
 } from '@mantine/core';
 import {
   IconAlertTriangle,
+  IconAdjustments,
   IconArrowRight,
   IconClock,
   IconEdit,
@@ -29,6 +30,8 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { myBankAPI } from '../../helper/api';
 import { showNotification } from '../../helper/showNotification';
+import ColumnActionMenu from '../../components/ColumnActionMenu';
+import { useTableControls } from '../../hooks/useTableControls';
 
 const defaultFilters = {
   group: '',
@@ -48,6 +51,236 @@ const MyBankDeactive = () => {
   const [columnFilters, setColumnFilters] = useState(defaultFilters);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const columns = useMemo(
+    () => [
+      {
+        key: 'group',
+        label: 'Group',
+        minWidth: 90,
+        render: (item) => (
+          <Text fw={600} size="sm">
+            {item.group || '-'}
+          </Text>
+        ),
+        filter: (
+          <TextInput
+            placeholder="Filter group..."
+            size="xs"
+            value={columnFilters.group}
+            onChange={(e) => handleFilterChange('group', e.currentTarget.value)}
+          />
+        ),
+      },
+      {
+        key: 'bankAccNo',
+        label: 'Account No',
+        minWidth: 140,
+        render: (item) => (
+          <Text fw={600} size="sm" c="blue">
+            {item.bankAccNo}
+          </Text>
+        ),
+        filter: (
+          <TextInput
+            placeholder="Filter account..."
+            size="xs"
+            value={columnFilters.bankAccNo}
+            onChange={(e) =>
+              handleFilterChange('bankAccNo', e.currentTarget.value)
+            }
+          />
+        ),
+      },
+      {
+        key: 'bankAccName',
+        label: 'Account Name',
+        minWidth: 160,
+        render: (item) => <Text size="sm">{item.bankAccName || '-'}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter name..."
+            size="xs"
+            value={columnFilters.bankAccName}
+            onChange={(e) =>
+              handleFilterChange('bankAccName', e.currentTarget.value)
+            }
+          />
+        ),
+      },
+      {
+        key: 'bankCode',
+        label: 'Bank',
+        minWidth: 120,
+        render: (item) => (
+          <Badge color="blue" variant="light">
+            {item.bankCode}
+          </Badge>
+        ),
+        filter: (
+          <TextInput
+            placeholder="Filter bank..."
+            size="xs"
+            value={columnFilters.bankCode}
+            onChange={(e) =>
+              handleFilterChange('bankCode', e.currentTarget.value)
+            }
+          />
+        ),
+      },
+      {
+        key: 'login',
+        label: 'Login',
+        minWidth: 100,
+        render: (item) => <Text size="sm">{item.login || '-'}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter login..."
+            size="xs"
+            value={columnFilters.login}
+            onChange={(e) => handleFilterChange('login', e.currentTarget.value)}
+          />
+        ),
+      },
+      {
+        key: 'type',
+        label: 'Type',
+        minWidth: 80,
+        render: (item) => (
+          <Badge color="gray" variant="outline">
+            {item.type}
+          </Badge>
+        ),
+        filter: (
+          <TextInput
+            placeholder="Filter type..."
+            size="xs"
+            value={columnFilters.type}
+            onChange={(e) => handleFilterChange('type', e.currentTarget.value)}
+          />
+        ),
+      },
+      {
+        key: 'active',
+        label: 'Active',
+        minWidth: 110,
+        render: (item) => (
+          <Badge color={item.active === 'Y' ? 'green' : 'red'} variant="light">
+            {item.active === 'Y' ? 'Active' : 'Inactive'}
+          </Badge>
+        ),
+        filter: (
+          <TextInput
+            placeholder="Filter active..."
+            size="xs"
+            value={columnFilters.active}
+            onChange={(e) =>
+              handleFilterChange('active', e.currentTarget.value)
+            }
+          />
+        ),
+      },
+      {
+        key: 'curr',
+        label: 'Balance',
+        minWidth: 140,
+        render: (item) => (
+          <Text size="sm" className="grid-alignright">
+            {formatNumber(item.curr)}
+          </Text>
+        ),
+      },
+      {
+        key: 'dailylimit',
+        label: 'Daily Limit',
+        minWidth: 140,
+        render: (item) => (
+          <Text size="sm" className="grid-alignright">
+            {formatNumber(item.dailylimit)}
+          </Text>
+        ),
+      },
+      {
+        key: 'daily',
+        label: 'Daily',
+        minWidth: 140,
+        render: (item) => (
+          <Text size="sm" className="grid-alignright">
+            {formatNumber(item.daily)}
+          </Text>
+        ),
+      },
+      {
+        key: 'action',
+        label: 'Action',
+        minWidth: 200,
+        render: (item) => (
+          <Group gap="xs" wrap="nowrap">
+            <Button
+              variant="light"
+              color="blue"
+              size="xs"
+              leftSection={<IconEdit size={16} />}
+              onClick={() => handleEdit(item)}
+            >
+              Edit
+            </Button>
+            <Button
+              variant="light"
+              color="orange"
+              size="xs"
+              leftSection={<IconClock size={16} />}
+              onClick={() => handleLastTransaction(item)}
+            >
+              Last TRX
+            </Button>
+            <Button
+              variant="light"
+              color="grape"
+              size="xs"
+              leftSection={<IconArrowRight size={16} />}
+              onClick={() =>
+                navigate('/transaction-account-by-company', {
+                  state: { data: { accountno: item.bankAccNo } },
+                })
+              }
+            >
+              More
+            </Button>
+            <Button
+              variant="light"
+              color="teal"
+              size="xs"
+              leftSection={<IconEye size={16} />}
+              onClick={() =>
+                navigate('/list-merchant-group', {
+                  state: {
+                    data: {
+                      bankAccNo: item.bankAccNo,
+                      bankAccName: item.bankAccName,
+                    },
+                  },
+                })
+              }
+            >
+              Show
+            </Button>
+          </Group>
+        ),
+      },
+    ],
+    [columnFilters]
+  );
+
+  const {
+    visibleColumns,
+    sortConfig,
+    handleHideColumn,
+    handleSort,
+    handleResetAll,
+  } = useTableControls(columns, {
+    onResetFilters: () => setColumnFilters(defaultFilters),
+    onResetSelection: () => setSelectedKeys([]),
+  });
 
   const [groupModalOpened, setGroupModalOpened] = useState(false);
   const [groupName, setGroupName] = useState('');
@@ -85,10 +318,21 @@ const MyBankDeactive = () => {
     [data, columnFilters]
   );
 
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+  const sortedData = useMemo(() => {
+    if (!sortConfig) return filteredData;
+    const dir = sortConfig.direction === 'desc' ? -1 : 1;
+    return [...filteredData].sort((a, b) => {
+      const av = a[sortConfig.key] ?? '';
+      const bv = b[sortConfig.key] ?? '';
+      if (av === bv) return 0;
+      return av > bv ? dir : -dir;
+    });
+  }, [filteredData, sortConfig]);
+
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedData = filteredData.slice(startIndex, endIndex);
+  const paginatedData = sortedData.slice(startIndex, endIndex);
 
   const selectedRecords = useMemo(
     () => data.filter((item) => selectedKeys.includes(makeKey(item))),
@@ -415,12 +659,13 @@ const MyBankDeactive = () => {
               Refresh
             </Button>
             <Button
-              leftSection={<IconUsers size={16} />}
               variant="light"
-              color="grape"
-              onClick={handleOpenGroupModal}
+              color="gray"
+              size="sm"
+              leftSection={<IconAdjustments size={16} />}
+              onClick={handleResetAll}
             >
-              Group
+              Reset
             </Button>
             <Button
               leftSection={<IconAlertTriangle size={16} />}
@@ -431,12 +676,12 @@ const MyBankDeactive = () => {
               Back
             </Button>
             <Button
+              leftSection={<IconUsers size={16} />}
               variant="light"
-              color="red"
-              size="sm"
-              onClick={handleClearFilters}
+              color="grape"
+              onClick={handleOpenGroupModal}
             >
-              Clear Filters
+              Group
             </Button>
           </Group>
 
@@ -493,17 +738,21 @@ const MyBankDeactive = () => {
                         aria-label="Select all rows"
                       />
                     </Table.Th>
-                    <Table.Th style={{ minWidth: 90 }}>Group</Table.Th>
-                    <Table.Th style={{ minWidth: 140 }}>Account No</Table.Th>
-                    <Table.Th style={{ minWidth: 160 }}>Account Name</Table.Th>
-                    <Table.Th style={{ minWidth: 90 }}>Bank</Table.Th>
-                    <Table.Th style={{ minWidth: 100 }}>Login</Table.Th>
-                    <Table.Th style={{ minWidth: 80 }}>Type</Table.Th>
-                    <Table.Th style={{ minWidth: 90 }}>Active</Table.Th>
-                    <Table.Th style={{ minWidth: 140 }}>Balance</Table.Th>
-                    <Table.Th style={{ minWidth: 140 }}>Daily Limit</Table.Th>
-                    <Table.Th style={{ minWidth: 140 }}>Daily</Table.Th>
-                    <Table.Th style={{ minWidth: 200 }}>Action</Table.Th>
+                    {visibleColumns.map((col) => (
+                      <Table.Th key={col.key} style={{ minWidth: col.minWidth }}>
+                        <Group gap={6} align="center" wrap="nowrap">
+                          <Text size="sm" fw={600}>
+                            {col.label}
+                          </Text>
+                          <ColumnActionMenu
+                            columnKey={col.key}
+                            sortConfig={sortConfig}
+                            onSort={handleSort}
+                            onHide={handleHideColumn}
+                          />
+                        </Group>
+                      </Table.Th>
+                    ))}
                   </Table.Tr>
 
                   <Table.Tr style={{ backgroundColor: '#e7f5ff' }}>
@@ -515,83 +764,11 @@ const MyBankDeactive = () => {
                         aria-label="Select all rows"
                       />
                     </Table.Th>
-                    <Table.Th>
-                      <TextInput
-                        placeholder="Filter group..."
-                        size="xs"
-                        value={columnFilters.group}
-                        onChange={(e) =>
-                          handleFilterChange('group', e.currentTarget.value)
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th>
-                      <TextInput
-                        placeholder="Filter account..."
-                        size="xs"
-                        value={columnFilters.bankAccNo}
-                        onChange={(e) =>
-                          handleFilterChange('bankAccNo', e.currentTarget.value)
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th>
-                      <TextInput
-                        placeholder="Filter name..."
-                        size="xs"
-                        value={columnFilters.bankAccName}
-                        onChange={(e) =>
-                          handleFilterChange(
-                            'bankAccName',
-                            e.currentTarget.value
-                          )
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th>
-                      <TextInput
-                        placeholder="Filter bank..."
-                        size="xs"
-                        value={columnFilters.bankCode}
-                        onChange={(e) =>
-                          handleFilterChange('bankCode', e.currentTarget.value)
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th>
-                      <TextInput
-                        placeholder="Filter login..."
-                        size="xs"
-                        value={columnFilters.login}
-                        onChange={(e) =>
-                          handleFilterChange('login', e.currentTarget.value)
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th>
-                      <TextInput
-                        placeholder="Filter type..."
-                        size="xs"
-                        value={columnFilters.type}
-                        onChange={(e) =>
-                          handleFilterChange('type', e.currentTarget.value)
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th>
-                      <TextInput
-                        placeholder="Filter active..."
-                        size="xs"
-                        value={columnFilters.active}
-                        onChange={(e) =>
-                          handleFilterChange('active', e.currentTarget.value)
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th />
-                    <Table.Th />
-                    <Table.Th />
-                    <Table.Th />
+                    {visibleColumns.map((col) => (
+                      <Table.Th key={`filter-${col.key}`}>
+                        {col.filter}
+                      </Table.Th>
+                    ))}
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -611,128 +788,17 @@ const MyBankDeactive = () => {
                               aria-label="Select row"
                             />
                           </Table.Td>
-                          <Table.Td>
-                            <Text
-                              fw={600}
-                              size="sm"
-                            >
-                              {item.group || '-'}
-                            </Text>
-                          </Table.Td>
-                          <Table.Td>
-                            <Text
-                              fw={600}
-                              size="sm"
-                              c="blue"
-                            >
-                              {item.bankAccNo}
-                            </Text>
-                          </Table.Td>
-                          <Table.Td>
-                            <Text size="sm">{item.bankAccName || '-'}</Text>
-                          </Table.Td>
-                          <Table.Td>
-                            <Badge
-                              color="blue"
-                              variant="light"
-                            >
-                              {item.bankCode}
-                            </Badge>
-                          </Table.Td>
-                          <Table.Td>
-                            <Text size="sm">{item.login || '-'}</Text>
-                          </Table.Td>
-                          <Table.Td>
-                            <Badge
-                              color="gray"
-                              variant="outline"
-                            >
-                              {item.type}
-                            </Badge>
-                          </Table.Td>
-                          <Table.Td>
-                            <Badge
-                              color={item.active === 'Y' ? 'green' : 'red'}
-                              variant="light"
-                            >
-                              {item.active === 'Y' ? 'Active' : 'Inactive'}
-                            </Badge>
-                          </Table.Td>
-                          <Table.Td className="grid-alignright">
-                            <Text size="sm">{formatNumber(item.curr)}</Text>
-                          </Table.Td>
-                          <Table.Td className="grid-alignright">
-                            <Text size="sm">
-                              {formatNumber(item.dailylimit)}
-                            </Text>
-                          </Table.Td>
-                          <Table.Td className="grid-alignright">
-                            <Text size="sm">{formatNumber(item.daily)}</Text>
-                          </Table.Td>
-                          <Table.Td>
-                            <Group
-                              gap="xs"
-                              wrap="nowrap"
-                            >
-                              <Button
-                                variant="light"
-                                color="blue"
-                                size="xs"
-                                leftSection={<IconEdit size={16} />}
-                                onClick={() => handleEdit(item)}
-                              >
-                                Edit
-                              </Button>
-                              <Button
-                                variant="light"
-                                color="orange"
-                                size="xs"
-                                leftSection={<IconClock size={16} />}
-                                onClick={() => handleLastTransaction(item)}
-                              >
-                                Last TRX
-                              </Button>
-                              <Button
-                                variant="light"
-                                color="grape"
-                                size="xs"
-                                leftSection={<IconArrowRight size={16} />}
-                                onClick={() =>
-                                  navigate('/transaction-account-by-company', {
-                                    state: {
-                                      data: { accountno: item.bankAccNo },
-                                    },
-                                  })
-                                }
-                              >
-                                More
-                              </Button>
-                              <Button
-                                variant="light"
-                                color="teal"
-                                size="xs"
-                                leftSection={<IconEye size={16} />}
-                                onClick={() =>
-                                  navigate('/list-merchant-group', {
-                                    state: {
-                                      data: {
-                                        bankAccNo: item.bankAccNo,
-                                        bankAccName: item.bankAccName,
-                                      },
-                                    },
-                                  })
-                                }
-                              >
-                                Show
-                              </Button>
-                            </Group>
-                          </Table.Td>
+                          {visibleColumns.map((col) => (
+                            <Table.Td key={`${key}-${col.key}`}>
+                              {col.render(item)}
+                            </Table.Td>
+                          ))}
                         </Table.Tr>
                       );
                     })
                   ) : (
                     <Table.Tr>
-                      <Table.Td colSpan={12}>
+                      <Table.Td colSpan={visibleColumns.length + 1}>
                         <Stack
                           align="center"
                           py="xl"

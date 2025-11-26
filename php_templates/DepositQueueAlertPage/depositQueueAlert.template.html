@@ -1,0 +1,24 @@
+<div>
+    <div class="page-header-container box">{{pagelang.pagetitle}}</div>
+    <div class="page-body box">
+        <div class="row">
+            <!--<div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+                <select class="form-control input-sm" ng-model="filter.accountno" >
+                    <option value="0">- ALL ACCOUNT -</option>
+                    <option ng-repeat="item in acclist" value="{{item.bankaccountno}}||{{item.bankcode}}">{{item.bankaccountname}} | {{item.bankcode}}</option>
+                </select>
+            </div>-->
+            <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+                <div class="button-container">
+                    <button type="button" class="btn btn-default btn-sm" ng-click="refresh()" ng-disabled="gridIsLoading==true">{{globallang.refresh}}</button>
+                </div> 
+            </div>
+        </div>
+        
+        <div id="grid1" ui-grid="gridOptions" class="grid" ui-grid-resize-columns ui-grid-auto-resize ui-grid-exporter ng-style="{'height': getHeight()+'px'}">
+            <div class="grid-nodata-container" ng-show="gridOptions.data.length == 0 && !gridIsLoading">No Data Available</div>
+            <div class="grid-loading-container" ng-show="gridIsLoading">
+                <img src="images/loading.gif" />
+            </div>
+        </div>
+</div>

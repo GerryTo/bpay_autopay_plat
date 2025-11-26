@@ -61,6 +61,15 @@ import MyBankBalance from './layouts/MyBank/myBankBalance';
 import MyBankLimit from './layouts/MyBank/myBankLimit';
 import MyBankDeactive from './layouts/MyBank/myBankDeactive';
 import MasterMyBankForm from './layouts/MyBank/masterMyBankForm';
+import DepositDashboard from './layouts/Deposit/DepositDashboard';
+import DepositPendingList from './layouts/Deposit/DepositPendingList';
+import AutomationDepositList from './layouts/Deposit/AutomationDepositList';
+import MerchantTransactionDeposit from './layouts/Deposit/MerchantTransactionDeposit';
+import DepositPending from './layouts/Deposit/DepositPending';
+import DepositQueueToday from './layouts/Deposit/DepositQueueToday';
+import DepositQueueTodayBDT from './layouts/Deposit/DepositQueueTodayBDT';
+import DepositQueue from './layouts/Deposit/DepositQueue';
+import DepositQueueAlert from './layouts/Deposit/DepositQueueAlert';
 
 export const mockdataRoutes = [
   {
@@ -192,7 +201,7 @@ export const mockdataRoutes = [
             label: 'Automation Deposit List',
             icon: <IconRobot />,
             link: '/new-deposit-list',
-            element: '',
+            element: <AutomationDepositList />,
           },
           {
             label: 'Mybank Check Deposit',
@@ -602,55 +611,55 @@ export const mockdataRoutes = [
         label: 'Deposit Dashboard Automation',
         icon: <IconLayoutDashboard />,
         link: '/deposit-dashboard',
-        element: '',
+        element: <DepositDashboard />,
       },
       {
         label: 'Deposit List',
         icon: <IconArrowDownCircle />,
         link: '/deposit-pending-list',
-        element: '',
+        element: <DepositPendingList />,
       },
       {
         label: 'Automation Deposit List',
         icon: <IconRobot />,
         link: '/new-deposit-list',
-        element: '',
+        element: <AutomationDepositList />,
       },
       {
         label: 'Merchant Transaction Deposit',
         icon: <IconShoppingCart />,
         link: '/transaction-merchant-deposit',
-        element: '',
+        element: <MerchantTransactionDeposit />,
       },
       {
         label: 'Deposit Pending',
         icon: <IconArrowDownCircle />,
         link: '/deposit-pending',
-        element: '',
+        element: <DepositPending />,
       },
       {
         label: 'Deposit Queue Today',
         icon: <IconArrowDownCircle />,
         link: '/deposit-queue-today',
-        element: '',
+        element: <DepositQueueToday />,
       },
       {
         label: 'Deposit Queue Today BDT',
         icon: <IconArrowDownCircle />,
         link: '/deposit-queue-today-bdt',
-        element: '',
+        element: <DepositQueueTodayBDT />,
       },
       {
         label: 'Deposit Queue Unmatched by Date',
         icon: <IconArrowDownCircle />,
         link: '/deposit-queue',
-        element: '',
+        element: <DepositQueue />,
       },
       {
         label: 'Deposit Queue Alert',
         icon: <IconAlertTriangle />,
         link: '/deposit-queue-alert',
-        element: '',
+        element: <DepositQueueAlert />,
       },
     ],
   },
