@@ -24,49 +24,33 @@ import { format } from 'date-fns';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 import {
-  IconArrowDownCircle,
+  IconArrowUpCircle,
   IconBolt,
   IconCalendar,
   IconChecklist,
   IconFilter,
   IconRefresh,
 } from '@tabler/icons-react';
-import { depositAPI } from '../../helper/api';
+import { withdrawAPI } from '../../helper/api';
 import { showNotification } from '../../helper/showNotification';
 import { useTableControls } from '../../hooks/useTableControls';
 import ColumnActionMenu from '../../components/ColumnActionMenu';
 
-const statusOptions = [
-  { value: 'A', label: 'All' },
-  { value: '9', label: 'Pending' },
-  { value: 'T', label: 'Order Need To Check' },
-  { value: '0', label: 'Completed' },
-  { value: '1', label: 'Failed' },
-];
-
 const defaultFilters = {
-  futuretrxid: '',
+  id: '',
   merchantcode: '',
   customercode: '',
   bankcode: '',
-  transactiontype: '',
   status: '',
-  callbackresponse: '',
-  accountno: '',
-  accountdst: '',
-  accountsrcname: '',
-  accountdstname: '',
-  alias: '',
-  user: '',
-  phonenumber: '',
   transactionid: '',
-  reference: '',
-  actualAgent: '',
-  servername: '',
-  serverurl: '',
-  notes: '',
+  dstbankaccount: '',
+  accountname: '',
+  accountno: '',
+  sourceaccountname: '',
+  sourcebankcode: '',
   notes2: '',
   notes3: '',
+  memo: '',
   memo2: '',
 };
 
@@ -77,7 +61,7 @@ const formatNumber = (value) => {
   return num.toLocaleString('en-US', { maximumFractionDigits: 2 });
 };
 
-const AutomationDepositList = () => {
+const WithdrawList = () => {
   const [dateRange, setDateRange] = useState([
     {
       startDate: new Date(),
@@ -86,9 +70,6 @@ const AutomationDepositList = () => {
     },
   ]);
   const [datePickerOpened, setDatePickerOpened] = useState(false);
-  const [status, setStatus] = useState(statusOptions[1].value);
-  const [agent, setAgent] = useState('');
-  const [agentOptions, setAgentOptions] = useState([]);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -111,44 +92,42 @@ const AutomationDepositList = () => {
   const columns = useMemo(
     () => [
       {
-        key: 'futuretrxid',
-        label: 'Future Trx ID',
-        minWidth: 160,
+        key: 'id',
+        label: 'Future ID',
+        minWidth: 140,
         render: (item) => (
           <Text
             size="sm"
             fw={600}
           >
-            {item.futuretrxid}
+            {item.id}
           </Text>
         ),
         filter: (
           <TextInput
-            placeholder="Filter trx id..."
+            placeholder="Filter id..."
             size="xs"
-            value={columnFilters.futuretrxid}
-            onChange={(e) =>
-              handleFilterChange('futuretrxid', e.currentTarget.value)
-            }
+            value={columnFilters.id}
+            onChange={(e) => handleFilterChange('id', e.currentTarget.value)}
           />
         ),
       },
       {
         key: 'insert',
-        label: 'Date',
+        label: 'System Timestamp',
         minWidth: 150,
         render: (item) => <Text size="sm">{item.insert}</Text>,
       },
       {
         key: 'completedate',
         label: 'Complete Date',
-        minWidth: 180,
+        minWidth: 150,
         render: (item) => <Text size="sm">{item.completedate || '-'}</Text>,
       },
       {
         key: 'merchantcode',
         label: 'Merchant',
-        minWidth: 150,
+        minWidth: 120,
         render: (item) => <Text size="sm">{item.merchantcode || '-'}</Text>,
         filter: (
           <TextInput
@@ -164,7 +143,7 @@ const AutomationDepositList = () => {
       {
         key: 'customercode',
         label: 'Customer',
-        minWidth: 140,
+        minWidth: 120,
         render: (item) => <Text size="sm">{item.customercode || '-'}</Text>,
         filter: (
           <TextInput
@@ -180,7 +159,7 @@ const AutomationDepositList = () => {
       {
         key: 'bankcode',
         label: 'Bank',
-        minWidth: 140,
+        minWidth: 90,
         render: (item) => (
           <Badge
             color="blue"
@@ -201,45 +180,29 @@ const AutomationDepositList = () => {
         ),
       },
       {
-        key: 'DB',
-        label: 'Debit',
+        key: 'amount',
+        label: 'Amount',
+        minWidth: 140,
+        render: (item) => (
+          <Text
+            size="sm"
+            className="grid-alignright"
+          >
+            {formatNumber(item.amount)}
+          </Text>
+        ),
+      },
+      {
+        key: 'fee',
+        label: 'Fee',
         minWidth: 120,
         render: (item) => (
           <Text
             size="sm"
             className="grid-alignright"
           >
-            {formatNumber(item.DB)}
+            {formatNumber(item.fee)}
           </Text>
-        ),
-      },
-      {
-        key: 'CR',
-        label: 'Credit',
-        minWidth: 120,
-        render: (item) => (
-          <Text
-            size="sm"
-            className="grid-alignright"
-          >
-            {formatNumber(item.CR)}
-          </Text>
-        ),
-      },
-      {
-        key: 'transactiontype',
-        label: 'Trans Type',
-        minWidth: 130,
-        render: (item) => <Text size="sm">{item.transactiontype || '-'}</Text>,
-        filter: (
-          <TextInput
-            placeholder="Filter type..."
-            size="xs"
-            value={columnFilters.transactiontype}
-            onChange={(e) =>
-              handleFilterChange('transactiontype', e.currentTarget.value)
-            }
-          />
         ),
       },
       {
@@ -266,178 +229,21 @@ const AutomationDepositList = () => {
         ),
       },
       {
-        key: 'callbackresponse',
-        label: 'Callback Status',
+        key: 'timestamp',
+        label: 'Client Timestamp',
         minWidth: 150,
-        render: (item) => <Text size="sm">{item.callbackresponse || '-'}</Text>,
-        filter: (
-          <TextInput
-            placeholder="Filter callback..."
-            size="xs"
-            value={columnFilters.callbackresponse}
-            onChange={(e) =>
-              handleFilterChange('callbackresponse', e.currentTarget.value)
-            }
-          />
-        ),
+        render: (item) => <Text size="sm">{item.timestamp || '-'}</Text>,
       },
       {
-        key: 'accountno',
-        label: 'Acc Source',
-        minWidth: 130,
-        render: (item) => <Text size="sm">{item.accountno || '-'}</Text>,
-        filter: (
-          <TextInput
-            placeholder="Filter acc source..."
-            size="xs"
-            value={columnFilters.accountno}
-            onChange={(e) =>
-              handleFilterChange('accountno', e.currentTarget.value)
-            }
-          />
-        ),
-      },
-      {
-        key: 'accountsrcname',
-        label: 'Acc Source Name',
-        minWidth: 180,
-        render: (item) => <Text size="sm">{item.accountsrcname || '-'}</Text>,
-        filter: (
-          <TextInput
-            placeholder="Filter source name..."
-            size="xs"
-            value={columnFilters.accountsrcname}
-            onChange={(e) =>
-              handleFilterChange('accountsrcname', e.currentTarget.value)
-            }
-          />
-        ),
-      },
-      {
-        key: 'accountdst',
-        label: 'Acc Dest',
-        minWidth: 130,
-        render: (item) => <Text size="sm">{item.accountdst || '-'}</Text>,
-        filter: (
-          <TextInput
-            placeholder="Filter acc dest..."
-            size="xs"
-            value={columnFilters.accountdst}
-            onChange={(e) =>
-              handleFilterChange('accountdst', e.currentTarget.value)
-            }
-          />
-        ),
-      },
-      {
-        key: 'accountdstname',
-        label: 'Acc Dest Name',
-        minWidth: 160,
-        render: (item) => <Text size="sm">{item.accountdstname || '-'}</Text>,
-        filter: (
-          <TextInput
-            placeholder="Filter dest name..."
-            size="xs"
-            value={columnFilters.accountdstname}
-            onChange={(e) =>
-              handleFilterChange('accountdstname', e.currentTarget.value)
-            }
-          />
-        ),
-      },
-      {
-        key: 'fee',
-        label: 'Fee',
-        minWidth: 120,
-        render: (item) => (
-          <Text
-            size="sm"
-            className="grid-alignright"
-          >
-            {formatNumber(item.fee)}
-          </Text>
-        ),
-      },
-      {
-        key: 'alias',
-        label: 'Alias',
-        minWidth: 120,
-        render: (item) => <Text size="sm">{item.alias || '-'}</Text>,
-        filter: (
-          <TextInput
-            placeholder="Filter alias..."
-            size="xs"
-            value={columnFilters.alias}
-            onChange={(e) => handleFilterChange('alias', e.currentTarget.value)}
-          />
-        ),
-      },
-      {
-        key: 'actualAgent',
-        label: 'Actual Agent',
-        minWidth: 140,
-        render: (item) => <Text size="sm">{item.actualAgent || '-'}</Text>,
-        filter: (
-          <TextInput
-            placeholder="Filter agent..."
-            size="xs"
-            value={columnFilters.actualAgent}
-            onChange={(e) =>
-              handleFilterChange('actualAgent', e.currentTarget.value)
-            }
-          />
-        ),
-      },
-      {
-        key: 'user',
-        label: 'SMS Agent',
-        minWidth: 130,
-        render: (item) => <Text size="sm">{item.user || '-'}</Text>,
-        filter: (
-          <TextInput
-            placeholder="Filter agent..."
-            size="xs"
-            value={columnFilters.user}
-            onChange={(e) => handleFilterChange('user', e.currentTarget.value)}
-          />
-        ),
-      },
-      {
-        key: 'phonenumber',
-        label: 'SMS Phone',
-        minWidth: 140,
-        render: (item) => <Text size="sm">{item.phonenumber || '-'}</Text>,
-        filter: (
-          <TextInput
-            placeholder="Filter phone..."
-            size="xs"
-            value={columnFilters.phonenumber}
-            onChange={(e) =>
-              handleFilterChange('phonenumber', e.currentTarget.value)
-            }
-          />
-        ),
-      },
-      {
-        key: 'reference',
-        label: 'Reference',
-        minWidth: 140,
-        render: (item) => <Text size="sm">{item.reference || '-'}</Text>,
-        filter: (
-          <TextInput
-            placeholder="Filter reference..."
-            size="xs"
-            value={columnFilters.reference}
-            onChange={(e) =>
-              handleFilterChange('reference', e.currentTarget.value)
-            }
-          />
-        ),
+        key: 'originaldate',
+        label: 'Original Timestamp',
+        minWidth: 150,
+        render: (item) => <Text size="sm">{item.originaldate || '-'}</Text>,
       },
       {
         key: 'transactionid',
         label: 'Transaction ID',
-        minWidth: 140,
+        minWidth: 150,
         render: (item) => <Text size="sm">{item.transactionid || '-'}</Text>,
         filter: (
           <TextInput
@@ -451,36 +257,100 @@ const AutomationDepositList = () => {
         ),
       },
       {
-        key: 'notes',
-        label: 'Notes',
-        minWidth: 140,
-        render: (item) => <Text size="sm">{item.notes || '-'}</Text>,
+        key: 'dstbankaccount',
+        label: 'Dest Bank Account',
+        minWidth: 160,
+        render: (item) => <Text size="sm">{item.dstbankaccount || '-'}</Text>,
         filter: (
           <TextInput
-            placeholder="Filter notes..."
+            placeholder="Filter dest bank..."
             size="xs"
-            value={columnFilters.notes}
-            onChange={(e) => handleFilterChange('notes', e.currentTarget.value)}
+            value={columnFilters.dstbankaccount}
+            onChange={(e) =>
+              handleFilterChange('dstbankaccount', e.currentTarget.value)
+            }
+          />
+        ),
+      },
+      {
+        key: 'accountname',
+        label: 'Dest Account Name',
+        minWidth: 160,
+        render: (item) => <Text size="sm">{item.accountname || '-'}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter dest name..."
+            size="xs"
+            value={columnFilters.accountname}
+            onChange={(e) =>
+              handleFilterChange('accountname', e.currentTarget.value)
+            }
+          />
+        ),
+      },
+      {
+        key: 'accountno',
+        label: 'Source Account',
+        minWidth: 150,
+        render: (item) => <Text size="sm">{item.accountno || '-'}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter src account..."
+            size="xs"
+            value={columnFilters.accountno}
+            onChange={(e) =>
+              handleFilterChange('accountno', e.currentTarget.value)
+            }
+          />
+        ),
+      },
+      {
+        key: 'sourceaccountname',
+        label: 'Source Account Name',
+        minWidth: 180,
+        render: (item) => (
+          <Text size="sm">{item.sourceaccountname || '-'}</Text>
+        ),
+        filter: (
+          <TextInput
+            placeholder="Filter src name..."
+            size="xs"
+            value={columnFilters.sourceaccountname}
+            onChange={(e) =>
+              handleFilterChange('sourceaccountname', e.currentTarget.value)
+            }
+          />
+        ),
+      },
+      {
+        key: 'sourcebankcode',
+        label: 'Source Bank',
+        minWidth: 140,
+        render: (item) => <Text size="sm">{item.sourcebankcode || '-'}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter src bank..."
+            size="xs"
+            value={columnFilters.sourcebankcode}
+            onChange={(e) =>
+              handleFilterChange('sourcebankcode', e.currentTarget.value)
+            }
           />
         ),
       },
       {
         key: 'notes2',
-        label: 'Receipt ID',
-        minWidth: 120,
+        label: 'Notes 2',
+        minWidth: 140,
         render: (item) => <Text size="sm">{item.notes2 || '-'}</Text>,
-      },
-      {
-        key: 'memo2',
-        label: 'Memo 2',
-        minWidth: 120,
-        render: (item) => <Text size="sm">{item.memo2 || '-'}</Text>,
         filter: (
           <TextInput
-            placeholder="Filter memo 2..."
+            placeholder="Filter notes 2..."
             size="xs"
-            value={columnFilters.memo2}
-            onChange={(e) => handleFilterChange('memo2', e.currentTarget.value)}
+            value={columnFilters.notes2}
+            onChange={(e) =>
+              handleFilterChange('notes2', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -501,34 +371,30 @@ const AutomationDepositList = () => {
         ),
       },
       {
-        key: 'servername',
-        label: 'Server Name',
+        key: 'memo',
+        label: 'Memo',
         minWidth: 140,
-        render: (item) => <Text size="sm">{item.servername || '-'}</Text>,
+        render: (item) => <Text size="sm">{item.memo || '-'}</Text>,
         filter: (
           <TextInput
-            placeholder="Filter server..."
+            placeholder="Filter memo..."
             size="xs"
-            value={columnFilters.servername}
-            onChange={(e) =>
-              handleFilterChange('servername', e.currentTarget.value)
-            }
+            value={columnFilters.memo}
+            onChange={(e) => handleFilterChange('memo', e.currentTarget.value)}
           />
         ),
       },
       {
-        key: 'serverurl',
-        label: 'Server URL',
-        minWidth: 200,
-        render: (item) => <Text size="sm">{item.serverurl || '-'}</Text>,
+        key: 'memo2',
+        label: 'Memo 2',
+        minWidth: 140,
+        render: (item) => <Text size="sm">{item.memo2 || '-'}</Text>,
         filter: (
           <TextInput
-            placeholder="Filter URL..."
+            placeholder="Filter memo 2..."
             size="xs"
-            value={columnFilters.serverurl}
-            onChange={(e) =>
-              handleFilterChange('serverurl', e.currentTarget.value)
-            }
+            value={columnFilters.memo2}
+            onChange={(e) => handleFilterChange('memo2', e.currentTarget.value)}
           />
         ),
       },
@@ -547,8 +413,7 @@ const AutomationDepositList = () => {
     onResetSelection: () => setSelectedKeys([]),
   });
 
-  const makeKey = (item) =>
-    `${item.futuretrxid || ''}-${item.transactionid || ''}`;
+  const makeKey = (item) => `${item.id || ''}-${item.transactionid || ''}`;
 
   const includesValue = (field, value) => {
     if (!value) return true;
@@ -559,32 +424,24 @@ const AutomationDepositList = () => {
     () =>
       data.filter((item) => {
         return (
-          includesValue(item.futuretrxid, columnFilters.futuretrxid) &&
+          includesValue(item.id, columnFilters.id) &&
           includesValue(item.merchantcode, columnFilters.merchantcode) &&
           includesValue(item.customercode, columnFilters.customercode) &&
           includesValue(item.bankcode, columnFilters.bankcode) &&
-          includesValue(item.transactiontype, columnFilters.transactiontype) &&
           includesValue(item.status, columnFilters.status) &&
-          includesValue(
-            item.callbackresponse,
-            columnFilters.callbackresponse
-          ) &&
-          includesValue(item.accountno, columnFilters.accountno) &&
-          includesValue(item.accountdst, columnFilters.accountdst) &&
-          includesValue(item.accountsrcname, columnFilters.accountsrcname) &&
-          includesValue(item.accountdstname, columnFilters.accountdstname) &&
-          includesValue(item.alias, columnFilters.alias) &&
-          includesValue(item.actualAgent, columnFilters.actualAgent) &&
-          includesValue(item.user, columnFilters.user) &&
-          includesValue(item.phonenumber, columnFilters.phonenumber) &&
-          includesValue(item.reference, columnFilters.reference) &&
           includesValue(item.transactionid, columnFilters.transactionid) &&
-          includesValue(item.notes, columnFilters.notes) &&
+          includesValue(item.dstbankaccount, columnFilters.dstbankaccount) &&
+          includesValue(item.accountname, columnFilters.accountname) &&
+          includesValue(item.accountno, columnFilters.accountno) &&
+          includesValue(
+            item.sourceaccountname,
+            columnFilters.sourceaccountname
+          ) &&
+          includesValue(item.sourcebankcode, columnFilters.sourcebankcode) &&
           includesValue(item.notes2, columnFilters.notes2) &&
           includesValue(item.notes3, columnFilters.notes3) &&
-          includesValue(item.memo2, columnFilters.memo2) &&
-          includesValue(item.servername, columnFilters.servername) &&
-          includesValue(item.serverurl, columnFilters.serverurl)
+          includesValue(item.memo, columnFilters.memo) &&
+          includesValue(item.memo2, columnFilters.memo2)
         );
       }),
     [data, columnFilters]
@@ -623,19 +480,6 @@ const AutomationDepositList = () => {
     }
   }, [totalPages, currentPage]);
 
-  const mapRecords = (records = []) =>
-    records.map((item) => {
-      const transactiontype = item.transactiontype;
-      const amount = Number(item.amount) || 0;
-      const isDebit = ['D', 'Topup', 'Y', 'I'].includes(transactiontype);
-      return {
-        ...item,
-        DB: isDebit ? amount : 0,
-        CR: isDebit ? 0 : amount,
-        fee: Number(item.fee) || 0,
-      };
-    });
-
   const decodeRecord = (record) =>
     Object.entries(record || {}).reduce((acc, [key, value]) => {
       if (typeof value === 'string') {
@@ -650,32 +494,13 @@ const AutomationDepositList = () => {
       return acc;
     }, {});
 
-  const fetchAgents = useCallback(async () => {
-    const response = await depositAPI.getAutomationAgents();
-    if (response.success && response.data) {
-      const payload = response.data;
-      if ((payload.status || '').toLowerCase() === 'ok') {
-        const records = Array.isArray(payload.records) ? payload.records : [];
-        const unique = {};
-        const deduped = records.filter((item) => {
-          const key = item.bankAccNo || item.account;
-          if (!key || unique[key]) return false;
-          unique[key] = true;
-          return true;
-        });
-        const options = deduped.map((item) => ({
-          value: item.bankAccNo || item.account,
-          label: `${item.bankAccNo || item.account} - ${
-            item.bankAccName || item.alias || item.bankCode || ''
-          }`,
-        }));
-        setAgentOptions(options);
-        if (options[0]) {
-          setAgent(options[0].value);
-        }
-      }
-    }
-  }, []);
+  const mapRecords = (records = []) =>
+    records.map((item) => ({
+      ...item,
+      id: item.id ?? item.futuretrxid ?? '',
+      amount: Number(item.amount) || 0,
+      fee: Number(item.fee) || 0,
+    }));
 
   const fetchList = useCallback(
     async ({ silent = false } = {}) => {
@@ -707,11 +532,9 @@ const AutomationDepositList = () => {
       try {
         const payloadDateFrom = dayjs(start).format('YYYY-MM-DD');
         const payloadDateTo = dayjs(end).format('YYYY-MM-DD');
-        const response = await depositAPI.getAutomationList(
+        const response = await withdrawAPI.getList(
           payloadDateFrom,
-          payloadDateTo,
-          status,
-          agent
+          payloadDateTo
         );
 
         if (response.success && response.data) {
@@ -725,23 +548,22 @@ const AutomationDepositList = () => {
           } else {
             showNotification({
               title: 'Error',
-              message:
-                payload.message || 'Failed to load automation deposit list',
+              message: payload.message || 'Failed to load withdraw list',
               color: 'red',
             });
           }
         } else {
           showNotification({
             title: 'Error',
-            message: response.error || 'Failed to load automation deposit list',
+            message: response.error || 'Failed to load withdraw list',
             color: 'red',
           });
         }
       } catch (error) {
-        console.error('Automation deposit list fetch error:', error);
+        console.error('Withdraw list fetch error:', error);
         showNotification({
           title: 'Error',
-          message: 'Unable to load automation deposit list',
+          message: 'Unable to load withdraw list',
           color: 'red',
         });
       } finally {
@@ -749,13 +571,12 @@ const AutomationDepositList = () => {
         setRefreshing(false);
       }
     },
-    [agent, dateRange, status]
+    [dateRange]
   );
 
   useEffect(() => {
-    fetchAgents();
     fetchList();
-  }, [fetchAgents, fetchList]);
+  }, [fetchList]);
 
   const toggleRow = (item) => {
     const key = makeKey(item);
@@ -779,12 +600,8 @@ const AutomationDepositList = () => {
     }
   };
 
-  const totalDebit = useMemo(
-    () => data.reduce((acc, curr) => acc + (Number(curr.DB) || 0), 0),
-    [data]
-  );
-  const totalCredit = useMemo(
-    () => data.reduce((acc, curr) => acc + (Number(curr.CR) || 0), 0),
+  const totalAmount = useMemo(
+    () => data.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0),
     [data]
   );
   const totalFee = useMemo(
@@ -816,13 +633,13 @@ const AutomationDepositList = () => {
                 size="xl"
                 fw={700}
               >
-                Automation Deposit List
+                Withdraw List
               </Text>
               <Text
                 size="sm"
                 c="dimmed"
               >
-                Automation deposit monitoring (styled like Data List)
+                Withdraw monitoring (styled like Data List)
               </Text>
             </Box>
 
@@ -894,24 +711,6 @@ const AutomationDepositList = () => {
                   </Popover.Dropdown>
                 </Popover>
 
-                <Select
-                  label="Status"
-                  data={statusOptions}
-                  value={status}
-                  onChange={(val) => setStatus(val || 'A')}
-                  style={{ minWidth: 180 }}
-                />
-
-                {/* <Select
-                  label="Agent"
-                  placeholder="Choose agent"
-                  data={agentOptions}
-                  value={agent}
-                  onChange={(val) => setAgent(val || '')}
-                  searchable
-                  style={{ minWidth: 240 }}
-                /> */}
-
                 <Button
                   onClick={() => fetchList()}
                   leftSection={<IconChecklist size={18} />}
@@ -925,7 +724,7 @@ const AutomationDepositList = () => {
               <Divider />
 
               <SimpleGrid
-                cols={3}
+                cols={2}
                 spacing="sm"
                 breakpoints={[{ maxWidth: 'sm', cols: 1 }]}
               >
@@ -943,9 +742,9 @@ const AutomationDepositList = () => {
                       size="sm"
                       c="dimmed"
                     >
-                      Total Debit
+                      Total Amount
                     </Text>
-                    <IconArrowDownCircle
+                    <IconArrowUpCircle
                       size={16}
                       color="blue"
                     />
@@ -954,35 +753,7 @@ const AutomationDepositList = () => {
                     fw={700}
                     size="lg"
                   >
-                    {formatNumber(totalDebit)}
-                  </Text>
-                </Card>
-                <Card
-                  withBorder
-                  padding="md"
-                  radius="md"
-                  shadow="xs"
-                >
-                  <Group
-                    justify="space-between"
-                    align="center"
-                  >
-                    <Text
-                      size="sm"
-                      c="dimmed"
-                    >
-                      Total Credit
-                    </Text>
-                    <IconArrowDownCircle
-                      size={16}
-                      color="teal"
-                    />
-                  </Group>
-                  <Text
-                    fw={700}
-                    size="lg"
-                  >
-                    {formatNumber(totalCredit)}
+                    {formatNumber(totalAmount)}
                   </Text>
                 </Card>
                 <Card
@@ -1171,4 +942,4 @@ const AutomationDepositList = () => {
   );
 };
 
-export default AutomationDepositList;
+export default WithdrawList;

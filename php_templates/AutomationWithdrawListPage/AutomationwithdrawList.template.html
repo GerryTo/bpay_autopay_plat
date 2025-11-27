@@ -1,0 +1,105 @@
+<div>
+    <div class="page-header-container box">{{pagelang.pagetitle}}</div>
+    <div class="page-body box">
+        <!-- <div class="row" style="margin-right:2px; margin-left: 2px; border-bottom:1px solid #ddd;">
+            <div class="col-xs-12 col-sm-6 col-md-8"
+                style="font-size: 18px; font-weight: bold; padding-top:5px; padding-bottom:10px;">Withdraw Automation
+                Status
+            </div>
+            <div class="col-xs-12 col-sm-6 col-md-4" style="padding-top:5px; ">
+                <table style="width:130px; float: right;">
+                    <tr style="justify-content: center;">
+                        <td>BKASH</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center; width:30px; color:crimson;">
+                            <label>OFF</label>
+                        </td>
+                        <td style="text-align: center; width:70px;">
+                            <label class="toggle-switch">
+                                <input type="checkbox" ng-model="isAutomationOnBkash"
+                                    ng-change="automationChangeBkash()">
+                                <span class="slider"></span>
+                            </label>
+                        </td>
+                        <td style="text-align: center; width:30px; color:limegreen;">
+                            <label>ON</label>
+                        </td>
+                    </tr>
+                </table>
+                <table style="width:130px; float: right; margin-right: 2%;">
+                    <tr style="justify-content: center;">
+                        <td>NAGAD</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center; width:30px; color:crimson;">
+                            <label>OFF</label>
+                        </td>
+                        <td style="text-align: center; width:70px;">
+                            <label class="toggle-switch">
+                                <input type="checkbox" ng-model="isAutomationOn" ng-change="automationChange()">
+                                <span class="slider"></span>
+                            </label>
+                        </td>
+                        <td style="text-align: center; width:30px; color:limegreen;">
+                            <label>ON</label>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div> -->
+        <div class="row" style="padding-top:10px;">
+            <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+                <p class="input-group">
+                    <input type="text" class="form-control input-sm" uib-datepicker-popup="{{datepickerConfig.format}}"
+                        ng-model="filter.fromdate" is-open="popup1.opened" datepicker-options="dateOptions"
+                        ng-required="true" close-text="Close" alt-input-formats="datepickerConfig.altInputFormats"
+                        placeholder="From date" />
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default btn-sm" ng-click="open1()">
+                            <i class="glyphicon glyphicon-calendar"></i>
+                        </button>
+                    </span>
+                </p>
+            </div>
+            <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+                <p class="input-group">
+                    <input type="text" class="form-control input-sm" uib-datepicker-popup="{{datepickerConfig.format}}"
+                        ng-model="filter.todate" is-open="popup2.opened" datepicker-options="dateOptions"
+                        ng-required="true" close-text="Close" alt-input-formats="datepickerConfig.altInputFormats"
+                        placeholder="To date" />
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default btn-sm" ng-click="open2()">
+                            <i class="glyphicon glyphicon-calendar"></i>
+                        </button>
+                    </span>
+                </p>
+            </div>
+            <div class="col-xs-12 col-sm-4 col-md-1 col-lg-1">
+                <div class="button-container">
+                    <button type="button" class="btn btn-default btn-sm" ng-click="refresh()"
+                        ng-disabled="gridIsLoading==true">{{globallang.refresh}}</button>
+                </div>
+            </div>
+            <div style="margin-top: 4px;" class="col-xs-12 col-sm-4 col-md-6 col-lg-6">
+                <input class="form-check-input" ng-model="filter.history" type="checkbox">
+                <label class="form-check-label">
+                    History
+                </label>
+            </div>
+            <div class="col-xs-10 col-sm-10 col-md-10 col-lg-10">
+                SERVICE AUTO ASSIGN: ACTIVE
+                <!-- <b
+                    ng-class="{'text-success': statusService === 'ACTIVE', 'text-danger': statusService === 'ERROR'}">{{statusService}}</b> -->
+            </div>
+        </div>
+        <div id="grid1" ui-grid="gridOptions" class="grid" ui-grid-resize-columns ui-grid-auto-resize ui-grid-pinning
+            ui-grid-exporter ng-style="{'height': getHeight()+'px'}">
+            <div class="grid-nodata-container" ng-show="gridOptions.data.length == 0 && !gridIsLoading">No Data
+                Available</div>
+            <div class="grid-loading-container" ng-show="gridIsLoading">
+                <img src="images/loading.gif" />
+            </div>
+        </div>
+    </div>
+</div>

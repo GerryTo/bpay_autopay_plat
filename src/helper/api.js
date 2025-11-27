@@ -2805,5 +2805,844 @@ export const merchantAPI = {
   },
 };
 
+// Withdraw Dashboard API calls
+export const withdrawAPI = {
+  /**
+   * Get withdraw dashboard summary (not encrypted)
+   */
+  getDashboardMetrics: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '{}'); // send non-empty payload to match PHP expectations
+
+      const response = await apiClient.post('/withdrawDashboard.php', formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Withdraw dashboard API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load withdraw dashboard',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get withdraw list (encrypted request)
+   * @param {String} datefrom - YYYY-MM-DD
+   * @param {String} dateto - YYYY-MM-DD
+   */
+  getList: async (datefrom, dateto) => {
+    try {
+      const payload = { datefrom: `${datefrom} 00:00:00`, dateto: `${dateto} 23:59:59` };
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/getWithdrawList.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            Object.entries(record || {}).reduce((acc, [key, value]) => {
+              if (typeof value === 'string') {
+                try {
+                  acc[key] = decodeURIComponent(value);
+                } catch (_) {
+                  acc[key] = value;
+                }
+              } else {
+                acc[key] = value;
+              }
+              return acc;
+            }, {})
+          );
+        }
+
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Withdraw list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load withdraw list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get automation withdraw list (encrypted request, plain response)
+   * @param {String} datefrom - YYYY-MM-DD
+   * @param {String} dateto - YYYY-MM-DD
+   * @param {Boolean} history - Include history data
+   */
+  getAutomationList: async (datefrom, dateto, history = false) => {
+    try {
+      const payload = {
+        datefrom: `${datefrom} 00:00:00`,
+        dateto: `${dateto} 23:59:59`,
+        history,
+      };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/getAutomationWithdrawList.php', formData);
+      const payloadData = response.data;
+
+      if (payloadData && payloadData.data) {
+        // In case backend returns encrypted data, decrypt it
+        const decrypted = CRYPTO.decrypt(payloadData.data);
+        return {
+          success: true,
+          data: decrypted,
+        };
+      }
+
+      if (payloadData && payloadData.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Automation withdraw list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load automation withdraw list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get automation withdraw transactions (appium withdraw transaction new)
+   * @param {String} datefrom - YYYY-MM-DD
+   * @param {String} dateto - YYYY-MM-DD
+   * @param {String} status - status filter
+   * @param {String} agent - account filter
+   */
+  getAutomationTransactions: async (datefrom, dateto, status, agent = '') => {
+    try {
+      const payload = {
+        datefrom: `${datefrom} 00:00:00`,
+        dateto: `${dateto} 23:59:59`,
+        status,
+        agent,
+      };
+
+      const response = await apiClient.post(
+        '/appiumWithdrawTransactionNew2.php',
+        { data: payload },
+        {
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+      const payloadData = response.data;
+
+      if (payloadData && payloadData.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Automation withdraw transaction API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load automation withdraw transactions',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get withdraw need-to-check list (encrypted)
+   * @param {Object} params
+   * @param {String} params.datefrom - YYYY-MM-DD
+   * @param {String} params.dateto - YYYY-MM-DD
+   * @param {String} params.hourfrom - HH:mm
+   * @param {String} params.hourto - HH:mm
+   * @param {Array<String>|String} params.merchant - merchant code(s) or 'all'
+   * @param {Boolean} params.history - include history
+   */
+  getWithdrawNtc: async ({
+    datefrom,
+    dateto,
+    hourfrom,
+    hourto,
+    merchant = 'all',
+    history = false,
+  }) => {
+    try {
+      const payload = {
+        datefrom: `${datefrom} 00:00:00`,
+        dateto: `${dateto} 23:59:59`,
+        hourfrom,
+        hourto,
+        merchant: Array.isArray(merchant) ? merchant.join(',') : merchant,
+        history,
+      };
+
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/getWithdrawNtc.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            Object.entries(record || {}).reduce((acc, [key, value]) => {
+              if (typeof value === 'string') {
+                try {
+                  acc[key] = decodeURIComponent(value);
+                } catch (_) {
+                  acc[key] = value;
+                }
+              } else {
+                acc[key] = value;
+              }
+              return acc;
+            }, {})
+          );
+        }
+
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Withdraw NTC list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load withdraw need-to-check list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get automation withdraw need-to-check list (encrypted)
+   * @param {Object} params
+   * @param {String} params.datefrom - YYYY-MM-DD
+   * @param {String} params.dateto - YYYY-MM-DD
+   * @param {String} params.hourfrom - HH:mm
+   * @param {String} params.hourto - HH:mm
+   * @param {Array<String>|String} params.merchant - merchant code(s) or 'all'
+   * @param {Boolean} params.history - include history
+   */
+  getAutomationWithdrawNtc: async ({
+    datefrom,
+    dateto,
+    hourfrom,
+    hourto,
+    merchant = 'all',
+    history = false,
+  }) => {
+    try {
+      const payload = {
+        datefrom: `${datefrom} 00:00:00`,
+        dateto: `${dateto} 23:59:59`,
+        hourfrom,
+        hourto,
+        merchant: Array.isArray(merchant) ? merchant.join(',') : merchant,
+        history,
+      };
+
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/automationGetWithdrawNtc.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            Object.entries(record || {}).reduce((acc, [key, value]) => {
+              if (typeof value === 'string') {
+                try {
+                  acc[key] = decodeURIComponent(value);
+                } catch (_) {
+                  acc[key] = value;
+                }
+              } else {
+                acc[key] = value;
+              }
+              return acc;
+            }, {})
+          );
+        }
+
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Automation withdraw NTC list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load automation withdraw need-to-check list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get withdraw check filter list (encrypted)
+   * @param {Object} params
+   * @param {String} params.datefrom - YYYY-MM-DD
+   * @param {String} params.dateto - YYYY-MM-DD
+   * @param {String} params.hourfrom - HH:mm
+   * @param {String} params.hourto - HH:mm
+   * @param {Array<String>|String} params.merchant - merchant code(s) or 'all'
+   * @param {Boolean} params.history - include history
+   * @param {String} params.filter - status filter
+   */
+  getWithdrawNtcFilter: async ({
+    datefrom,
+    dateto,
+    hourfrom,
+    hourto,
+    merchant = 'all',
+    history = false,
+    filter = 'pending',
+    bankCode = '',
+  }) => {
+    try {
+      // PHP expects merchant as array of objects with id, or string 'all'
+      const merchantPayload =
+        merchant === 'all'
+          ? 'all'
+          : (Array.isArray(merchant) ? merchant : [merchant]).map((m) =>
+              typeof m === 'string' ? { id: m } : m
+            );
+
+      const payload = {
+        datefrom: `${datefrom} 00:00:00`,
+        dateto: `${dateto} 23:59:59`,
+        hourfrom,
+        hourto,
+        merchant: merchantPayload,
+        history,
+        filter,
+        bankCode,
+      };
+
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/withdrawNtcFilter.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            Object.entries(record || {}).reduce((acc, [key, value]) => {
+              if (typeof value === 'string') {
+                try {
+                  acc[key] = decodeURIComponent(value);
+                } catch (_) {
+                  acc[key] = value;
+                }
+              } else {
+                acc[key] = value;
+              }
+              return acc;
+            }, {})
+          );
+        }
+
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Withdraw NTC filter list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load withdraw check filter list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get allowed withdraw banks (encrypted)
+   */
+  getWithdrawBanks: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '');
+
+      const response = await apiClient.post('/getWithdrawBank.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            Object.entries(record || {}).reduce((acc, [key, value]) => {
+              if (typeof value === 'string') {
+                try {
+                  acc[key] = decodeURIComponent(value);
+                } catch (_) {
+                  acc[key] = value;
+                }
+              } else {
+                acc[key] = value;
+              }
+              return acc;
+            }, {})
+          );
+        }
+
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Withdraw bank list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load withdraw banks',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Set withdraw bank status (encrypted)
+   * @param {Number|String} id - bank record id
+   * @param {String} status - 'Y' or 'N'
+   */
+  setWithdrawBankStatus: async (id, status) => {
+    try {
+      const jsonData = CRYPTO.encrypt({ id, status });
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/setWithdrawBankStatus.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Withdraw bank status API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to update withdraw bank status',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get withdraw assignment list (encrypted)
+   * @param {String} datefrom - YYYY-MM-DD
+   * @param {String} dateto - YYYY-MM-DD
+   */
+  getWithdrawAssignments: async (datefrom, dateto) => {
+    try {
+      const payload = {
+        datefrom: `${datefrom} 00:00:00`,
+        dateto: `${dateto} 23:59:59`,
+      };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/withdrawAssignment_list.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            Object.entries(record || {}).reduce((acc, [key, value]) => {
+              if (typeof value === 'string') {
+                try {
+                  acc[key] = decodeURIComponent(value);
+                } catch (_) {
+                  acc[key] = value;
+                }
+              } else {
+                acc[key] = value;
+              }
+              return acc;
+            }, {})
+          );
+        }
+
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Withdraw assignment list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load withdraw assignments',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get assignment pending list (encrypted)
+   * @param {String} datefrom - YYYY-MM-DD
+   * @param {String} dateto - YYYY-MM-DD
+   */
+  getWithdrawAssignmentPending: async (datefrom, dateto) => {
+    try {
+      const payload = {
+        datefrom: `${datefrom} 00:00:00`,
+        dateto: `${dateto} 23:59:59`,
+      };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/assignmentPending_list.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            Object.entries(record || {}).reduce((acc, [key, value]) => {
+              if (typeof value === 'string') {
+                try {
+                  acc[key] = decodeURIComponent(value);
+                } catch (_) {
+                  acc[key] = value;
+                }
+              } else {
+                acc[key] = value;
+              }
+              return acc;
+            }, {})
+          );
+        }
+
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Withdraw assignment pending list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load assignment pending list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get withdraw queue (encrypted)
+   */
+  getWithdrawQueue: async () => {
+    try {
+      const jsonData = CRYPTO.encrypt({ data: '' });
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/getWithdrawQueue.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            Object.entries(record || {}).reduce((acc, [key, value]) => {
+              if (typeof value === 'string') {
+                try {
+                  acc[key] = decodeURIComponent(value);
+                } catch (_) {
+                  acc[key] = value;
+                }
+              } else {
+                acc[key] = value;
+              }
+              return acc;
+            }, {})
+          );
+        }
+
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Withdraw queue list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load withdraw queue',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Assign/reassign withdraw (encrypted)
+   * @param {Object} params - { id, accountNo, bankCode, accountName, username }
+   */
+  assignWithdraw: async ({ id, accountNo, bankCode, accountName, username }) => {
+    try {
+      const jsonData = CRYPTO.encrypt({ id, accountNo, bankCode, accountName, username });
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/withdrawAssignment_assign.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Withdraw assign API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to assign withdraw',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get merchant withdrawal transactions (encrypted)
+   * @param {String} datefrom - YYYY-MM-DD
+   * @param {String} dateto - YYYY-MM-DD
+   * @param {String} transactiontype - 'W' for withdraw
+   * @param {String} statusValue - optional status filter
+   */
+  getMerchantWithdrawalTransactions: async (
+    datefrom,
+    dateto,
+    transactiontype = 'W',
+    statusValue = ''
+  ) => {
+    try {
+      const payload = { datefrom: `${datefrom} 00:00:00`, dateto: `${dateto} 23:59:59`, transactiontype };
+      if (statusValue) {
+        payload.statusValue = statusValue;
+      }
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/getTransactionByMerchant.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            Object.entries(record || {}).reduce((acc, [key, value]) => {
+              if (typeof value === 'string') {
+                try {
+                  acc[key] = decodeURIComponent(value);
+                } catch (_) {
+                  acc[key] = value;
+                }
+              } else {
+                acc[key] = value;
+              }
+              return acc;
+            }, {})
+          );
+        }
+
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Merchant withdrawal transactions API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load merchant withdrawal transactions',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get merchant balance (encrypted)
+   * @param {String} datefrom - YYYY-MM-DD
+   */
+  getMerchantBalance: async (datefrom) => {
+    try {
+      const payload = { datefrom: `${datefrom} 00:00:00` };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/getMasterMerchantBalance.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Merchant balance API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load merchant balance',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Mark withdraw as success with upload/assignment (not encrypted)
+   * @param {Object} params - { id, account, bankcode, receipt }
+   */
+  setWithdrawSuccessWithReceipt: async ({ id, account, bankcode, receipt }) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data[id]', id);
+      formData.append('data[account]', account);
+      formData.append('data[bankcode]', bankcode);
+      formData.append('data[receipt]', receipt || '');
+
+      const response = await apiClient.post(
+        '/changeStatusSuccessTransactionAccountByCompanyEncrypt.php',
+        formData
+      );
+
+      // this endpoint is NOT encrypted in legacy bulk flow
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Withdraw success with receipt API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to update withdraw status',
+        details: error.response?.data || null,
+      };
+    }
+  },
+};
+
 // Export default API client for custom calls
 export default apiClient;

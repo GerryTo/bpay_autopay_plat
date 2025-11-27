@@ -70,6 +70,20 @@ import DepositQueueToday from './layouts/Deposit/DepositQueueToday';
 import DepositQueueTodayBDT from './layouts/Deposit/DepositQueueTodayBDT';
 import DepositQueue from './layouts/Deposit/DepositQueue';
 import DepositQueueAlert from './layouts/Deposit/DepositQueueAlert';
+import WithdrawDashboard from './layouts/Withdrawal/WithdrawDashboard';
+import WithdrawList from './layouts/Withdrawal/WithdrawList';
+import AutomationWithdrawList from './layouts/Withdrawal/AutomationWithdrawList';
+import AppiumWithdrawList from './layouts/Withdrawal/AppiumWithdrawList';
+import WithdrawCheck from './layouts/Withdrawal/WithdrawCheck';
+import WithdrawCheckAutomation from './layouts/Withdrawal/WithdrawCheckAutomation';
+import WithdrawCheckFilter from './layouts/Withdrawal/WithdrawCheckFilter';
+import WithdrawCheckFilterSelected from './layouts/Withdrawal/WithdrawCheckFilterSelected';
+import WithdrawAllowedBank from './layouts/Withdrawal/WithdrawAllowedBank';
+import MerchantTransactionWithdraw from './layouts/Withdrawal/MerchantTransactionWithdraw';
+import WithdrawAssignment from './layouts/Withdrawal/WithdrawAssignment';
+import WithdrawAssignmentBulk from './layouts/Withdrawal/WithdrawAssignmentBulk';
+import WithdrawAssignmentPending from './layouts/Withdrawal/WithdrawAssignmentPending';
+import WithdrawQueue from './layouts/Withdrawal/WithdrawQueue';
 
 export const mockdataRoutes = [
   {
@@ -231,25 +245,25 @@ export const mockdataRoutes = [
             label: 'Withdraw Check',
             icon: <IconArrowUpCircle />,
             link: '/withdraw-ntc',
-            element: '',
+            element: <WithdrawCheck />,
           },
           {
             label: 'Withdraw Check Filter',
             icon: <IconArrowUpCircle />,
             link: '/withdraw-ntc-filter',
-            element: '',
+            element: <WithdrawCheckFilter />,
           },
           {
             label: 'Withdraw Check Automation',
             icon: <IconRobot />,
             link: '/withdraw-ntc-automation',
-            element: '',
+            element: <WithdrawCheckAutomation />,
           },
           {
             label: 'Withdraw Check Filter Bulk',
             icon: <IconArrowUpCircle />,
             link: '/withdraw-ntc-filter-selected',
-            element: '',
+            element: <WithdrawCheckFilterSelected />,
           },
           {
             label: 'Transaction Merchant Hour',
@@ -261,7 +275,7 @@ export const mockdataRoutes = [
             label: 'ALL Automation Withdraw List',
             icon: <IconRobot />,
             link: '/Automation-withdraw-list',
-            element: '',
+            element: <AutomationWithdrawList />,
           },
         ],
       },
@@ -670,85 +684,85 @@ export const mockdataRoutes = [
         label: 'Withdraw Dashboard Automation',
         icon: <IconLayoutDashboard />,
         link: '/withdraw-dashboard',
-        element: '',
+        element: <WithdrawDashboard />,
       },
       {
         label: 'Withdraw List',
         icon: <IconArrowUpCircle />,
         link: '/withdraw-list',
-        element: '',
+        element: <WithdrawList />,
       },
       {
         label: 'ALL Automation Withdraw List',
         icon: <IconRobot />,
         link: '/Automation-withdraw-list',
-        element: '',
+        element: <AutomationWithdrawList />,
       },
       {
         label: 'Automation Withdraw List',
         icon: <IconRobot />,
         link: '/appium-withdraw-transaction-new',
-        element: '',
+        element: <AppiumWithdrawList />,
       },
       {
         label: 'Withdraw Check',
         icon: <IconArrowUpCircle />,
         link: '/withdraw-ntc',
-        element: '',
+        element: <WithdrawCheck />,
       },
       {
         label: 'Withdraw Check Automation',
         icon: <IconRobot />,
         link: '/withdraw-ntc-automation',
-        element: '',
+        element: <WithdrawCheckAutomation />,
       },
       {
         label: 'Withdraw Check Filter',
         icon: <IconArrowUpCircle />,
         link: '/withdraw-ntc-filter',
-        element: '',
+        element: <WithdrawCheckFilter />,
       },
       {
         label: 'Withdraw Check Filter Bulk',
         icon: <IconArrowUpCircle />,
         link: '/withdraw-ntc-filter-selected',
-        element: '',
+        element: <WithdrawCheckFilterSelected />,
       },
       {
         label: 'Setting',
         icon: <IconSettings />,
         link: '/withdraw-bank',
-        element: '',
+        element: <WithdrawAllowedBank />,
       },
       {
         label: 'Merchant Transaction Withdrawal',
         icon: <IconShoppingCart />,
         link: '/transaction-merchant-withdraw',
-        element: '',
+        element: <MerchantTransactionWithdraw />,
       },
       {
         label: 'Assignment',
         icon: <IconUserShield />,
         link: '/withdraw-assignment',
-        element: '',
+        element: <WithdrawAssignment />,
       },
       {
         label: 'Assignment Bulk',
         icon: <IconUserShield />,
         link: '/withdraw-ntc-assign-selected',
-        element: '',
+        element: <WithdrawAssignmentBulk />,
       },
       {
         label: 'Assignment Pending',
         icon: <IconUserShield />,
         link: '/assignment-pending',
-        element: '',
+        element: <WithdrawAssignmentPending />,
       },
       {
         label: 'Withdraw Queue',
         icon: <IconArrowUpCircle />,
         link: '/withdraw-queue',
-        element: '',
+        element: <WithdrawQueue />,
       },
     ],
   },

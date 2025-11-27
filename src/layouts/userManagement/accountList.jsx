@@ -16,6 +16,7 @@ import {
   Card,
   Pagination,
   Select,
+  Divider,
 } from '@mantine/core';
 import {
   IconPlus,
@@ -27,6 +28,8 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { showNotification } from '../../helper/showNotification';
 import { userAPI } from '../../helper/api';
+import ColumnActionMenu from '../../components/ColumnActionMenu';
+import { useTableControls } from '../../hooks/useTableControls';
 
 const AccountList = () => {
   const navigate = useNavigate();
@@ -48,67 +51,293 @@ const AccountList = () => {
     issetmerchant: '',
   });
 
-  // Filter data based on column filters
-  const filteredData = data.filter((item) => {
-    // Check each column filter
-    const loginMatch =
-      !columnFilters.login ||
-      item.login?.toLowerCase().includes(columnFilters.login.toLowerCase());
+  const columns = useMemo(
+    () => [
+      {
+        key: 'login',
+        label: 'Login',
+        minWidth: 120,
+        render: (item) => (
+          <Text fw={600} size="sm" c="blue">
+            {item.login}
+          </Text>
+        ),
+        filter: (
+          <TextInput
+            placeholder="Filter login..."
+            size="xs"
+            value={columnFilters.login}
+            onChange={(e) => handleFilterChange('login', e.currentTarget.value)}
+          />
+        ),
+      },
+      {
+        key: 'active',
+        label: 'Status',
+        minWidth: 120,
+        render: (item) => (
+          <Badge color={item.active === 'Y' ? 'green' : 'red'} variant="light">
+            {item.active === 'Y' ? 'Active' : 'Inactive'}
+          </Badge>
+        ),
+        filter: (
+          <Select
+            placeholder="All"
+            size="xs"
+            value={columnFilters.status}
+            onChange={(value) => handleFilterChange('status', value || '')}
+            data={[
+              { value: '', label: 'All' },
+              { value: 'Y', label: 'Active' },
+              { value: 'N', label: 'Inactive' },
+            ]}
+            clearable
+          />
+        ),
+      },
+      {
+        key: 'type',
+        label: 'Type',
+        minWidth: 100,
+        render: (item) => (
+          <Badge color="blue" variant="outline">
+            {item.type}
+          </Badge>
+        ),
+        filter: (
+          <Select
+            placeholder="All"
+            size="xs"
+            value={columnFilters.type}
+            onChange={(value) => handleFilterChange('type', value || '')}
+            data={[
+              { value: '', label: 'All' },
+              { value: 'S', label: 'Super Admin' },
+              { value: 'A', label: 'Admin' },
+              { value: 'M', label: 'Merchant' },
+              { value: 'R', label: 'Reseller' },
+            ]}
+            clearable
+          />
+        ),
+      },
+      {
+        key: 'merchantcode',
+        label: 'Merchant',
+        minWidth: 140,
+        render: (item) => <Text size="sm">{item.merchantcode}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter merchant..."
+            size="xs"
+            value={columnFilters.merchantcode}
+            onChange={(e) =>
+              handleFilterChange('merchantcode', e.currentTarget.value)
+            }
+          />
+        ),
+      },
+      {
+        key: 'phoneNumber',
+        label: 'Phone Number',
+        minWidth: 140,
+        render: (item) => <Text size="sm">{item.phoneNumber}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter phone..."
+            size="xs"
+            value={columnFilters.phoneNumber}
+            onChange={(e) =>
+              handleFilterChange('phoneNumber', e.currentTarget.value)
+            }
+          />
+        ),
+      },
+      {
+        key: 'agentName',
+        label: 'Agent Name',
+        minWidth: 160,
+        render: (item) => <Text size="sm">{item.agentName}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter agent..."
+            size="xs"
+            value={columnFilters.agentName}
+            onChange={(e) =>
+              handleFilterChange('agentName', e.currentTarget.value)
+            }
+          />
+        ),
+      },
+      {
+        key: 'alias',
+        label: 'Alias',
+        minWidth: 140,
+        render: (item) => <Text size="sm">{item.alias}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter alias..."
+            size="xs"
+            value={columnFilters.alias}
+            onChange={(e) => handleFilterChange('alias', e.currentTarget.value)}
+          />
+        ),
+      },
+      {
+        key: 'isdm',
+        label: 'Direct Merchant',
+        minWidth: 130,
+        render: (item) => (
+          <Badge
+            color={item.isdm === 'Y' ? 'teal' : 'gray'}
+            size="sm"
+            variant="dot"
+          >
+            {item.isdm === 'Y' ? 'Yes' : 'No'}
+          </Badge>
+        ),
+        filter: (
+          <Select
+            placeholder="All"
+            size="xs"
+            value={columnFilters.isdm}
+            onChange={(value) => handleFilterChange('isdm', value || '')}
+            data={[
+              { value: '', label: 'All' },
+              { value: 'Y', label: 'Yes' },
+              { value: 'N', label: 'No' },
+            ]}
+            clearable
+          />
+        ),
+      },
+      {
+        key: 'issetmerchant',
+        label: 'Set Merchant',
+        minWidth: 130,
+        render: (item) => (
+          <Badge
+            color={item.issetmerchant === 'Y' ? 'teal' : 'gray'}
+            size="sm"
+            variant="dot"
+          >
+            {item.issetmerchant === 'Y' ? 'Yes' : 'No'}
+          </Badge>
+        ),
+        filter: (
+          <Select
+            placeholder="All"
+            size="xs"
+            value={columnFilters.issetmerchant}
+            onChange={(value) =>
+              handleFilterChange('issetmerchant', value || '')
+            }
+            data={[
+              { value: '', label: 'All' },
+              { value: 'Y', label: 'Yes' },
+              { value: 'N', label: 'No' },
+            ]}
+            clearable
+          />
+        ),
+      },
+      {
+        key: 'action',
+        label: 'Action',
+        minWidth: 150,
+        render: (item) => (
+          <Group gap="xs" wrap="nowrap">
+            <Tooltip label="Edit User">
+              <ActionIcon
+                variant="light"
+                color="blue"
+                size="md"
+                onClick={() => handleEdit(item)}
+              >
+                <IconEdit size={18} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="Delete User">
+              <ActionIcon
+                variant="light"
+                color="red"
+                size="md"
+                onClick={() => handleDelete(item)}
+              >
+                <IconTrash size={18} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+        ),
+      },
+    ],
+    [columnFilters]
+  );
 
-    const statusMatch =
-      !columnFilters.status || item.active === columnFilters.status;
-
-    const typeMatch = !columnFilters.type || item.type === columnFilters.type;
-
-    const merchantMatch =
-      !columnFilters.merchantcode ||
-      item.merchantcode
-        ?.toLowerCase()
-        .includes(columnFilters.merchantcode.toLowerCase());
-
-    const phoneMatch =
-      !columnFilters.phoneNumber ||
-      item.phoneNumber
-        ?.toLowerCase()
-        .includes(columnFilters.phoneNumber.toLowerCase());
-
-    const agentMatch =
-      !columnFilters.agentName ||
-      item.agentName
-        ?.toLowerCase()
-        .includes(columnFilters.agentName.toLowerCase());
-
-    const aliasMatch =
-      !columnFilters.alias ||
-      item.alias?.toLowerCase().includes(columnFilters.alias.toLowerCase());
-
-    const dmMatch = !columnFilters.isdm || item.isdm === columnFilters.isdm;
-
-    const setMerchantMatch =
-      !columnFilters.issetmerchant ||
-      item.issetmerchant === columnFilters.issetmerchant;
-
-    // All filters must match
-    return (
-      loginMatch &&
-      statusMatch &&
-      typeMatch &&
-      merchantMatch &&
-      phoneMatch &&
-      agentMatch &&
-      aliasMatch &&
-      dmMatch &&
-      setMerchantMatch
-    );
+  const {
+    visibleColumns,
+    sortConfig,
+    handleHideColumn,
+    handleSort,
+    handleResetAll,
+  } = useTableControls(columns, {
+    onResetFilters: () =>
+      setColumnFilters({
+        login: '',
+        status: '',
+        type: '',
+        merchantcode: '',
+        phoneNumber: '',
+        agentName: '',
+        alias: '',
+        isdm: '',
+        issetmerchant: '',
+      }),
   });
 
+  const includesValue = (field, value) => {
+    if (!value) return true;
+    return (field ?? '').toString().toLowerCase().includes(value.toLowerCase());
+  };
+
+  const filteredData = useMemo(
+    () =>
+      data.filter((item) => {
+        return (
+          includesValue(item.login, columnFilters.login) &&
+          (columnFilters.status ? item.active === columnFilters.status : true) &&
+          (columnFilters.type ? item.type === columnFilters.type : true) &&
+          includesValue(item.merchantcode, columnFilters.merchantcode) &&
+          includesValue(item.phoneNumber, columnFilters.phoneNumber) &&
+          includesValue(item.agentName, columnFilters.agentName) &&
+          includesValue(item.alias, columnFilters.alias) &&
+          (columnFilters.isdm ? item.isdm === columnFilters.isdm : true) &&
+          (columnFilters.issetmerchant
+            ? item.issetmerchant === columnFilters.issetmerchant
+            : true)
+        );
+      }),
+    [data, columnFilters]
+  );
+
+  const sortedData = useMemo(() => {
+    if (!sortConfig) return filteredData;
+    const { key, direction } = sortConfig;
+    const dir = direction === 'desc' ? -1 : 1;
+    return [...filteredData].sort((a, b) => {
+      const av = a[key] ?? '';
+      const bv = b[key] ?? '';
+      if (av === bv) return 0;
+      return av > bv ? dir : -dir;
+    });
+  }, [filteredData, sortConfig]);
+
   // Pagination calculations
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedData = filteredData.slice(startIndex, endIndex);
+  const paginatedData = sortedData.slice(startIndex, endIndex);
 
-  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [columnFilters]);
@@ -461,155 +690,40 @@ const AccountList = () => {
                 }}
               >
                 <Table.Thead>
-                  {/* Header Row */}
                   <Table.Tr>
-                    <Table.Th style={{ minWidth: 120 }}>Login</Table.Th>
-                    <Table.Th style={{ minWidth: 120 }}>Status</Table.Th>
-                    <Table.Th style={{ minWidth: 80 }}>Type</Table.Th>
-                    <Table.Th style={{ minWidth: 140 }}>Merchant</Table.Th>
-                    <Table.Th style={{ minWidth: 140 }}>Phone Number</Table.Th>
-                    <Table.Th style={{ minWidth: 160 }}>Agent Name</Table.Th>
-                    <Table.Th style={{ minWidth: 140 }}>Alias</Table.Th>
-                    <Table.Th style={{ minWidth: 140 }}>
-                      Direct Merchant
-                    </Table.Th>
-                    <Table.Th style={{ minWidth: 130 }}>Set Merchant</Table.Th>
-                    <Table.Th style={{ minWidth: 120 }}>Action</Table.Th>
-                  </Table.Tr>
-
-                  {/* Filter Row */}
-                  <Table.Tr style={{ backgroundColor: '#e7f5ff' }}>
-                    <Table.Th style={{ padding: '8px' }}>
-                      <TextInput
-                        placeholder="Filter login..."
-                        size="xs"
-                        value={columnFilters.login}
-                        onChange={(e) =>
-                          handleFilterChange('login', e.currentTarget.value)
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th style={{ padding: '8px' }}>
-                      <Select
-                        placeholder="All"
-                        size="xs"
-                        value={columnFilters.status}
-                        onChange={(value) =>
-                          handleFilterChange('status', value || '')
-                        }
-                        data={[
-                          { value: '', label: 'All' },
-                          { value: 'Y', label: 'Active' },
-                          { value: 'N', label: 'Inactive' },
-                        ]}
-                        clearable
-                      />
-                    </Table.Th>
-                    <Table.Th style={{ padding: '8px' }}>
-                      <Select
-                        placeholder="All"
-                        size="xs"
-                        value={columnFilters.type}
-                        onChange={(value) =>
-                          handleFilterChange('type', value || '')
-                        }
-                        data={[
-                          { value: '', label: 'All' },
-                          { value: 'S', label: 'Super Admin' },
-                          { value: 'A', label: 'Admin' },
-                          { value: 'M', label: 'Merchant' },
-                          { value: 'R', label: 'Reseller' },
-                          { value: 'G', label: 'Agent' },
-                        ]}
-                        clearable
-                      />
-                    </Table.Th>
-                    <Table.Th style={{ padding: '8px' }}>
-                      <TextInput
-                        placeholder="Filter merchant..."
-                        size="xs"
-                        value={columnFilters.merchantcode}
-                        onChange={(e) =>
-                          handleFilterChange(
-                            'merchantcode',
-                            e.currentTarget.value
-                          )
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th style={{ padding: '8px' }}>
-                      <TextInput
-                        placeholder="Filter phone..."
-                        size="xs"
-                        value={columnFilters.phoneNumber}
-                        onChange={(e) =>
-                          handleFilterChange(
-                            'phoneNumber',
-                            e.currentTarget.value
-                          )
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th style={{ padding: '8px' }}>
-                      <TextInput
-                        placeholder="Filter agent..."
-                        size="xs"
-                        value={columnFilters.agentName}
-                        onChange={(e) =>
-                          handleFilterChange('agentName', e.currentTarget.value)
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th style={{ padding: '8px' }}>
-                      <TextInput
-                        placeholder="Filter alias..."
-                        size="xs"
-                        value={columnFilters.alias}
-                        onChange={(e) =>
-                          handleFilterChange('alias', e.currentTarget.value)
-                        }
-                      />
-                    </Table.Th>
-                    <Table.Th style={{ padding: '8px' }}>
-                      <Select
-                        placeholder="All"
-                        size="xs"
-                        value={columnFilters.isdm}
-                        onChange={(value) =>
-                          handleFilterChange('isdm', value || '')
-                        }
-                        data={[
-                          { value: '', label: 'All' },
-                          { value: 'Y', label: 'Yes' },
-                          { value: 'N', label: 'No' },
-                        ]}
-                        clearable
-                      />
-                    </Table.Th>
-                    <Table.Th style={{ padding: '8px' }}>
-                      <Select
-                        placeholder="All"
-                        size="xs"
-                        value={columnFilters.issetmerchant}
-                        onChange={(value) =>
-                          handleFilterChange('issetmerchant', value || '')
-                        }
-                        data={[
-                          { value: '', label: 'All' },
-                          { value: 'Y', label: 'Yes' },
-                          { value: 'N', label: 'No' },
-                        ]}
-                        clearable
-                      />
-                    </Table.Th>
-                    <Table.Th style={{ padding: '8px' }}>
-                      {/* No filter for Action column */}
-                    </Table.Th>
+                    {visibleColumns.map((col) => (
+                      <Table.Th
+                        key={col.key}
+                        style={{ minWidth: col.minWidth || 120 }}
+                      >
+                        <Group gap={6} justify="space-between" align="center">
+                          <Text size="sm" fw={600}>
+                            {col.label}
+                          </Text>
+                          <ColumnActionMenu
+                            columnKey={col.key}
+                            sortConfig={sortConfig}
+                            onSort={handleSort}
+                            onHide={handleHideColumn}
+                          />
+                        </Group>
+                        <Divider my={4} />
+                        {col.filter || null}
+                      </Table.Th>
+                    ))}
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
-                  {rows.length > 0 ? (
-                    rows
+                  {paginatedData.length > 0 ? (
+                    paginatedData.map((item, index) => (
+                      <Table.Tr key={index}>
+                        {visibleColumns.map((col) => (
+                          <Table.Td key={col.key}>
+                            {col.render ? col.render(item) : item[col.key]}
+                          </Table.Td>
+                        ))}
+                      </Table.Tr>
+                    ))
                   ) : (
                     <Table.Tr>
                       <Table.Td colSpan={10}>

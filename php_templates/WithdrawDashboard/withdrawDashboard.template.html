@@ -1,0 +1,282 @@
+<div>
+    <div class="page-header-container box">Withdraw Dashboard</div>
+    <div class="page-body box">
+    <div class="row" style="margin-right:2px; margin-left: 2px; border-bottom:1px solid #ddd;">
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Auto Assign Status</div>
+                <div><span>ACTIVE</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Agent HB Disconnected(From Live)</div>
+                <div class="dashboard-panel-value" ng-style="{
+            'display': 'flex',
+            'justify-content': 'center',
+        }"><span>{{agentHbDisconnect}}</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Last Complete Withdraw Time</div>
+                <div class="dashboard-panel-value" ng-style="{
+            'display': 'flex',
+            'justify-content': 'center',
+        }"><span>{{lastWD}}</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Average NAGAD Withdraw Time</div>
+                <div class="dashboard-panel-value" ng-style="{
+            'display': 'flex',
+            'justify-content': 'center',
+        }"><span> {{avg_minutes}}m {{avg_seconds}} s</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Average BKASH Withdraw Time</div>
+                <div class="dashboard-panel-value" ng-style="{
+            'display': 'flex',
+            'justify-content': 'center',
+        }"><span> {{avg_minutesBkash}}m {{avg_secondsBkash}} s</span></div>
+            </div>
+        </div>
+    </div>
+        <div class="row" style="margin-right:2px; margin-left: 2px; border-bottom:1px solid #ddd;">
+            <div class="col-md-2">
+                <div class="box dashboard-panel">
+                    <div class="dashboard-panel-title">WD Completed</div>
+                    <div class="dashboard-panel-value" ng-style="{
+                'display': 'flex',
+                'justify-content': 'center',
+            }"><span>{{withdrawCompleted}}</span></div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="box dashboard-panel">
+                    <div class="dashboard-panel-title">WD Pending</div>
+                    <div class="dashboard-panel-value" ng-style="{
+                        'display': 'flex',
+                        'justify-content': 'center',
+                    }"><span>{{withdrawPending}}</span></div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="box dashboard-panel">
+                    <div class="dashboard-panel-title">WD Proccessing</div>
+                    <div class="dashboard-panel-value" ng-style="{
+                        'display': 'flex',
+                        'justify-content': 'center',
+                    }"><span>{{withdrawTBP}}</span></div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="box dashboard-panel">
+                    <div class="dashboard-panel-title"><button
+                    ng-click="pending()"
+                    ng-style="{
+                        'background': 'none',
+                        'border': 'none',
+                            'padding': '0',
+                            'margin': '0',
+                            'font': 'inherit',
+                            'color': 'inherit',
+                            'cursor': 'pointer',
+                            'outline': 'inherit',
+                            'text-decoration': 'none'
+                        }">				
+                        Withdraw Need Attention</button></div>
+                    <div class="dashboard-panel-value" ng-style="{
+                'display': 'flex',
+                'justify-content': 'center',
+            }"><span>{{agentFailedWithdraw2}}</span></div>
+                </div>
+            </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Withdraw Pending More than 5 Minutes</div>
+                <div class="dashboard-panel-value" ng-style="{
+            'display': 'flex',
+            'justify-content': 'center',
+        }"><span>{{pending5Minute}}</span></div>
+            </div>
+        </div>
+        <!-- <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Withdraw Failed 1st Attempt</div>
+                <div class="dashboard-panel-value" ng-style="{
+            'display': 'flex',
+            'justify-content': 'center',
+        }"><span>{{withdrawAttempt1}}</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Withdraw Failed 2nd Attempt</div>
+                <div class="dashboard-panel-value" ng-style="{
+            'display': 'flex',
+            'justify-content': 'center',
+        }"><span>{{withdrawAttempt2}}</span></div>
+            </div>
+        </div> -->
+        </div>
+    <div class="row" style="margin-right:2px; margin-left: 2px; border-bottom:1px solid #ddd;">
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Bkash WD Proccessing</div>
+                <div class="dashboard-panel-value" ng-style="{
+            'display': 'flex',
+            'justify-content': 'center',
+        }"><span>{{bkashWithdrawTBP}}</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Bkash Agent Ready</div>
+                <div class="dashboard-panel-value" ng-style="{
+            'display': 'flex',
+            'justify-content': 'center',
+        }"><span>{{bkashAgentAFW}}</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Bkash Agent Available</div>
+                <div class="dashboard-panel-value" ng-style="{
+            'display': 'flex',
+            'justify-content': 'center',
+        }"><span>{{bkashA}}</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Bkash Agent Low Balance</div>
+                <div class="dashboard-panel-value" ng-style="{
+            'display': 'flex',
+            'justify-content': 'center',
+        }"><span>{{bkashLowLimit}}</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title"><button 
+                    ng-click="pending1()" 
+                    ng-style="{
+                        'background': 'none',
+                        'border': 'none',
+                        'padding': '0',
+                        'margin': '0',
+                        'font': 'inherit',
+                        'color': 'inherit',
+                        'cursor': 'pointer',
+                        'outline': 'inherit',
+                        'text-decoration': 'none'
+                    }">
+                    Bkash WD Pending
+                </button></div>
+                <div class="dashboard-panel-value" ng-style="{
+            'display': 'flex',
+            'justify-content': 'center',
+        }"><span>{{bkashWithdrawPending}}</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Bkash WD Assigned</div>
+                <div class="dashboard-panel-value" ng-style="{
+            'display': 'flex',
+            'justify-content': 'center',
+        }"><span>{{bkashWithdrawAssigned}}</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Bkash WD Completed</div>
+                <div class="dashboard-panel-value" ng-style="{
+            'display': 'flex',
+            'justify-content': 'center',
+        }"><span>{{bkashWithdrawNA}}</span></div>
+            </div>
+        </div>
+        </div>
+    <div class="row" style="margin-right:2px; margin-left: 2px; border-bottom:1px solid #ddd;">
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Nagad WD Proccessing</div>
+                <div class="dashboard-panel-value" ng-style="{
+            'display': 'flex',
+            'justify-content': 'center',
+        }"><span>{{nagadWithdrawTBP}}</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Nagad Agent Ready</div>
+                <div class="dashboard-panel-value" ng-style="{
+            'display': 'flex',
+            'justify-content': 'center',
+        }"><span>{{nagadAgentAFW}}</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Nagad Agent Available</div>
+                <div class="dashboard-panel-value" ng-style="{
+            'display': 'flex',
+            'justify-content': 'center',
+        }"><span>{{nagadA}}</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Nagad Agent Low Balance</div>
+                <div class="dashboard-panel-value" ng-style="{
+            'display': 'flex',
+            'justify-content': 'center',
+        }"><span>{{nagadLowLimit}}</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel" >
+                <div class="dashboard-panel-title"><button ng-click="pending1()" ng-style="{
+                    'background': 'none',
+                    'border': 'none',
+                    'padding': '0',
+                    'margin': '0',
+                    'font': 'inherit',
+                    'color': 'inherit',
+                    'cursor': 'pointer',
+                    'outline': 'inherit',
+                    'text-decoration': 'none'
+                }">Nagad WD Pending</button></div>
+                <div class="dashboard-panel-value" ng-style="{
+            'display': 'flex',
+            'justify-content': 'center',
+        }"><span>{{nagadWithdrawPending}}</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Nagad WD Assigned</div>
+                <div class="dashboard-panel-value" ng-style="{
+            'display': 'flex',
+            'justify-content': 'center',
+        }"><span>{{nagadWithdrawAssigned}}</span></div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="box dashboard-panel">
+                <div class="dashboard-panel-title">Nagad WD Completed</div>
+                <div class="dashboard-panel-value" ng-style="{
+            'display': 'flex',
+            'justify-content': 'center',
+        }"><span>{{nagadWithdrawNA}}</span></div>
+            </div>
+        </div>
+        </div>
+    </div>
+    </div>
+</div>
