@@ -671,7 +671,7 @@ const MerchantTransactionDeposit = () => {
                 size="sm"
                 c="dimmed"
               >
-                Deposit-only transactions (styled like Data List)
+                Deposit-only transactions
               </Text>
             </Box>
 

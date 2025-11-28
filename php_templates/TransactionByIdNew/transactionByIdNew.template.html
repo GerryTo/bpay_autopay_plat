@@ -1,0 +1,39 @@
+<div>
+    <div class="page-header-container box">{{pagelang.pagetitle}}</div>
+    <div class="page-body box">
+        <div class="row">
+            <div class="col-xs-12 col-sm-2 col-md-1 col-lg-1" style="padding-top:6px;">
+                Trans. Id :
+            </div>
+            <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+                <input type="text" class="form-control input-sm" ng-model="filter.transId"
+                    placeholder="input Transaction Id here" />
+            </div>
+            <div class="col-xs-12 col-sm-1 col-md-1 col-lg-1">
+                <div class="button-container">
+                    <button type="button" class="btn btn-default btn-sm" ng-click="event.refresh()"
+                        ng-disabled="effect.loading==true">{{globallang.refresh}}</button>
+                </div>
+            </div>
+            <!-- <div style="margin-top: 4px;" class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+                <div class="form-check">
+                    <label class="checkbox-inline">
+                        <input class="checkbox-inline" ng-model="filter.history" ng-click="event.boxClick(1)" type="checkbox">
+                        <p class="form-check-label">History</p>
+                    </label>
+                    <label class="checkbox-inline">
+                        <input class="checkbox-inline" ng-model="filter.archive" ng-click="event.boxClick(2)" type="checkbox">
+                        <p class="form-check-label">Archive</p>
+                    </label>
+                </div>
+            </div> -->
+
+        </div>
+        <div id="grid1" ui-grid="config.grid" class="grid" ui-grid-resize-columns ui-grid-auto-resize ui-grid-exporter>
+            <div class="grid-nodata-container" ng-show="config.grid.data.length == 0 && !effect.loading">No Data Available</div>
+            <div class="grid-loading-container" ng-show="effect.loading">
+                <img src="images/loading.gif" />
+            </div>
+        </div>
+    </div>
+</div>

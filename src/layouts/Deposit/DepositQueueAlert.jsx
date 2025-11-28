@@ -14,10 +14,7 @@ import {
   Text,
   TextInput,
 } from '@mantine/core';
-import {
-  IconRefresh,
-  IconFilter,
-} from '@tabler/icons-react';
+import { IconRefresh, IconFilter } from '@tabler/icons-react';
 import { depositAPI } from '../../helper/api';
 import { showNotification } from '../../helper/showNotification';
 import { useTableControls } from '../../hooks/useTableControls';
@@ -74,7 +71,10 @@ const DepositQueueAlert = () => {
         label: 'Account No',
         minWidth: 160,
         render: (item) => (
-          <Text size="sm" fw={600}>
+          <Text
+            size="sm"
+            fw={600}
+          >
             {item.bankaccountno}
           </Text>
         ),
@@ -92,7 +92,10 @@ const DepositQueueAlert = () => {
         label: 'Bank',
         minWidth: 100,
         render: (item) => (
-          <Badge color="blue" variant="light">
+          <Badge
+            color="blue"
+            variant="light"
+          >
             {item.bankcode || '-'}
           </Badge>
         ),
@@ -103,7 +106,10 @@ const DepositQueueAlert = () => {
         label: 'Pending Transaction',
         minWidth: 160,
         render: (item) => (
-          <Text size="sm" className="grid-alignright">
+          <Text
+            size="sm"
+            className="grid-alignright"
+          >
             {formatNumber(item.total)}
           </Text>
         ),
@@ -123,7 +129,8 @@ const DepositQueueAlert = () => {
     onResetFilters: () => setColumnFilters(defaultFilters),
   });
 
-  const makeKey = (item) => `${item.bankaccountno || ''}-${item.bankcode || ''}`;
+  const makeKey = (item) =>
+    `${item.bankaccountno || ''}-${item.bankcode || ''}`;
 
   const includesValue = (field, value) => {
     if (!value) return true;
@@ -215,7 +222,12 @@ const DepositQueueAlert = () => {
 
   return (
     <Box p="md">
-      <Card shadow="sm" padding="lg" radius="md" withBorder>
+      <Card
+        shadow="sm"
+        padding="lg"
+        radius="md"
+        withBorder
+      >
         <LoadingOverlay
           visible={loading}
           overlayProps={{ radius: 'md', blur: 2 }}
@@ -223,13 +235,22 @@ const DepositQueueAlert = () => {
         />
 
         <Stack gap="lg">
-          <Group justify="space-between" align="center">
+          <Group
+            justify="space-between"
+            align="center"
+          >
             <Box>
-              <Text size="xl" fw={700}>
+              <Text
+                size="xl"
+                fw={700}
+              >
                 Deposit Queue Alert
               </Text>
-              <Text size="sm" c="dimmed">
-                Accounts with pending transactions (styled like Data List)
+              <Text
+                size="sm"
+                c="dimmed"
+              >
+                Accounts with pending transactions
               </Text>
             </Box>
 
@@ -276,8 +297,14 @@ const DepositQueueAlert = () => {
                     key={col.key}
                     style={{ minWidth: col.minWidth || 120 }}
                   >
-                    <Group gap={8} align="center">
-                      <Text size="sm" fw={600}>
+                    <Group
+                      gap={8}
+                      align="center"
+                    >
+                      <Text
+                        size="sm"
+                        fw={600}
+                      >
                         {col.label}
                       </Text>
                       <ColumnActionMenu
@@ -313,7 +340,10 @@ const DepositQueueAlert = () => {
               ) : (
                 <Table.Tr>
                   <Table.Td colSpan={visibleColumns.length}>
-                    <Text ta="center" c="dimmed">
+                    <Text
+                      ta="center"
+                      c="dimmed"
+                    >
                       No data available
                     </Text>
                   </Table.Td>
@@ -322,9 +352,18 @@ const DepositQueueAlert = () => {
             </Table.Tbody>
           </Table>
 
-          <Group justify="space-between" align="center">
-            <Group gap="sm" align="center">
-              <Text size="sm" c="dimmed">
+          <Group
+            justify="space-between"
+            align="center"
+          >
+            <Group
+              gap="sm"
+              align="center"
+            >
+              <Text
+                size="sm"
+                c="dimmed"
+              >
                 Rows per page:
               </Text>
               <Select

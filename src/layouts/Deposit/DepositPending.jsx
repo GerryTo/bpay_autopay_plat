@@ -599,7 +599,7 @@ const DepositPending = () => {
                 size="sm"
                 c="dimmed"
               >
-                Search deposit by Transaction ID (styled like Data List)
+                Search deposit by Transaction ID
               </Text>
             </Box>
 

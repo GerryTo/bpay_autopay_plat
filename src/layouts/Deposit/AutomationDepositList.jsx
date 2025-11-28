@@ -822,7 +822,7 @@ const AutomationDepositList = () => {
                 size="sm"
                 c="dimmed"
               >
-                Automation deposit monitoring (styled like Data List)
+                Automation deposit monitoring
               </Text>
             </Box>
 

@@ -181,7 +181,9 @@ const WithdrawCheckFilterSelected = () => {
             placeholder="Filter timestamp..."
             size="xs"
             value={columnFilters.insert}
-            onChange={(e) => handleFilterChange('insert', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('insert', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -363,7 +365,9 @@ const WithdrawCheckFilterSelected = () => {
         key: 'sourceaccountname',
         label: 'Source Account Name',
         minWidth: 180,
-        render: (item) => <Text size="sm">{item.sourceaccountname || '-'}</Text>,
+        render: (item) => (
+          <Text size="sm">{item.sourceaccountname || '-'}</Text>
+        ),
         filter: (
           <TextInput
             placeholder="Filter src name..."
@@ -429,7 +433,9 @@ const WithdrawCheckFilterSelected = () => {
             placeholder="Filter status..."
             size="xs"
             value={columnFilters.status}
-            onChange={(e) => handleFilterChange('status', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('status', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -564,7 +570,10 @@ const WithdrawCheckFilterSelected = () => {
           includesValue(item.accountname, columnFilters.accountname) &&
           includesValue(item.sourcebankcode, columnFilters.sourcebankcode) &&
           includesValue(item.accountno, columnFilters.accountno) &&
-          includesValue(item.sourceaccountname, columnFilters.sourceaccountname) &&
+          includesValue(
+            item.sourceaccountname,
+            columnFilters.sourceaccountname
+          ) &&
           includesValue(item.originaldate, columnFilters.originaldate) &&
           includesValue(item.fee, columnFilters.fee) &&
           includesValue(item.status, columnFilters.status) &&
@@ -572,7 +581,10 @@ const WithdrawCheckFilterSelected = () => {
           includesValue(item.notes3, columnFilters.notes3) &&
           includesValue(item.finalstatusdesc, columnFilters.finalstatusdesc) &&
           includesValue(item.agentAlias, columnFilters.agentAlias) &&
-          includesValue(item.assignStatusDesc, columnFilters.assignStatusDesc) &&
+          includesValue(
+            item.assignStatusDesc,
+            columnFilters.assignStatusDesc
+          ) &&
           includesValue(item.note, columnFilters.note)
         );
       }),
@@ -654,7 +666,9 @@ const WithdrawCheckFilterSelected = () => {
         return;
       }
 
-      const [hourfromRaw = '00.00', hourtoRaw = '23.59'] = (hourRange || '00.00-23.59').split('-');
+      const [hourfromRaw = '00.00', hourtoRaw = '23.59'] = (
+        hourRange || '00.00-23.59'
+      ).split('-');
       const hourfrom = hourfromRaw.replace('.', ':');
       const hourto = hourtoRaw.replace('.', ':');
 
@@ -682,14 +696,18 @@ const WithdrawCheckFilterSelected = () => {
           } else {
             showNotification({
               title: 'Error',
-              message: payload.message || 'Failed to load withdraw check filter bulk list',
+              message:
+                payload.message ||
+                'Failed to load withdraw check filter bulk list',
               color: 'red',
             });
           }
         } else {
           showNotification({
             title: 'Error',
-            message: response.error || 'Failed to load withdraw check filter bulk list',
+            message:
+              response.error ||
+              'Failed to load withdraw check filter bulk list',
             color: 'red',
           });
         }
@@ -743,7 +761,7 @@ const WithdrawCheckFilterSelected = () => {
                 size="sm"
                 c="dimmed"
               >
-                Bulk withdraw need-to-check monitoring (styled like Deposit Pending)
+                Bulk withdraw need-to-check monitoring
               </Text>
             </Box>
 

@@ -1,0 +1,99 @@
+<div>
+    <div class="page-header-container box">{{pagelang.pagetitle}}</div>
+    <div class="page-body box">
+        <form>
+            <div class="form-group">
+                <label for="account">Account :</label>
+                <select class="form-control" id="account" ng-model="data.accountno" ng-change="changeAccount()">
+                    <option value="" disabled>- CHOOSE ACCOUNT NO -</option>
+                    <option ng-repeat="item in acclist" value="{{item.bankaccountno}}||{{item.bankcode}}">{{item.bankaccountno}} - {{item.bankaccountname}} - {{item.bankcode}}</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="merchant">Type :</label>
+                <select class="form-control" id="merchant" ng-model="data.type">
+                    <option value="Y">Manual Debit</option>
+                    <option value="Z">Manual Credit</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="amount">Adjustment Amount :</label>
+                <input type="text" class="form-control form-control-sm" id="amount" placeholder="Input Adjustment Amount" ng-model="data.amount"
+                    select-on-click ng-keydown="validateNumberOnly($event)" />
+            </div>
+
+						<div class="form-group">
+			
+
+			
+                <label for="amount">Notes :</label>
+				
+			     <select class="form-control" id="merchant" ng-model="data.notes2" ng-change="checkNotes(data.notes2)"  >
+                    <option value="MANUAL DEPOSIT">MANUAL DEPOSIT</option>
+					<option value="MANUAL WITHDRAWAL">MANUAL WITHDRAWAL</option>
+					<option value="MANUAL TOPUP">MANUAL TOPUP</option>
+					<option value="MANUAL SETTLEMENT">MANUAL SETTLEMENT</option>
+					<option value="BANK INTEREST">BANK INTEREST</option>
+					<option value="BANK CHARGE">BANK CHARGE</option>
+					<option value="TRANSFER IN">TRANSFER IN</option>
+					<option value="TRANSFER OUT">TRANSFER OUT</option>
+					<option value="TESTING">TESTING</option>
+					<option value="1">UNKNOWN/OTHERS</option>
+                    
+                </select>			
+			
+				<br/>
+				
+			
+			<label >Actual Transaction Date:</label>
+        <div class="row">
+            <!--<div class="col-xs-12 col-sm-2 col-md-2 col-lg-2">
+                Date : 
+            </div>-->
+			
+			
+			
+            <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+                <p class="input-group">
+                    <input type="text" class="form-control input-sm" uib-datepicker-popup="{{datepickerConfig.format}}" ng-model="filter.fromdate" is-open="popup1.opened"
+                        datepicker-options="dateOptions" ng-required="true" close-text="Close" alt-input-formats="datepickerConfig.altInputFormats" placeholder="From date"
+                    />
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default btn-sm" ng-click="open1()">
+                            <i class="glyphicon glyphicon-calendar"></i>
+                        </button>
+                    </span>
+                </p>
+            </div>
+        </div>
+
+	
+		
+			<label ng-show="visible==2" >Other:</label>
+				<div class="row">
+					<div class="col-md-1">
+					<input type="text" class="form-control form-control-sm" readonly="readonly" id="subnotes" placeholder="Input Notes" ng-model="data.subnotes" ng-show="visible==2" />
+					</div>
+					<div class="col-md-11">
+					 <input type="text" class="form-control form-control-sm" id="notes" placeholder="Input Notes" ng-model="data.notes" ng-show="visible==2" />
+					</div>					
+				</div>
+				
+
+				
+
+            </div>
+
+			
+			
+			
+            </div>
+			
+			
+            <div class="form-section-footer">
+                <button type="button" class="btn btn-primary btn-sm" ng-click="save()">{{globallang.save}}</button>
+                <button type="button" class="btn btn-default btn-sm" ng-click="cancel()">{{globallang.cancel}}</button>
+            </div>
+        </form>
+    </div>
+</div>

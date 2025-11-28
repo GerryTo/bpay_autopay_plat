@@ -416,7 +416,8 @@ const MerchantTransactionWithdraw = () => {
     onResetFilters: () => setColumnFilters(defaultFilters),
   });
 
-  const makeKey = (item) => `${item.futuretrxid || ''}-${item.transactionid || ''}`;
+  const makeKey = (item) =>
+    `${item.futuretrxid || ''}-${item.transactionid || ''}`;
 
   const includesValue = (field, value) => {
     if (!value) return true;
@@ -537,7 +538,8 @@ const MerchantTransactionWithdraw = () => {
           } else {
             showNotification({
               title: 'Error',
-              message: payload.message || 'Failed to load merchant transactions',
+              message:
+                payload.message || 'Failed to load merchant transactions',
               color: 'red',
             });
           }
@@ -611,7 +613,7 @@ const MerchantTransactionWithdraw = () => {
                 size="sm"
                 c="dimmed"
               >
-                Merchant withdrawal transactions (styled like Deposit Pending)
+                Merchant withdrawal transactions
               </Text>
             </Box>
 

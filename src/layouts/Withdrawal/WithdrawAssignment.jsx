@@ -128,7 +128,9 @@ const WithdrawAssignment = () => {
             placeholder="Filter timestamp..."
             size="xs"
             value={columnFilters.insert}
-            onChange={(e) => handleFilterChange('insert', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('insert', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -328,7 +330,9 @@ const WithdrawAssignment = () => {
             placeholder="Filter status..."
             size="xs"
             value={columnFilters.status}
-            onChange={(e) => handleFilterChange('status', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('status', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -451,7 +455,10 @@ const WithdrawAssignment = () => {
           includesValue(item.accountname, columnFilters.accountname) &&
           includesValue(item.sourcebankcode, columnFilters.sourcebankcode) &&
           includesValue(item.accountno, columnFilters.accountno) &&
-          includesValue(item.sourceaccountname, columnFilters.sourceaccountname) &&
+          includesValue(
+            item.sourceaccountname,
+            columnFilters.sourceaccountname
+          ) &&
           includesValue(item.fee, columnFilters.fee) &&
           includesValue(item.status, columnFilters.status) &&
           includesValue(item.notes2, columnFilters.notes2) &&
@@ -662,7 +669,7 @@ const WithdrawAssignment = () => {
                 size="sm"
                 c="dimmed"
               >
-                Assign or reassign withdraw transactions (styled like Deposit Pending)
+                Assign or reassign withdraw transactions
               </Text>
             </Box>
 
@@ -734,7 +741,10 @@ const WithdrawAssignment = () => {
                   </Popover.Dropdown>
                 </Popover>
 
-                <Badge variant="light" color="gray">
+                <Badge
+                  variant="light"
+                  color="gray"
+                >
                   Records: {data.length}
                 </Badge>
               </Group>
@@ -873,14 +883,20 @@ const WithdrawAssignment = () => {
         centered
       >
         <Stack gap="sm">
-          <Text size="sm" c="dimmed">
+          <Text
+            size="sm"
+            c="dimmed"
+          >
             ID: {selectedRow?.id || '-'} | Bank: {selectedRow?.bankcode || '-'}
           </Text>
           <TextInput
             label="Account No"
             value={assignForm.accountNo}
             onChange={(e) =>
-              setAssignForm((prev) => ({ ...prev, accountNo: e.currentTarget.value }))
+              setAssignForm((prev) => ({
+                ...prev,
+                accountNo: e.currentTarget.value,
+              }))
             }
             required
           />
@@ -888,7 +904,10 @@ const WithdrawAssignment = () => {
             label="Bank Code"
             value={assignForm.bankCode}
             onChange={(e) =>
-              setAssignForm((prev) => ({ ...prev, bankCode: e.currentTarget.value }))
+              setAssignForm((prev) => ({
+                ...prev,
+                bankCode: e.currentTarget.value,
+              }))
             }
             required
           />
@@ -896,7 +915,10 @@ const WithdrawAssignment = () => {
             label="Account Name"
             value={assignForm.accountName}
             onChange={(e) =>
-              setAssignForm((prev) => ({ ...prev, accountName: e.currentTarget.value }))
+              setAssignForm((prev) => ({
+                ...prev,
+                accountName: e.currentTarget.value,
+              }))
             }
             required
           />
@@ -904,11 +926,17 @@ const WithdrawAssignment = () => {
             label="Username"
             value={assignForm.username}
             onChange={(e) =>
-              setAssignForm((prev) => ({ ...prev, username: e.currentTarget.value }))
+              setAssignForm((prev) => ({
+                ...prev,
+                username: e.currentTarget.value,
+              }))
             }
             required
           />
-          <Group justify="flex-end" mt="sm">
+          <Group
+            justify="flex-end"
+            mt="sm"
+          >
             <Button
               variant="light"
               onClick={() => setAssignModalOpen(false)}

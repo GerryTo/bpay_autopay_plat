@@ -191,8 +191,12 @@ const WithdrawDashboard = () => {
             withdrawPending: toNumber(record.resWdPending?.total),
             pending5Minute: toNumber(record.resPending5Minutes?.total),
             lastWithdraw: record.resLastWD?.d_completedate || '-',
-            averageNagadSeconds: toNumber(record.resAverageWDNagad?.avg_duration),
-            averageBkashSeconds: toNumber(record.resAverageWDBkash?.avg_duration),
+            averageNagadSeconds: toNumber(
+              record.resAverageWDNagad?.avg_duration
+            ),
+            averageBkashSeconds: toNumber(
+              record.resAverageWDBkash?.avg_duration
+            ),
             bkashProcessing: toNumber(record.resBkashWithdrawTBP?.total),
             bkashReady: toNumber(record.resBkashAFW?.total),
             bkashAvailable: toNumber(record.resBkashA?.total),
@@ -263,7 +267,11 @@ const WithdrawDashboard = () => {
       { label: 'Processing', value: stats.nagadProcessing, color: 'teal' },
       { label: 'Pending', value: stats.nagadPending, color: 'orange' },
       { label: 'Assigned', value: stats.nagadAssigned, color: 'blue' },
-      { label: 'Need Attention', value: stats.nagadNeedAttention, color: 'red' },
+      {
+        label: 'Need Attention',
+        value: stats.nagadNeedAttention,
+        color: 'red',
+      },
       { label: 'Agent Ready', value: stats.nagadReady, color: 'green' },
       { label: 'Agent Available', value: stats.nagadAvailable, color: 'lime' },
       { label: 'Low Balance', value: stats.nagadLowBalance, color: 'yellow' },
@@ -284,7 +292,11 @@ const WithdrawDashboard = () => {
       { label: 'Processing', value: stats.bkashProcessing, color: 'cyan' },
       { label: 'Pending', value: stats.bkashPending, color: 'orange' },
       { label: 'Assigned', value: stats.bkashAssigned, color: 'blue' },
-      { label: 'Need Attention', value: stats.bkashNeedAttention, color: 'red' },
+      {
+        label: 'Need Attention',
+        value: stats.bkashNeedAttention,
+        color: 'red',
+      },
       { label: 'Agent Ready', value: stats.bkashReady, color: 'green' },
       { label: 'Agent Available', value: stats.bkashAvailable, color: 'lime' },
       { label: 'Low Balance', value: stats.bkashLowBalance, color: 'yellow' },
@@ -347,7 +359,7 @@ const WithdrawDashboard = () => {
                 size="sm"
                 c="dimmed"
               >
-                Realtime withdraw performance summary (styled like Data List)
+                Realtime withdraw performance summary
               </Text>
             </Box>
 
@@ -360,7 +372,9 @@ const WithdrawDashboard = () => {
               </Text>
               <Switch
                 checked={autoRefresh}
-                onChange={(event) => setAutoRefresh(event.currentTarget.checked)}
+                onChange={(event) =>
+                  setAutoRefresh(event.currentTarget.checked)
+                }
                 color="blue"
               />
               <Button
@@ -466,9 +480,7 @@ const WithdrawDashboard = () => {
             <SimpleGrid
               cols={2}
               spacing="md"
-              breakpoints={[
-                { maxWidth: 'sm', cols: 1 },
-              ]}
+              breakpoints={[{ maxWidth: 'sm', cols: 1 }]}
             >
               {averageStats.map((item) => (
                 <StatCard
@@ -493,9 +505,7 @@ const WithdrawDashboard = () => {
             <SimpleGrid
               cols={2}
               spacing="md"
-              breakpoints={[
-                { maxWidth: 'md', cols: 1 },
-              ]}
+              breakpoints={[{ maxWidth: 'md', cols: 1 }]}
             >
               <ChannelCard
                 title="NAGAD"

@@ -639,7 +639,7 @@ const WithdrawList = () => {
                 size="sm"
                 c="dimmed"
               >
-                Withdraw monitoring (styled like Data List)
+                Withdraw monitoring
               </Text>
             </Box>
 

@@ -1,0 +1,51 @@
+<div>
+    <div class="page-header-container box">Update Transaction</div>
+    <div class="page-body box">
+        <div class="row">
+          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <label class="control-label" style="float:left; width:150px; margin-top:7px" for="notes3">Transaction ID</label>
+              <p class="input-group">
+                  <input class="form-control" type="text" id="notes3" ng-model="filter.notes3">
+              </p>
+          </div>
+          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <label class="control-label" style="float:left; width:150px; margin-top:7px" for="amount">Amount</label>
+              <p class="form-check" style="margin: 5px;">
+                  <input class="form-check-input" ng-disabled="filter.status == 1" ng-model="filter.chgAmt" ng-click="chgAmtHandle()" type="checkbox">
+                  <label class="form-check-label">
+                    Change Amount
+                  </label>
+              </p>
+              <p class="input-group" ng-if="filter.chgAmt" style="margin-left: 150px;">
+                <input class="form-control" type="number" id="amount" ng-model="filter.amount">
+              </p>
+          </div>
+          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <label class="control-label" style="float:left; width:150px; margin-top:7px" for="status">Status</label>
+              <p class="form-check" style="margin: 5px;">
+                <input class="form-check-input" ng-model="filter.chgChk" ng-click="chgChkHandle()" type="checkbox">
+                <label class="form-check-label">
+                  Change Status
+                </label>
+              </p>
+              <p class="form-check" ng-if="filter.chgChk" style="margin-left: 150px;">
+                  <input class="form-check-input" ng-model="filter.status" name="status" value="0" type="radio">
+                  <label class="form-check-label">
+                    Success
+                  </label>
+                  <input class="form-check-input" ng-model="filter.status" ng-click="chgStsHandle()" name="status" value="1" type="radio">
+                  <label class="form-check-label">
+                    Fail
+                  </label>
+              </p>
+          </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12 col-sm-4 col-md-4 col-lg-4">
+                <div class="button-container" style="float: right;">
+                    <button type="button" class="btn btn-default btn-sm" ng-click="submit()" ng-disabled="gridIsLoading==true">Submit</button>
+                </div> 
+            </div>
+        </div>
+    </div>
+</div>

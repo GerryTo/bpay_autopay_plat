@@ -64,7 +64,8 @@ const formatNumber = (value) => {
 };
 
 const getTransactionHighlight = (item) => {
-  if ((item.status || '').toLowerCase() !== 'order need to check') return undefined;
+  if ((item.status || '').toLowerCase() !== 'order need to check')
+    return undefined;
   if (!item.insert) return undefined;
   const now = dayjs();
   const inserted = dayjs(item.insert);
@@ -134,7 +135,9 @@ const AutomationWithdrawList = () => {
             placeholder="Filter timestamp..."
             size="xs"
             value={columnFilters.insert}
-            onChange={(e) => handleFilterChange('insert', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('insert', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -316,7 +319,9 @@ const AutomationWithdrawList = () => {
         key: 'sourceaccountname',
         label: 'Source Account Name',
         minWidth: 180,
-        render: (item) => <Text size="sm">{item.sourceaccountname || '-'}</Text>,
+        render: (item) => (
+          <Text size="sm">{item.sourceaccountname || '-'}</Text>
+        ),
         filter: (
           <TextInput
             placeholder="Filter src name..."
@@ -394,7 +399,9 @@ const AutomationWithdrawList = () => {
             placeholder="Filter status..."
             size="xs"
             value={columnFilters.status}
-            onChange={(e) => handleFilterChange('status', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('status', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -479,7 +486,10 @@ const AutomationWithdrawList = () => {
           includesValue(item.originaldate, columnFilters.originaldate) &&
           includesValue(item.sourcebankcode, columnFilters.sourcebankcode) &&
           includesValue(item.accountno, columnFilters.accountno) &&
-          includesValue(item.sourceaccountname, columnFilters.sourceaccountname) &&
+          includesValue(
+            item.sourceaccountname,
+            columnFilters.sourceaccountname
+          ) &&
           includesValue(item.dstbankaccount, columnFilters.dstbankaccount) &&
           includesValue(item.accountname, columnFilters.accountname) &&
           includesValue(item.transactionid, columnFilters.transactionid) &&
@@ -589,14 +599,16 @@ const AutomationWithdrawList = () => {
           } else {
             showNotification({
               title: 'Error',
-              message: payload.message || 'Failed to load automation withdraw list',
+              message:
+                payload.message || 'Failed to load automation withdraw list',
               color: 'red',
             });
           }
         } else {
           showNotification({
             title: 'Error',
-            message: response.error || 'Failed to load automation withdraw list',
+            message:
+              response.error || 'Failed to load automation withdraw list',
             color: 'red',
           });
         }
@@ -662,7 +674,7 @@ const AutomationWithdrawList = () => {
                 size="sm"
                 c="dimmed"
               >
-                Automation withdraw monitoring (styled like Deposit Pending)
+                Automation withdraw monitoring
               </Text>
             </Box>
 

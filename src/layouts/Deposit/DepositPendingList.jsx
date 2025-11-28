@@ -854,7 +854,7 @@ const DepositPendingList = () => {
                 size="sm"
                 c="dimmed"
               >
-                Pending and recent deposits (styled like Data List)
+                Pending and recent deposits
               </Text>
             </Box>
 
@@ -1097,7 +1097,10 @@ const DepositPendingList = () => {
                         key={col.key}
                         style={{ minWidth: col.minWidth || 120 }}
                       >
-                        <Group gap={8} align="center">
+                        <Group
+                          gap={8}
+                          align="center"
+                        >
                           <Text
                             size="sm"
                             fw={600}

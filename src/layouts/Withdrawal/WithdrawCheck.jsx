@@ -137,7 +137,9 @@ const WithdrawCheck = () => {
             placeholder="Filter timestamp..."
             size="xs"
             value={columnFilters.insert}
-            onChange={(e) => handleFilterChange('insert', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('insert', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -319,7 +321,9 @@ const WithdrawCheck = () => {
         key: 'sourceaccountname',
         label: 'Source Account Name',
         minWidth: 180,
-        render: (item) => <Text size="sm">{item.sourceaccountname || '-'}</Text>,
+        render: (item) => (
+          <Text size="sm">{item.sourceaccountname || '-'}</Text>
+        ),
         filter: (
           <TextInput
             placeholder="Filter src name..."
@@ -385,7 +389,9 @@ const WithdrawCheck = () => {
             placeholder="Filter status..."
             size="xs"
             value={columnFilters.status}
-            onChange={(e) => handleFilterChange('status', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('status', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -506,7 +512,10 @@ const WithdrawCheck = () => {
           includesValue(item.accountname, columnFilters.accountname) &&
           includesValue(item.sourcebankcode, columnFilters.sourcebankcode) &&
           includesValue(item.accountno, columnFilters.accountno) &&
-          includesValue(item.sourceaccountname, columnFilters.sourceaccountname) &&
+          includesValue(
+            item.sourceaccountname,
+            columnFilters.sourceaccountname
+          ) &&
           includesValue(item.originaldate, columnFilters.originaldate) &&
           includesValue(item.fee, columnFilters.fee) &&
           includesValue(item.status, columnFilters.status) &&
@@ -608,7 +617,9 @@ const WithdrawCheck = () => {
         return;
       }
 
-      const [hourfrom = '00:00', hourto = '23:59'] = (hourRange || '00:00-23:59').split('-');
+      const [hourfrom = '00:00', hourto = '23:59'] = (
+        hourRange || '00:00-23:59'
+      ).split('-');
 
       silent ? setRefreshing(true) : setLoading(true);
 
@@ -696,7 +707,7 @@ const WithdrawCheck = () => {
                 size="sm"
                 c="dimmed"
               >
-                Withdraw need-to-check monitoring (styled like Deposit Pending)
+                Withdraw need-to-check monitoring
               </Text>
             </Box>
 

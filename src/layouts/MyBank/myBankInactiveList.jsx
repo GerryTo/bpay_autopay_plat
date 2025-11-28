@@ -705,7 +705,7 @@ const MyBankInactiveList = () => {
                 size="sm"
                 c="dimmed"
               >
-                Set status akun MyBank yang inactive
+                Set the status of an inactive MyBank account
               </Text>
             </Box>
           </Group>
@@ -790,14 +790,14 @@ const MyBankInactiveList = () => {
                     color: '#0f1011ff',
                     whiteSpace: 'nowrap',
                     padding: '12px 16px',
-              },
-              td: {
-                padding: '10px 16px',
-                fontSize: '14px',
-                whiteSpace: 'nowrap',
-              },
-              }}
-            >
+                  },
+                  td: {
+                    padding: '10px 16px',
+                    fontSize: '14px',
+                    whiteSpace: 'nowrap',
+                  },
+                }}
+              >
                 <Table.Thead>
                   <Table.Tr>
                     <Table.Th style={{ width: 48 }}>

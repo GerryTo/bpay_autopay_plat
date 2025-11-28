@@ -1798,6 +1798,1274 @@ export const depositAPI = {
   },
 };
 
+// Transaction by ID API calls
+export const transactionAPI = {
+  /**
+   * Get transaction(s) by Transaction ID (encrypted)
+   * @param {Object} params - { transId: string, history?: boolean, similarSearch?: boolean }
+   */
+  getByTransactionId: async ({ transId, history = false, similarSearch = false }) => {
+    try {
+      const payload = { transId, history, similarSearch };
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/transactionById_getList.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Transaction by ID API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load transaction data',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get transaction(s) by Transaction ID Backup (encrypted)
+   * @param {String} transId - Transaction ID
+   */
+  getBackupByTransactionId: async (transId) => {
+    try {
+      const payload = { transId };
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/transactionByIdBackup_getList.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Transaction by ID Backup API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load transaction backup data',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get transaction(s) by Transaction ID (backup equals)
+   * @param {Object} params - { transId: string, type?: 'current' | 'history' | 'archive' }
+   */
+  getByTransactionIdNew: async ({ transId, type = 'current' }) => {
+    try {
+      const payload = { transId, type };
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/transactionByIdNew_getList.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Transaction by ID New API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load transaction data (new)',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get Find Transaction Member list (not encrypted)
+   */
+  getFindTransactionMemberList: async () => {
+    try {
+      const response = await apiClient.post('/findTransactionMember_getList.php', '');
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Find Transaction Member API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load transaction member data',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get rejected transactions (encrypted)
+   */
+  getRejectedTransactions: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '');
+
+      const response = await apiClient.post('/getTransactionRejected.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Rejected transactions API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load rejected transactions',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Find Trxid by Transaction ID (not encrypted)
+   * @param {String} transId
+   */
+  findTrxidByTransId: async (transId) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data[transId]', transId);
+
+      const response = await apiClient.post('/GetTrxidArchive.php', formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Find trxid by transId API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load trxid data',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Change trxid in archive (not encrypted)
+   * @param {String} trxid
+   */
+  changeTrxidArchive: async (trxid) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data[trxid]', trxid);
+
+      const response = await apiClient.post('/updateTrxidArchive.php', formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Change trxid archive API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to change trxid',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get transaction by account (encrypted)
+   * @param {Object} params - { datefrom, dateto, accountno, bank, isPending }
+   */
+  getTransactionByAccount: async ({ datefrom, dateto, accountno = '0', bank = '', isPending = '0' }) => {
+    try {
+      const payload = { datefrom, dateto, accountno, bank, isPending };
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/getTransactionAccountByCompany.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = JSON.parse(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Transaction by account API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load transactions by account',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get MyBank account list (not encrypted)
+   */
+  getMyBankList: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '');
+
+      const response = await apiClient.post('/getMyBank.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('MyBank list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load account list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get transaction by account history (encrypted)
+   * @param {Object} params - { datefrom, dateto, accountno, bank, isPending }
+   */
+  getTransactionByAccountHistory: async ({ datefrom, dateto, accountno = '0', bank = '', isPending = '0' }) => {
+    try {
+      const payload = { datefrom, dateto, accountno, bank, isPending };
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/getTransactionHistory.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = JSON.parse(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Transaction history API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load transaction history',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get transactions with empty callback (encrypted request, plain response)
+   * @param {String} date - YYYY-MM-DD
+   */
+  getTransactionCallbackEmpty: async (date) => {
+    try {
+      const payload = { date };
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/transactionCallbackEmpty_getList.php', formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Transaction callback empty API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load empty-callback transactions',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Resend callbacks for given future trx ids (not encrypted)
+   * @param {Array} ids - array of { id: futuretrxid }
+   */
+  resendTransactionCallbackEmpty: async (ids = []) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', JSON.stringify(ids));
+
+      const response = await apiClient.post('/transactionCallbackEmpty_resendCallback.php', formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Resend callback empty API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to resend callback',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get transactions with callback 502 (encrypted request, plain response)
+   * @param {String} date - YYYY-MM-DD
+   */
+  getTransactionCallback502: async (date) => {
+    try {
+      const payload = { date };
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/transactionCallback502_getList.php', formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Transaction callback 502 API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load 502 callback transactions',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Resend callbacks for 502 list (not encrypted)
+   * @param {Array} ids - array of { id: futuretrxid }
+   */
+  resendTransactionCallback502: async (ids = []) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', JSON.stringify(ids));
+
+      const response = await apiClient.post('/transactionCallback502_resendCallback.php', formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Resend callback 502 API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to resend 502 callback',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get transactions completed today (encrypted)
+   * @param {String} transactiontype - optional filter
+   */
+  getTransactionTodayComplete: async (transactiontype = '') => {
+    try {
+      const payload = { transactiontype };
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/getTransactionTodayComplete.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Transaction today complete API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load today completed transactions',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get suspected transactions (not encrypted)
+   */
+  getSuspectedTransactions: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '');
+
+      const response = await apiClient.post('/suspectedTransaction_getList.php', formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Suspected transactions API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load suspected transactions',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Process suspected transaction (approve/send back) (encrypted)
+   * @param {String} id - futuretrxid
+   */
+  processSuspectedTransaction: async (id) => {
+    try {
+      const payload = { id };
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/suspectedTransaction_process.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Process suspected transaction API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to process suspected transaction',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get submitted transactions (encrypted)
+   * @param {String} transactiontype
+   */
+  getSubmittedTransactions: async (transactiontype = '') => {
+    try {
+      const payload = { transactiontype };
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/submittedTransaction_getList.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Submitted transactions API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load submitted transactions',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get pending transactions (encrypted)
+   * @param {String} transactiontype
+   */
+  getPendingTransactions: async (transactiontype = '') => {
+    try {
+      const payload = { transactiontype };
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/transactionPending_getList.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Pending transactions API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load pending transactions',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get Transaction Flag M list (encrypted)
+   * @param {Object} params - { accountno, bank }
+   */
+  getTransactionFlagM: async ({ accountno = '0', bank = '' } = {}) => {
+    try {
+      const payload = { accountno, bank };
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/getTransactionFlagM.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Transaction Flag M API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load Transaction Flag M data',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get transactions by Not Match Sameday (encrypted)
+   * @param {Object} params - { datefrom, dateto }
+   */
+  getTransactionNotMatchSameday: async ({ datefrom, dateto }) => {
+    try {
+      const payload = { datefrom, dateto };
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/getTransactionByNotMatchSameday.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Not Match Sameday API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load not-match-sameday transactions',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get resubmit transaction list (encrypted)
+   * @param {Object} filter - { type, amount }
+   */
+  getResubmitTransactionList: async (filter = {}) => {
+    try {
+      const jsonData = CRYPTO.encrypt(filter);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/resubmitTransaction_getList.php', formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Resubmit transaction list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load resubmit transaction list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Submit selected resubmit transactions (encrypted)
+   * @param {Object} payload - includes filterUsed and list (selected rows)
+   */
+  submitResubmitTransactions: async (payload = {}) => {
+    try {
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/resubmitTransaction_submit.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Resubmit transaction submit API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to submit resubmit transactions',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get resubmit transaction log list
+   * @param {Object} filter - { trxid }
+   */
+  getResubmitTransactionLogs: async (filter = {}) => {
+    try {
+      const formData = new URLSearchParams();
+      Object.entries(filter || {}).forEach(([key, value]) => {
+        formData.append(`data[${key}]`, value ?? '');
+      });
+
+      const response = await apiClient.post('/resubmitLog_getList.php', formData);
+
+      if (response.data && response.data.data) {
+        const decrypted = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decrypted,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Resubmit transaction log list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load resubmit transaction log',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get resubmit transaction log detail
+   * @param {String|Number} id
+   */
+  getResubmitTransactionLogDetail: async (id) => {
+    try {
+      const payload = { id };
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/resubmitLogDetail_getList.php', formData);
+
+      if (response.data && response.data.data) {
+        const decrypted = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decrypted,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Resubmit transaction log detail API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load resubmit transaction log detail',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get resubmit auto matching list (encrypted)
+   * @param {Object} filter - { type, amount }
+   */
+  getResubmitAutoMatchingList: async (filter = {}) => {
+    try {
+      const jsonData = CRYPTO.encrypt(filter);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/resubmitAutoMatching_getList.php', formData);
+
+      if (response.data && response.data.data) {
+        const decrypted = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decrypted,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Resubmit auto matching list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load resubmit auto matching list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Submit selected auto matching rows (encrypted)
+   * @param {Object} payload - { type, amount, list }
+   */
+  submitResubmitAutoMatching: async (payload = {}) => {
+    try {
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/resubmitAutoMatching_submit.php', formData);
+
+      if (response.data && response.data.data) {
+        const decrypted = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decrypted,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Resubmit auto matching submit API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to submit resubmit auto matching',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Update transaction status (encrypted)
+   * @param {Object} payload - { notes3, chgAmt, chgChk, amount, status, pass }
+   */
+  updateTransactionStatus: async (payload = {}) => {
+    try {
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/updateTransactionStatus.php', formData);
+
+      if (response.data && response.data.data) {
+        const decrypted = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decrypted,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Update transaction status API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to update transaction status',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Update transaction status (new) - encrypted
+   * @param {Object} payload - { transId, history, chgAmt, chgChk, amount, status, notes3, transactionid }
+   */
+  updateTransactionStatusNew: async (payload = {}) => {
+    try {
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/updateTransactionStatusNew.php', formData);
+
+      if (response.data && response.data.data) {
+        const decrypted = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decrypted,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Update transaction status new API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to update transaction status (new)',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Update Notes3 by futuretrxid (encrypted)
+   * @param {Object} payload - { id, notes, history }
+   */
+  updateTransactionNotesById: async (payload = {}) => {
+    try {
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/transactionUpdateNotesById.php', formData);
+
+      if (response.data && response.data.data) {
+        const decrypted = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decrypted,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Update notes by id API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to update notes',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Update Notes2 by futuretrxid (encrypted)
+   * @param {Object} payload - { id, notes, history }
+   */
+  updateTransactionNotes2ById: async (payload = {}) => {
+    try {
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/transactionUpdateNotes2ById.php', formData);
+
+      if (response.data && response.data.data) {
+        const decrypted = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decrypted,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Update notes2 by id API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to update notes2',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get update transaction log list (encrypted)
+   * @param {Object} payload - { date }
+   */
+  getUpdateTransactionLog: async (payload = {}) => {
+    try {
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/getUpdateTransactionLog.php', formData);
+
+      if (response.data && response.data.data) {
+        const decrypted = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decrypted,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Update transaction log API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load update transaction log',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get active MyBank accounts (encrypted response)
+   */
+  getActiveMyBank: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '');
+
+      const response = await apiClient.post('/getActiveMyBank.php', formData);
+
+      if (response.data && response.data.data) {
+        const decrypted = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decrypted,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Active MyBank API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load active MyBank list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Save company adjustment (encrypted)
+   * @param {Object} payload - adjustment data
+   */
+  saveCompanyAdjustment: async (payload = {}) => {
+    try {
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/saveCompanyAdjustment.php', formData);
+
+      if (response.data && response.data.data) {
+        const decrypted = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decrypted,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Save company adjustment API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to save company adjustment',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get master merchant list (encrypted)
+   */
+  getMasterMerchant: async () => {
+    try {
+      const response = await apiClient.post('/getMasterMerchant.php', {});
+
+      if (response.data && response.data.data) {
+        const decrypted = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decrypted,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Master merchant API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load merchant list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get merchant bank accounts (encrypted)
+   * @param {Object} payload - includes merchantCode
+   */
+  getMasterBankMerchant: async (payload = {}) => {
+    try {
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/getMasterBankMerchant.php', formData);
+
+      if (response.data && response.data.data) {
+        const decrypted = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decrypted,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Merchant bank list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load merchant bank list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Save company adjustment for merchant (encrypted)
+   * @param {Object} payload
+   */
+  saveCompanyAdjustmentMerchant: async (payload = {}) => {
+    try {
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/saveCompanyAdjustmentMerchant.php', formData);
+
+      if (response.data && response.data.data) {
+        const decrypted = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decrypted,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Save company adjustment merchant API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to save company adjustment merchant',
+        details: error.response?.data || null,
+      };
+    }
+  },
+};
+
 // Merchant Management API calls
 export const merchantAPI = {
   /**

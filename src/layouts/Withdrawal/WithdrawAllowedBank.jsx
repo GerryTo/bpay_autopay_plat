@@ -185,43 +185,40 @@ const WithdrawAllowedBank = () => {
     }
   }, [totalPages, currentPage]);
 
-  const fetchList = useCallback(
-    async ({ silent = false } = {}) => {
-      silent ? setRefreshing(true) : setLoading(true);
-      try {
-        const response = await withdrawAPI.getWithdrawBanks();
-        if (response.success && response.data) {
-          const payload = response.data;
-          if ((payload.status || '').toLowerCase() === 'ok') {
-            setData(Array.isArray(payload.records) ? payload.records : []);
-          } else {
-            showNotification({
-              title: 'Error',
-              message: payload.message || 'Failed to load withdraw banks',
-              color: 'red',
-            });
-          }
+  const fetchList = useCallback(async ({ silent = false } = {}) => {
+    silent ? setRefreshing(true) : setLoading(true);
+    try {
+      const response = await withdrawAPI.getWithdrawBanks();
+      if (response.success && response.data) {
+        const payload = response.data;
+        if ((payload.status || '').toLowerCase() === 'ok') {
+          setData(Array.isArray(payload.records) ? payload.records : []);
         } else {
           showNotification({
             title: 'Error',
-            message: response.error || 'Failed to load withdraw banks',
+            message: payload.message || 'Failed to load withdraw banks',
             color: 'red',
           });
         }
-      } catch (error) {
-        console.error('Withdraw bank list fetch error:', error);
+      } else {
         showNotification({
           title: 'Error',
-          message: 'Unable to load withdraw allowed bank list',
+          message: response.error || 'Failed to load withdraw banks',
           color: 'red',
         });
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
       }
-    },
-    []
-  );
+    } catch (error) {
+      console.error('Withdraw bank list fetch error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to load withdraw allowed bank list',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
   const toggleStatus = async (item, status) => {
     setLoading(true);
@@ -296,7 +293,7 @@ const WithdrawAllowedBank = () => {
                 size="sm"
                 c="dimmed"
               >
-                Manage which banks are enabled for withdrawal (styled like Data List)
+                Manage which banks are enabled for withdrawal
               </Text>
             </Box>
 

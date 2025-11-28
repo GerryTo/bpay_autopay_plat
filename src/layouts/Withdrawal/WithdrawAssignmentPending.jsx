@@ -101,7 +101,9 @@ const WithdrawAssignmentPending = () => {
             placeholder="Filter timestamp..."
             size="xs"
             value={columnFilters.insert}
-            onChange={(e) => handleFilterChange('insert', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('insert', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -161,7 +163,9 @@ const WithdrawAssignmentPending = () => {
             placeholder="Filter amount..."
             size="xs"
             value={columnFilters.amount}
-            onChange={(e) => handleFilterChange('amount', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('amount', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -214,7 +218,9 @@ const WithdrawAssignmentPending = () => {
             placeholder="Filter account..."
             size="xs"
             value={columnFilters.accountno}
-            onChange={(e) => handleFilterChange('accountno', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('accountno', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -222,7 +228,9 @@ const WithdrawAssignmentPending = () => {
         key: 'sourceaccountname',
         label: 'Source Account Name',
         minWidth: 170,
-        render: (item) => <Text size="sm">{item.sourceaccountname || '-'}</Text>,
+        render: (item) => (
+          <Text size="sm">{item.sourceaccountname || '-'}</Text>
+        ),
         filter: (
           <TextInput
             placeholder="Filter name..."
@@ -276,7 +284,9 @@ const WithdrawAssignmentPending = () => {
             placeholder="Filter pending..."
             size="xs"
             value={columnFilters.selisih}
-            onChange={(e) => handleFilterChange('selisih', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('selisih', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -300,10 +310,15 @@ const WithdrawAssignmentPending = () => {
     [columnFilters]
   );
 
-  const { visibleColumns, sortConfig, handleHideColumn, handleSort, handleResetAll } =
-    useTableControls(columns, {
-      onResetFilters: () => setColumnFilters(defaultFilters),
-    });
+  const {
+    visibleColumns,
+    sortConfig,
+    handleHideColumn,
+    handleSort,
+    handleResetAll,
+  } = useTableControls(columns, {
+    onResetFilters: () => setColumnFilters(defaultFilters),
+  });
 
   const includesValue = (field, value) => {
     if (!value) return true;
@@ -321,7 +336,10 @@ const WithdrawAssignmentPending = () => {
           includesValue(item.bankcode, columnFilters.bankcode) &&
           includesValue(item.sourcebankcode, columnFilters.sourcebankcode) &&
           includesValue(item.accountno, columnFilters.accountno) &&
-          includesValue(item.sourceaccountname, columnFilters.sourceaccountname) &&
+          includesValue(
+            item.sourceaccountname,
+            columnFilters.sourceaccountname
+          ) &&
           includesValue(item.transactionid, columnFilters.transactionid) &&
           includesValue(item.agentAlias, columnFilters.agentAlias) &&
           includesValue(item.selisih, columnFilters.selisih)
@@ -395,18 +413,24 @@ const WithdrawAssignmentPending = () => {
       try {
         const payloadFrom = format(start, 'yyyy-MM-dd');
         const payloadTo = format(end, 'yyyy-MM-dd');
-        const response = await withdrawAPI.getWithdrawAssignmentPending(payloadFrom, payloadTo);
+        const response = await withdrawAPI.getWithdrawAssignmentPending(
+          payloadFrom,
+          payloadTo
+        );
 
         if (response.success && response.data) {
           const payload = response.data;
           if ((payload.status || '').toLowerCase() === 'ok') {
-            const records = Array.isArray(payload.records) ? payload.records : [];
+            const records = Array.isArray(payload.records)
+              ? payload.records
+              : [];
             const decoded = records.map(decodeRecord);
             setData(mapRecords(decoded));
           } else {
             showNotification({
               title: 'Error',
-              message: payload.message || 'Failed to load assignment pending list',
+              message:
+                payload.message || 'Failed to load assignment pending list',
               color: 'red',
             });
           }
@@ -546,7 +570,7 @@ const WithdrawAssignmentPending = () => {
                 size="sm"
                 c="dimmed"
               >
-                Pending assignment monitoring (styled like Deposit Pending)
+                Pending assignment monitoring
               </Text>
             </Box>
 
@@ -601,10 +625,10 @@ const WithdrawAssignmentPending = () => {
                       leftSection={<IconCalendar size={18} />}
                       onClick={() => setDatePickerOpened((o) => !o)}
                     >
-                      {`${format(dateRange[0].startDate, 'dd MMM yyyy')} - ${format(
-                        dateRange[0].endDate,
+                      {`${format(
+                        dateRange[0].startDate,
                         'dd MMM yyyy'
-                      )}`}
+                      )} - ${format(dateRange[0].endDate, 'dd MMM yyyy')}`}
                     </Button>
                   </Popover.Target>
                   <Popover.Dropdown p="sm">
@@ -775,7 +799,10 @@ const WithdrawAssignmentPending = () => {
         centered
       >
         <Stack gap="sm">
-          <Text size="sm" c="dimmed">
+          <Text
+            size="sm"
+            c="dimmed"
+          >
             ID: {selectedRow?.futuretrxid || selectedRow?.id || '-'} | Bank:{' '}
             {selectedRow?.bankcode || '-'}
           </Text>
@@ -783,7 +810,10 @@ const WithdrawAssignmentPending = () => {
             label="Account No"
             value={assignForm.accountNo}
             onChange={(e) =>
-              setAssignForm((prev) => ({ ...prev, accountNo: e.currentTarget.value }))
+              setAssignForm((prev) => ({
+                ...prev,
+                accountNo: e.currentTarget.value,
+              }))
             }
             required
           />
@@ -791,7 +821,10 @@ const WithdrawAssignmentPending = () => {
             label="Bank Code"
             value={assignForm.bankCode}
             onChange={(e) =>
-              setAssignForm((prev) => ({ ...prev, bankCode: e.currentTarget.value }))
+              setAssignForm((prev) => ({
+                ...prev,
+                bankCode: e.currentTarget.value,
+              }))
             }
             required
           />
@@ -799,7 +832,10 @@ const WithdrawAssignmentPending = () => {
             label="Account Name"
             value={assignForm.accountName}
             onChange={(e) =>
-              setAssignForm((prev) => ({ ...prev, accountName: e.currentTarget.value }))
+              setAssignForm((prev) => ({
+                ...prev,
+                accountName: e.currentTarget.value,
+              }))
             }
             required
           />
@@ -807,11 +843,17 @@ const WithdrawAssignmentPending = () => {
             label="Username"
             value={assignForm.username}
             onChange={(e) =>
-              setAssignForm((prev) => ({ ...prev, username: e.currentTarget.value }))
+              setAssignForm((prev) => ({
+                ...prev,
+                username: e.currentTarget.value,
+              }))
             }
             required
           />
-          <Group justify="flex-end" mt="sm">
+          <Group
+            justify="flex-end"
+            mt="sm"
+          >
             <Button
               variant="light"
               onClick={() => setAssignModalOpen(false)}

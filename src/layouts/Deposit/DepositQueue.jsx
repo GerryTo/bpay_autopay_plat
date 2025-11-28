@@ -570,7 +570,7 @@ const DepositQueue = () => {
                 size="sm"
                 c="dimmed"
               >
-                Queue transactions by date range (styled like Data List)
+                Queue transactions by date range
               </Text>
             </Box>
 

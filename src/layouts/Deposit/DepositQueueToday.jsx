@@ -97,7 +97,10 @@ const DepositQueueToday = () => {
         label: 'Future Trx ID',
         minWidth: 180,
         render: (item) => (
-          <Text size="sm" fw={600}>
+          <Text
+            size="sm"
+            fw={600}
+          >
             {item.futuretrxid}
           </Text>
         ),
@@ -136,7 +139,10 @@ const DepositQueueToday = () => {
         label: 'Bank',
         minWidth: 100,
         render: (item) => (
-          <Badge color="blue" variant="light">
+          <Badge
+            color="blue"
+            variant="light"
+          >
             {item.bankcode || '-'}
           </Badge>
         ),
@@ -147,7 +153,10 @@ const DepositQueueToday = () => {
         label: 'Amount',
         minWidth: 120,
         render: (item) => (
-          <Text size="sm" className="grid-alignright">
+          <Text
+            size="sm"
+            className="grid-alignright"
+          >
             {formatNumber(item.amount)}
           </Text>
         ),
@@ -212,7 +221,10 @@ const DepositQueueToday = () => {
         label: 'Fee',
         minWidth: 120,
         render: (item) => (
-          <Text size="sm" className="grid-alignright">
+          <Text
+            size="sm"
+            className="grid-alignright"
+          >
             {formatNumber(item.fee)}
           </Text>
         ),
@@ -287,7 +299,8 @@ const DepositQueueToday = () => {
     onResetFilters: () => setColumnFilters(defaultFilters),
   });
 
-  const makeKey = (item) => `${item.futuretrxid || ''}-${item.transactionid || ''}`;
+  const makeKey = (item) =>
+    `${item.futuretrxid || ''}-${item.transactionid || ''}`;
 
   const includesValue = (field, value) => {
     if (!value) return true;
@@ -360,14 +373,18 @@ const DepositQueueToday = () => {
         const unique = {};
         const opts = records
           .filter((item) => {
-            const key = `${item.bankAccNo || item.account}||${item.bankCode || ''}`;
+            const key = `${item.bankAccNo || item.account}||${
+              item.bankCode || ''
+            }`;
             if (!key || unique[key]) return false;
             unique[key] = true;
             return true;
           })
           .map((item) => ({
             value: `${item.bankAccNo || item.account}||${item.bankCode || ''}`,
-            label: `${item.bankAccNo || item.account} - ${item.bankAccName || item.alias || item.bankCode || ''}`,
+            label: `${item.bankAccNo || item.account} - ${
+              item.bankAccName || item.alias || item.bankCode || ''
+            }`,
           }));
         setAccounts(opts);
         if (opts[0]) setAccount(opts[0].value);
@@ -398,7 +415,9 @@ const DepositQueueToday = () => {
         if (response.success && response.data) {
           const payloadData = response.data;
           if ((payloadData.status || '').toLowerCase() === 'ok') {
-            const records = Array.isArray(payloadData.records) ? payloadData.records : [];
+            const records = Array.isArray(payloadData.records)
+              ? payloadData.records
+              : [];
             setData(records);
           } else {
             showNotification({
@@ -454,7 +473,12 @@ const DepositQueueToday = () => {
 
   return (
     <Box p="md">
-      <Card shadow="sm" padding="lg" radius="md" withBorder>
+      <Card
+        shadow="sm"
+        padding="lg"
+        radius="md"
+        withBorder
+      >
         <LoadingOverlay
           visible={loading}
           overlayProps={{ radius: 'md', blur: 2 }}
@@ -462,13 +486,22 @@ const DepositQueueToday = () => {
         />
 
         <Stack gap="lg">
-          <Group justify="space-between" align="center">
+          <Group
+            justify="space-between"
+            align="center"
+          >
             <Box>
-              <Text size="xl" fw={700}>
+              <Text
+                size="xl"
+                fw={700}
+              >
                 Deposit Queue Today
               </Text>
-              <Text size="sm" c="dimmed">
-                Queue transactions for selected account (styled like Data List)
+              <Text
+                size="sm"
+                c="dimmed"
+              >
+                Queue transactions for selected account
               </Text>
             </Box>
 
@@ -496,8 +529,17 @@ const DepositQueueToday = () => {
             </Group>
           </Group>
 
-          <Card withBorder radius="md" padding="md" shadow="xs">
-            <Group align="flex-end" gap="md" wrap="wrap">
+          <Card
+            withBorder
+            radius="md"
+            padding="md"
+            shadow="xs"
+          >
+            <Group
+              align="flex-end"
+              gap="md"
+              wrap="wrap"
+            >
               <Select
                 label="Account"
                 placeholder="Select account"
@@ -509,8 +551,14 @@ const DepositQueueToday = () => {
               />
               <Stack gap={4}>
                 <Group gap={6}>
-                  <IconArrowDownCircle size={16} color="blue" />
-                  <Text size="sm" c="dimmed">
+                  <IconArrowDownCircle
+                    size={16}
+                    color="blue"
+                  />
+                  <Text
+                    size="sm"
+                    c="dimmed"
+                  >
                     Total Amount
                   </Text>
                 </Group>
@@ -518,8 +566,14 @@ const DepositQueueToday = () => {
               </Stack>
               <Stack gap={4}>
                 <Group gap={6}>
-                  <IconCash size={16} color="orange" />
-                  <Text size="sm" c="dimmed">
+                  <IconCash
+                    size={16}
+                    color="orange"
+                  />
+                  <Text
+                    size="sm"
+                    c="dimmed"
+                  >
                     Total Fee
                   </Text>
                 </Group>
@@ -529,7 +583,10 @@ const DepositQueueToday = () => {
           </Card>
 
           <Box pos="relative">
-            <ScrollArea type="auto" h="60vh">
+            <ScrollArea
+              type="auto"
+              h="60vh"
+            >
               <Table
                 highlightOnHover
                 withTableBorder
@@ -543,9 +600,18 @@ const DepositQueueToday = () => {
                 <Table.Thead>
                   <Table.Tr>
                     {visibleColumns.map((col) => (
-                      <Table.Th key={col.key} style={{ minWidth: col.minWidth || 120 }}>
-                        <Group gap={8} align="center">
-                          <Text size="sm" fw={600}>
+                      <Table.Th
+                        key={col.key}
+                        style={{ minWidth: col.minWidth || 120 }}
+                      >
+                        <Group
+                          gap={8}
+                          align="center"
+                        >
+                          <Text
+                            size="sm"
+                            fw={600}
+                          >
                             {col.label}
                           </Text>
                           <ColumnActionMenu
@@ -562,7 +628,10 @@ const DepositQueueToday = () => {
                     {visibleColumns.map((col) => (
                       <Table.Th
                         key={`${col.key}-filter`}
-                        style={{ minWidth: col.minWidth || 120, padding: '8px' }}
+                        style={{
+                          minWidth: col.minWidth || 120,
+                          padding: '8px',
+                        }}
                       >
                         {col.filter || null}
                       </Table.Th>
@@ -581,7 +650,10 @@ const DepositQueueToday = () => {
                   ) : (
                     <Table.Tr>
                       <Table.Td colSpan={visibleColumns.length}>
-                        <Text ta="center" c="dimmed">
+                        <Text
+                          ta="center"
+                          c="dimmed"
+                        >
                           No data available
                         </Text>
                       </Table.Td>
@@ -592,9 +664,18 @@ const DepositQueueToday = () => {
             </ScrollArea>
           </Box>
 
-          <Group justify="space-between" align="center">
-            <Group gap="sm" align="center">
-              <Text size="sm" c="dimmed">
+          <Group
+            justify="space-between"
+            align="center"
+          >
+            <Group
+              gap="sm"
+              align="center"
+            >
+              <Text
+                size="sm"
+                c="dimmed"
+              >
                 Rows per page:
               </Text>
               <Select

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Box,
   Button,
@@ -58,7 +58,11 @@ const AccountList = () => {
         label: 'Login',
         minWidth: 120,
         render: (item) => (
-          <Text fw={600} size="sm" c="blue">
+          <Text
+            fw={600}
+            size="sm"
+            c="blue"
+          >
             {item.login}
           </Text>
         ),
@@ -76,7 +80,10 @@ const AccountList = () => {
         label: 'Status',
         minWidth: 120,
         render: (item) => (
-          <Badge color={item.active === 'Y' ? 'green' : 'red'} variant="light">
+          <Badge
+            color={item.active === 'Y' ? 'green' : 'red'}
+            variant="light"
+          >
             {item.active === 'Y' ? 'Active' : 'Inactive'}
           </Badge>
         ),
@@ -100,7 +107,10 @@ const AccountList = () => {
         label: 'Type',
         minWidth: 100,
         render: (item) => (
-          <Badge color="blue" variant="outline">
+          <Badge
+            color="blue"
+            variant="outline"
+          >
             {item.type}
           </Badge>
         ),
@@ -246,7 +256,10 @@ const AccountList = () => {
         label: 'Action',
         minWidth: 150,
         render: (item) => (
-          <Group gap="xs" wrap="nowrap">
+          <Group
+            gap="xs"
+            wrap="nowrap"
+          >
             <Tooltip label="Edit User">
               <ActionIcon
                 variant="light"
@@ -305,7 +318,9 @@ const AccountList = () => {
       data.filter((item) => {
         return (
           includesValue(item.login, columnFilters.login) &&
-          (columnFilters.status ? item.active === columnFilters.status : true) &&
+          (columnFilters.status
+            ? item.active === columnFilters.status
+            : true) &&
           (columnFilters.type ? item.type === columnFilters.type : true) &&
           includesValue(item.merchantcode, columnFilters.merchantcode) &&
           includesValue(item.phoneNumber, columnFilters.phoneNumber) &&
@@ -696,8 +711,15 @@ const AccountList = () => {
                         key={col.key}
                         style={{ minWidth: col.minWidth || 120 }}
                       >
-                        <Group gap={6} justify="space-between" align="center">
-                          <Text size="sm" fw={600}>
+                        <Group
+                          gap={6}
+                          justify="space-between"
+                          align="center"
+                        >
+                          <Text
+                            size="sm"
+                            fw={600}
+                          >
                             {col.label}
                           </Text>
                           <ColumnActionMenu

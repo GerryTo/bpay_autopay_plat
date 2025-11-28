@@ -40,7 +40,10 @@ const statusOptions = [
   { value: 'SEND TO AUTOMATION SUCCESS', label: 'In process' },
   { value: 'Withdrawal Success', label: 'Withdraw success' },
   { value: 'AUTOMATION FAILED', label: 'Withdraw need attention' },
-  { value: 'finished_checking_history', label: 'Withdraw Finished Checking History' },
+  {
+    value: 'finished_checking_history',
+    label: 'Withdraw Finished Checking History',
+  },
   { value: 'Withdrawal Failed', label: 'Withdraw Failed' },
   { value: 'Manual Assign List', label: 'Manual Assign List' },
 ];
@@ -125,7 +128,11 @@ const AppiumWithdrawList = () => {
           <Text
             size="sm"
             fw={600}
-            style={{ backgroundColor: getTransactionHighlight(item), padding: '2px 4px', borderRadius: 4 }}
+            style={{
+              backgroundColor: getTransactionHighlight(item),
+              padding: '2px 4px',
+              borderRadius: 4,
+            }}
           >
             {item.id}
           </Text>
@@ -146,7 +153,11 @@ const AppiumWithdrawList = () => {
         render: (item) => (
           <Text
             size="sm"
-            style={{ backgroundColor: getTransactionHighlight(item), padding: '2px 4px', borderRadius: 4 }}
+            style={{
+              backgroundColor: getTransactionHighlight(item),
+              padding: '2px 4px',
+              borderRadius: 4,
+            }}
           >
             {item.transactionid || '-'}
           </Text>
@@ -188,7 +199,9 @@ const AppiumWithdrawList = () => {
             placeholder="Filter system ts..."
             size="xs"
             value={columnFilters.insert}
-            onChange={(e) => handleFilterChange('insert', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('insert', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -338,7 +351,9 @@ const AppiumWithdrawList = () => {
         key: 'sourceaccountname',
         label: 'Source Account Name',
         minWidth: 170,
-        render: (item) => <Text size="sm">{item.sourceaccountname || '-'}</Text>,
+        render: (item) => (
+          <Text size="sm">{item.sourceaccountname || '-'}</Text>
+        ),
         filter: (
           <TextInput
             placeholder="Filter source name..."
@@ -386,7 +401,9 @@ const AppiumWithdrawList = () => {
         key: 'statusTransaction',
         label: 'Status Transaction',
         minWidth: 150,
-        render: (item) => <Text size="sm">{item.statusTransaction || '-'}</Text>,
+        render: (item) => (
+          <Text size="sm">{item.statusTransaction || '-'}</Text>
+        ),
         filter: (
           <TextInput
             placeholder="Filter status trx..."
@@ -496,11 +513,23 @@ const AppiumWithdrawList = () => {
           includesValue(item.amount, columnFilters.amount) &&
           includesValue(item.bankcode, columnFilters.bankcode) &&
           includesValue(item.dstbankaccount, columnFilters.dstbankaccount) &&
-          includesValue(item.dstbankaccountNo, columnFilters.dstbankaccountNo) &&
-          includesValue(item.sourceaccountname, columnFilters.sourceaccountname) &&
+          includesValue(
+            item.dstbankaccountNo,
+            columnFilters.dstbankaccountNo
+          ) &&
+          includesValue(
+            item.sourceaccountname,
+            columnFilters.sourceaccountname
+          ) &&
           includesValue(item.notes3, columnFilters.notes3) &&
-          includesValue(item.statusAutomation, columnFilters.statusAutomation) &&
-          includesValue(item.statusTransaction, columnFilters.statusTransaction) &&
+          includesValue(
+            item.statusAutomation,
+            columnFilters.statusAutomation
+          ) &&
+          includesValue(
+            item.statusTransaction,
+            columnFilters.statusTransaction
+          ) &&
           includesValue(item.memo, columnFilters.memo) &&
           includesValue(item.SentMqtt, columnFilters.SentMqtt) &&
           includesValue(item.ReceiveMqtt, columnFilters.ReceiveMqtt) &&
@@ -572,7 +601,9 @@ const AppiumWithdrawList = () => {
           unique[value] = true;
           arr.push({
             value,
-            label: `${value} - ${item.bankAccName || item.alias || item.bankCode || ''}`,
+            label: `${value} - ${
+              item.bankAccName || item.alias || item.bankCode || ''
+            }`,
           });
           return arr;
         }, []);
@@ -629,14 +660,16 @@ const AppiumWithdrawList = () => {
           } else {
             showNotification({
               title: 'Error',
-              message: payload.message || 'Failed to load automation withdraw list',
+              message:
+                payload.message || 'Failed to load automation withdraw list',
               color: 'red',
             });
           }
         } else {
           showNotification({
             title: 'Error',
-            message: response.error || 'Failed to load automation withdraw list',
+            message:
+              response.error || 'Failed to load automation withdraw list',
             color: 'red',
           });
         }
@@ -703,7 +736,7 @@ const AppiumWithdrawList = () => {
                 size="sm"
                 c="dimmed"
               >
-                Automation withdraw monitoring (styled like Deposit Pending)
+                Automation withdraw monitoring
               </Text>
             </Box>
 

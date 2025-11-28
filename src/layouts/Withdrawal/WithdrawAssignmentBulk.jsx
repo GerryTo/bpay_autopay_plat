@@ -188,7 +188,9 @@ const WithdrawAssignmentBulk = () => {
             placeholder="Filter timestamp..."
             size="xs"
             value={columnFilters.insert}
-            onChange={(e) => handleFilterChange('insert', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('insert', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -370,7 +372,9 @@ const WithdrawAssignmentBulk = () => {
         key: 'sourceaccountname',
         label: 'Source Account Name',
         minWidth: 180,
-        render: (item) => <Text size="sm">{item.sourceaccountname || '-'}</Text>,
+        render: (item) => (
+          <Text size="sm">{item.sourceaccountname || '-'}</Text>
+        ),
         filter: (
           <TextInput
             placeholder="Filter src name..."
@@ -436,7 +440,9 @@ const WithdrawAssignmentBulk = () => {
             placeholder="Filter status..."
             size="xs"
             value={columnFilters.status}
-            onChange={(e) => handleFilterChange('status', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('status', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -572,7 +578,10 @@ const WithdrawAssignmentBulk = () => {
           includesValue(item.accountname, columnFilters.accountname) &&
           includesValue(item.sourcebankcode, columnFilters.sourcebankcode) &&
           includesValue(item.accountno, columnFilters.accountno) &&
-          includesValue(item.sourceaccountname, columnFilters.sourceaccountname) &&
+          includesValue(
+            item.sourceaccountname,
+            columnFilters.sourceaccountname
+          ) &&
           includesValue(item.originaldate, columnFilters.originaldate) &&
           includesValue(item.fee, columnFilters.fee) &&
           includesValue(item.status, columnFilters.status) &&
@@ -580,7 +589,10 @@ const WithdrawAssignmentBulk = () => {
           includesValue(item.notes3, columnFilters.notes3) &&
           includesValue(item.finalstatusdesc, columnFilters.finalstatusdesc) &&
           includesValue(item.agentAlias, columnFilters.agentAlias) &&
-          includesValue(item.assignStatusDesc, columnFilters.assignStatusDesc) &&
+          includesValue(
+            item.assignStatusDesc,
+            columnFilters.assignStatusDesc
+          ) &&
           includesValue(item.note, columnFilters.note)
         );
       }),
@@ -729,7 +741,9 @@ const WithdrawAssignmentBulk = () => {
         return;
       }
 
-      const [hourfromRaw = '00.00', hourtoRaw = '23.59'] = (hourRange || '00.00-23.59').split('-');
+      const [hourfromRaw = '00.00', hourtoRaw = '23.59'] = (
+        hourRange || '00.00-23.59'
+      ).split('-');
       const hourfrom = hourfromRaw.replace('.', ':');
       const hourto = hourtoRaw.replace('.', ':');
 
@@ -760,14 +774,17 @@ const WithdrawAssignmentBulk = () => {
           } else {
             showNotification({
               title: 'Error',
-              message: payload.message || 'Failed to load withdraw assignment bulk list',
+              message:
+                payload.message ||
+                'Failed to load withdraw assignment bulk list',
               color: 'red',
             });
           }
         } else {
           showNotification({
             title: 'Error',
-            message: response.error || 'Failed to load withdraw assignment bulk list',
+            message:
+              response.error || 'Failed to load withdraw assignment bulk list',
             color: 'red',
           });
         }
@@ -816,7 +833,12 @@ const WithdrawAssignmentBulk = () => {
   };
 
   const handleBulkAssign = async () => {
-    const { accountNo, bankCode: assignBank, accountName, username } = assignForm;
+    const {
+      accountNo,
+      bankCode: assignBank,
+      accountName,
+      username,
+    } = assignForm;
     if (!accountNo || !assignBank || !accountName || !username) {
       showNotification({
         title: 'Validation',
@@ -916,7 +938,7 @@ const WithdrawAssignmentBulk = () => {
                 size="sm"
                 c="dimmed"
               >
-                Assign multiple withdraw need-to-check items (styled like Deposit Pending)
+                Assign multiple withdraw need-to-check items
               </Text>
             </Box>
 
@@ -1160,7 +1182,9 @@ const WithdrawAssignmentBulk = () => {
                             />
                           </Table.Td>
                           {visibleColumns.map((col) => (
-                            <Table.Td key={col.key}>{col.render(item)}</Table.Td>
+                            <Table.Td key={col.key}>
+                              {col.render(item)}
+                            </Table.Td>
                           ))}
                         </Table.Tr>
                       );
@@ -1232,14 +1256,20 @@ const WithdrawAssignmentBulk = () => {
         centered
       >
         <Stack gap="sm">
-          <Text size="sm" c="dimmed">
+          <Text
+            size="sm"
+            c="dimmed"
+          >
             Items selected: {selectedItems.length}
           </Text>
           <TextInput
             label="Account No"
             value={assignForm.accountNo}
             onChange={(e) =>
-              setAssignForm((prev) => ({ ...prev, accountNo: e.currentTarget.value }))
+              setAssignForm((prev) => ({
+                ...prev,
+                accountNo: e.currentTarget.value,
+              }))
             }
             required
           />
@@ -1247,7 +1277,10 @@ const WithdrawAssignmentBulk = () => {
             label="Bank Code"
             value={assignForm.bankCode}
             onChange={(e) =>
-              setAssignForm((prev) => ({ ...prev, bankCode: e.currentTarget.value }))
+              setAssignForm((prev) => ({
+                ...prev,
+                bankCode: e.currentTarget.value,
+              }))
             }
             required
           />
@@ -1255,7 +1288,10 @@ const WithdrawAssignmentBulk = () => {
             label="Account Name"
             value={assignForm.accountName}
             onChange={(e) =>
-              setAssignForm((prev) => ({ ...prev, accountName: e.currentTarget.value }))
+              setAssignForm((prev) => ({
+                ...prev,
+                accountName: e.currentTarget.value,
+              }))
             }
             required
           />
@@ -1263,11 +1299,17 @@ const WithdrawAssignmentBulk = () => {
             label="Username"
             value={assignForm.username}
             onChange={(e) =>
-              setAssignForm((prev) => ({ ...prev, username: e.currentTarget.value }))
+              setAssignForm((prev) => ({
+                ...prev,
+                username: e.currentTarget.value,
+              }))
             }
             required
           />
-          <Group justify="flex-end" mt="sm">
+          <Group
+            justify="flex-end"
+            mt="sm"
+          >
             <Button
               variant="light"
               onClick={() => setAssignModalOpen(false)}

@@ -264,7 +264,11 @@ const DepositDashboard = () => {
       pending: stats.nagadDepositPending,
       needAttention: stats.nagadDepositNeedAttention,
     }),
-    [stats.nagadDeposit, stats.nagadDepositNeedAttention, stats.nagadDepositPending]
+    [
+      stats.nagadDeposit,
+      stats.nagadDepositNeedAttention,
+      stats.nagadDepositPending,
+    ]
   );
 
   const bkashStats = useMemo(
@@ -273,7 +277,11 @@ const DepositDashboard = () => {
       pending: stats.bkashDepositPending,
       needAttention: stats.bkashDepositNeedAttention,
     }),
-    [stats.bkashDeposit, stats.bkashDepositNeedAttention, stats.bkashDepositPending]
+    [
+      stats.bkashDeposit,
+      stats.bkashDepositNeedAttention,
+      stats.bkashDepositPending,
+    ]
   );
 
   const averageStats = useMemo(
@@ -323,7 +331,7 @@ const DepositDashboard = () => {
                 size="sm"
                 c="dimmed"
               >
-                Daily deposit performance summary (styled like Data List)
+                Daily deposit performance summary
               </Text>
             </Box>
 
@@ -336,7 +344,9 @@ const DepositDashboard = () => {
               </Text>
               <Switch
                 checked={autoRefresh}
-                onChange={(event) => setAutoRefresh(event.currentTarget.checked)}
+                onChange={(event) =>
+                  setAutoRefresh(event.currentTarget.checked)
+                }
                 color="blue"
               />
               <Button
@@ -435,9 +445,7 @@ const DepositDashboard = () => {
             <SimpleGrid
               cols={2}
               spacing="md"
-              breakpoints={[
-                { maxWidth: 'sm', cols: 1 },
-              ]}
+              breakpoints={[{ maxWidth: 'sm', cols: 1 }]}
             >
               {averageStats.map((item) => (
                 <StatCard
@@ -462,9 +470,7 @@ const DepositDashboard = () => {
             <SimpleGrid
               cols={2}
               spacing="md"
-              breakpoints={[
-                { maxWidth: 'md', cols: 1 },
-              ]}
+              breakpoints={[{ maxWidth: 'md', cols: 1 }]}
             >
               <ChannelCard
                 title="NAGAD"

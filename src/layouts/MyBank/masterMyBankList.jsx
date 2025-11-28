@@ -87,7 +87,10 @@ const MasterMyBankList = () => {
         label: 'Group',
         minWidth: 110,
         render: (item) => (
-          <Text fw={600} size="sm">
+          <Text
+            fw={600}
+            size="sm"
+          >
             {item.group || '-'}
           </Text>
         ),
@@ -110,7 +113,9 @@ const MasterMyBankList = () => {
             placeholder="Filter upline..."
             size="xs"
             value={columnFilters.upline}
-            onChange={(e) => handleFilterChange('upline', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('upline', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -147,7 +152,11 @@ const MasterMyBankList = () => {
         label: 'Account No',
         minWidth: 140,
         render: (item) => (
-          <Text fw={600} size="sm" c="blue">
+          <Text
+            fw={600}
+            size="sm"
+            c="blue"
+          >
             {item.bankAccNo}
           </Text>
         ),
@@ -167,7 +176,10 @@ const MasterMyBankList = () => {
         label: 'Bank',
         minWidth: 110,
         render: (item) => (
-          <Badge color="blue" variant="light">
+          <Badge
+            color="blue"
+            variant="light"
+          >
             {item.bankCode}
           </Badge>
         ),
@@ -187,7 +199,10 @@ const MasterMyBankList = () => {
         label: 'Type',
         minWidth: 90,
         render: (item) => (
-          <Badge color="gray" variant="outline">
+          <Badge
+            color="gray"
+            variant="outline"
+          >
             {item.type}
           </Badge>
         ),
@@ -205,7 +220,10 @@ const MasterMyBankList = () => {
         label: 'Active',
         minWidth: 100,
         render: (item) => (
-          <Badge color={item.active === 'Y' ? 'green' : 'red'} variant="light">
+          <Badge
+            color={item.active === 'Y' ? 'green' : 'red'}
+            variant="light"
+          >
             {item.active === 'Y' ? 'Active' : 'Inactive'}
           </Badge>
         ),
@@ -228,7 +246,9 @@ const MasterMyBankList = () => {
         key: 'opentype',
         label: 'Open Type',
         minWidth: 120,
-        render: (item) => <Text size="sm">{item.opentype ?? item.openType}</Text>,
+        render: (item) => (
+          <Text size="sm">{item.opentype ?? item.openType}</Text>
+        ),
         filter: (
           <TextInput
             placeholder="Filter open type..."
@@ -261,7 +281,10 @@ const MasterMyBankList = () => {
         label: 'Agent Commission',
         minWidth: 140,
         render: (item) => (
-          <Text size="sm" className="grid-alignright">
+          <Text
+            size="sm"
+            className="grid-alignright"
+          >
             {formatNumber(item.agentCommission)}
           </Text>
         ),
@@ -277,7 +300,10 @@ const MasterMyBankList = () => {
         label: 'Last Balance',
         minWidth: 140,
         render: (item) => (
-          <Text size="sm" className="grid-alignright">
+          <Text
+            size="sm"
+            className="grid-alignright"
+          >
             {formatNumber(item.lastbalance)}
           </Text>
         ),
@@ -287,7 +313,10 @@ const MasterMyBankList = () => {
         label: 'Action',
         minWidth: 200,
         render: (item) => (
-          <Group gap="xs" wrap="nowrap">
+          <Group
+            gap="xs"
+            wrap="nowrap"
+          >
             <Button
               variant="light"
               color="blue"
@@ -688,7 +717,7 @@ const MasterMyBankList = () => {
                 size="sm"
                 c="dimmed"
               >
-                Manajemen akun MyBank beserta grouping, upline, dan issue
+                MyBank account management including grouping, upline, and issues
               </Text>
             </Box>
           </Group>
@@ -840,9 +869,19 @@ const MasterMyBankList = () => {
                       />
                     </Table.Th>
                     {visibleColumns.map((col) => (
-                      <Table.Th key={col.key} style={{ minWidth: col.minWidth }}>
-                        <Group gap={6} align="center" wrap="nowrap">
-                          <Text size="sm" fw={600}>
+                      <Table.Th
+                        key={col.key}
+                        style={{ minWidth: col.minWidth }}
+                      >
+                        <Group
+                          gap={6}
+                          align="center"
+                          wrap="nowrap"
+                        >
+                          <Text
+                            size="sm"
+                            fw={600}
+                          >
                             {col.label}
                           </Text>
                           <ColumnActionMenu

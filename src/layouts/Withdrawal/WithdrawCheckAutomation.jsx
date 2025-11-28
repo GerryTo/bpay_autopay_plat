@@ -124,7 +124,11 @@ const WithdrawCheckAutomation = () => {
           <Text
             size="sm"
             fw={600}
-            style={{ backgroundColor: getTransactionHighlight(item), padding: '2px 4px', borderRadius: 4 }}
+            style={{
+              backgroundColor: getTransactionHighlight(item),
+              padding: '2px 4px',
+              borderRadius: 4,
+            }}
           >
             {item.id}
           </Text>
@@ -148,7 +152,9 @@ const WithdrawCheckAutomation = () => {
             placeholder="Filter timestamp..."
             size="xs"
             value={columnFilters.insert}
-            onChange={(e) => handleFilterChange('insert', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('insert', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -269,7 +275,11 @@ const WithdrawCheckAutomation = () => {
         render: (item) => (
           <Text
             size="sm"
-            style={{ backgroundColor: getTransactionHighlight(item), padding: '2px 4px', borderRadius: 4 }}
+            style={{
+              backgroundColor: getTransactionHighlight(item),
+              padding: '2px 4px',
+              borderRadius: 4,
+            }}
           >
             {item.transactionid || '-'}
           </Text>
@@ -351,7 +361,9 @@ const WithdrawCheckAutomation = () => {
         key: 'sourceaccountname',
         label: 'Source Account Name',
         minWidth: 180,
-        render: (item) => <Text size="sm">{item.sourceaccountname || '-'}</Text>,
+        render: (item) => (
+          <Text size="sm">{item.sourceaccountname || '-'}</Text>
+        ),
         filter: (
           <TextInput
             placeholder="Filter src name..."
@@ -417,7 +429,9 @@ const WithdrawCheckAutomation = () => {
             placeholder="Filter status..."
             size="xs"
             value={columnFilters.status}
-            onChange={(e) => handleFilterChange('status', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('status', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -539,7 +553,10 @@ const WithdrawCheckAutomation = () => {
           includesValue(item.accountname, columnFilters.accountname) &&
           includesValue(item.sourcebankcode, columnFilters.sourcebankcode) &&
           includesValue(item.accountno, columnFilters.accountno) &&
-          includesValue(item.sourceaccountname, columnFilters.sourceaccountname) &&
+          includesValue(
+            item.sourceaccountname,
+            columnFilters.sourceaccountname
+          ) &&
           includesValue(item.originaldate, columnFilters.originaldate) &&
           includesValue(item.fee, columnFilters.fee) &&
           includesValue(item.status, columnFilters.status) &&
@@ -641,7 +658,9 @@ const WithdrawCheckAutomation = () => {
         return;
       }
 
-      const [hourfrom = '00:00', hourto = '23:59'] = (hourRange || '00:00-23:59').split('-');
+      const [hourfrom = '00:00', hourto = '23:59'] = (
+        hourRange || '00:00-23:59'
+      ).split('-');
 
       silent ? setRefreshing(true) : setLoading(true);
 
@@ -668,14 +687,17 @@ const WithdrawCheckAutomation = () => {
           } else {
             showNotification({
               title: 'Error',
-              message: payload.message || 'Failed to load automation withdraw check list',
+              message:
+                payload.message ||
+                'Failed to load automation withdraw check list',
               color: 'red',
             });
           }
         } else {
           showNotification({
             title: 'Error',
-            message: response.error || 'Failed to load automation withdraw check list',
+            message:
+              response.error || 'Failed to load automation withdraw check list',
             color: 'red',
           });
         }
@@ -729,7 +751,7 @@ const WithdrawCheckAutomation = () => {
                 size="sm"
                 c="dimmed"
               >
-                Automation withdraw need-to-check monitoring (styled like Deposit Pending)
+                Automation withdraw need-to-check monitoring
               </Text>
             </Box>
 

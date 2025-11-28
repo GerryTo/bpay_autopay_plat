@@ -39,7 +39,10 @@ const statusOptions = [
   { value: 'assign', label: 'Assign' },
   { value: 'reassign', label: 'Re-Assign' },
   { value: 'Order need to check', label: 'Order need to check' },
-  { value: 'Order need to check history', label: 'Order need to check history' },
+  {
+    value: 'Order need to check history',
+    label: 'Order need to check history',
+  },
   { value: 'Pending history', label: 'Pending history' },
 ];
 
@@ -148,7 +151,9 @@ const WithdrawCheckFilter = () => {
             placeholder="Filter timestamp..."
             size="xs"
             value={columnFilters.insert}
-            onChange={(e) => handleFilterChange('insert', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('insert', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -330,7 +335,9 @@ const WithdrawCheckFilter = () => {
         key: 'sourceaccountname',
         label: 'Source Account Name',
         minWidth: 180,
-        render: (item) => <Text size="sm">{item.sourceaccountname || '-'}</Text>,
+        render: (item) => (
+          <Text size="sm">{item.sourceaccountname || '-'}</Text>
+        ),
         filter: (
           <TextInput
             placeholder="Filter src name..."
@@ -396,7 +403,9 @@ const WithdrawCheckFilter = () => {
             placeholder="Filter status..."
             size="xs"
             value={columnFilters.status}
-            onChange={(e) => handleFilterChange('status', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('status', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -531,7 +540,10 @@ const WithdrawCheckFilter = () => {
           includesValue(item.accountname, columnFilters.accountname) &&
           includesValue(item.sourcebankcode, columnFilters.sourcebankcode) &&
           includesValue(item.accountno, columnFilters.accountno) &&
-          includesValue(item.sourceaccountname, columnFilters.sourceaccountname) &&
+          includesValue(
+            item.sourceaccountname,
+            columnFilters.sourceaccountname
+          ) &&
           includesValue(item.originaldate, columnFilters.originaldate) &&
           includesValue(item.fee, columnFilters.fee) &&
           includesValue(item.status, columnFilters.status) &&
@@ -539,7 +551,10 @@ const WithdrawCheckFilter = () => {
           includesValue(item.notes3, columnFilters.notes3) &&
           includesValue(item.finalstatusdesc, columnFilters.finalstatusdesc) &&
           includesValue(item.agentAlias, columnFilters.agentAlias) &&
-          includesValue(item.assignStatusDesc, columnFilters.assignStatusDesc) &&
+          includesValue(
+            item.assignStatusDesc,
+            columnFilters.assignStatusDesc
+          ) &&
           includesValue(item.note, columnFilters.note)
         );
       }),
@@ -634,7 +649,9 @@ const WithdrawCheckFilter = () => {
         return;
       }
 
-      const [hourfrom = '00:00', hourto = '23:59'] = (hourRange || '00:00-23:59').split('-');
+      const [hourfrom = '00:00', hourto = '23:59'] = (
+        hourRange || '00:00-23:59'
+      ).split('-');
 
       silent ? setRefreshing(true) : setLoading(true);
 
@@ -662,14 +679,16 @@ const WithdrawCheckFilter = () => {
           } else {
             showNotification({
               title: 'Error',
-              message: payload.message || 'Failed to load withdraw check filter list',
+              message:
+                payload.message || 'Failed to load withdraw check filter list',
               color: 'red',
             });
           }
         } else {
           showNotification({
             title: 'Error',
-            message: response.error || 'Failed to load withdraw check filter list',
+            message:
+              response.error || 'Failed to load withdraw check filter list',
             color: 'red',
           });
         }
@@ -723,7 +742,7 @@ const WithdrawCheckFilter = () => {
                 size="sm"
                 c="dimmed"
               >
-                Filtered withdraw need-to-check monitoring (styled like Deposit Pending)
+                Filtered withdraw need-to-check monitoring
               </Text>
             </Box>
 

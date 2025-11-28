@@ -1,0 +1,101 @@
+<div>
+    <div class="page-header-container box">{{pagelang.pagetitle}}</div>
+    <div class="page-body box">
+        <div class="row">
+            <!--<div class="col-xs-12 col-sm-2 col-md-2 col-lg-2">
+                Date : 
+            </div>-->
+            <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+                <p class="input-group">
+                    <input type="text" class="form-control input-sm" uib-datepicker-popup="{{datepickerConfig.format}}" ng-model="filter.fromdate" is-open="popup1.opened"
+                        datepicker-options="dateOptions" ng-required="true" close-text="Close" alt-input-formats="datepickerConfig.altInputFormats" placeholder="From date"
+                    />
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default btn-sm" ng-click="open1()">
+                            <i class="glyphicon glyphicon-calendar"></i>
+                        </button>
+                    </span>
+                </p>
+            </div>
+            <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+                <p class="input-group">
+                    <input type="text" class="form-control input-sm" uib-datepicker-popup="{{datepickerConfig.format}}" ng-model="filter.todate" is-open="popup2.opened"
+                        datepicker-options="dateOptions" ng-required="true" close-text="Close" alt-input-formats="datepickerConfig.altInputFormats" placeholder="To date"
+                    />
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default btn-sm" ng-click="open2()">
+                            <i class="glyphicon glyphicon-calendar"></i>
+                        </button>
+                    </span>
+                </p>
+            </div>
+        </div>
+        <div class="row">
+            <!--<div class="col-xs-12 col-sm-2 col-md-2 col-lg-2">
+                Merchant : 
+            </div>-->
+            <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+                <select class="form-control input-sm" ng-model="filter.accountno" >
+                    <option value="0">- ALL ACCOUNT -</option>
+                    <option ng-repeat="item in acclist" value="{{item.bankaccountno}}||{{item.bankcode}}">{{item.bankaccountname}} | {{item.bankcode}}</option>
+                </select>
+            </div>
+            <div class="col-xs-12 col-sm-6 col-md-6 col-lg-6">
+                <div class="button-container">
+                    <button type="button" class="btn btn-default btn-sm" ng-click="refresh()" ng-disabled="gridIsLoading==true">{{globallang.refresh}}</button>
+                    <!--<button type="button" class="btn btn-success btn-sm" ng-click="withdraw()">Withdraw</button>-->
+                    <button type="button" class="btn btn-warning btn-sm" ng-click="adjustment()">Adjustment</button>
+					<button type="button" class="btn btn-warning btn-sm" ng-click="adjustmentMerchant()">Adjustment Merchant</button>
+                    <button type="button" class="btn btn-warning btn-sm" ng-click="adjustmentMerchantNoFee()"> Adjustment Merchant without Fee </button>
+                </div> 
+            </div>
+        </div>
+        <!--<div class="row">
+            <div class="col-xs-12 col-sm-2 col-md-2 col-lg-2">
+                Account : 
+            </div>
+            <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+                <select class="form-control input-sm" ng-model="filter.accountno">
+                    <option value="0">- ALL ACCOUNT -</option>
+                    <option ng-repeat="item in acclist" value="{{item.bankaccountno}}">{{item.bankaccountno}}</option>
+                </select>
+            </div>
+        </div>-->
+        <div id="grid1" ui-grid="gridOptions" class="grid" ui-grid-resize-columns ui-grid-auto-resize ui-grid-exporter>
+            <div class="grid-nodata-container" ng-show="gridOptions.data.length == 0 && !gridIsLoading">No Data Available</div>
+            <div class="grid-loading-container" ng-show="gridIsLoading">
+                <img src="images/loading.gif" />
+            </div>
+        </div>
+	<table width="100%">
+        <tr>
+                <td width="20%">Opening Balance</td>
+                <td width="25%" class="grid-alignright">{{Balance.opening | number :0}} </td>
+                <td width="10%">&nbsp;</td>
+                <td width="20%">Current Balance</td>
+                <td width="25%" class="grid-alignright">{{Balance.opening+Summary.DB-Summary.CR+Summary.fee | number :0}} </td>
+        <tr>
+        <tr>
+                <td>Total Pending DB</td>
+                <td class="grid-alignright">{{Summary.pendingDB | number :0}} </td>
+                <td>&nbsp;</td>
+                <td>Total DB</td>
+                <td class="grid-alignright">{{Summary.DB | number :0}} </td>
+        <tr>
+        <tr>
+                <td>Total Pending CR</td>
+                <td class="grid-alignright">{{Summary.PendingCR | number :0}} </td>
+                <td>&nbsp;</td>
+                <td>Total CR</td>
+                <td class="grid-alignright">{{Summary.CR | number :0}} </td>
+        <tr>
+        <tr>
+                <td></td>
+                <td></td>
+                <td>&nbsp;</td>
+                <td>Fee</td>
+                <td class="grid-alignright">{{Summary.fee | number :0}} </td>
+        <tr>
+        </table>
+    </div>
+</div>

@@ -131,7 +131,9 @@ const WithdrawQueue = () => {
             placeholder="Filter amount..."
             size="xs"
             value={columnFilters.amount}
-            onChange={(e) => handleFilterChange('amount', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('amount', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -225,7 +227,9 @@ const WithdrawQueue = () => {
             placeholder="Filter status..."
             size="xs"
             value={columnFilters.status}
-            onChange={(e) => handleFilterChange('status', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('status', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -295,10 +299,15 @@ const WithdrawQueue = () => {
     [columnFilters, handleFilterChange]
   );
 
-  const { visibleColumns, sortConfig, handleHideColumn, handleSort, handleResetAll } =
-    useTableControls(columns, {
-      onResetFilters: () => setColumnFilters(defaultFilters),
-    });
+  const {
+    visibleColumns,
+    sortConfig,
+    handleHideColumn,
+    handleSort,
+    handleResetAll,
+  } = useTableControls(columns, {
+    onResetFilters: () => setColumnFilters(defaultFilters),
+  });
 
   const includesValue = (field, value) => {
     if (!value) return true;
@@ -375,45 +384,42 @@ const WithdrawQueue = () => {
       amount: Number(item.amount) || 0,
     }));
 
-  const fetchList = useCallback(
-    async ({ silent = false } = {}) => {
-      silent ? setRefreshing(true) : setLoading(true);
-      try {
-        const response = await withdrawAPI.getWithdrawQueue();
-        if (response.success && response.data) {
-          const payload = response.data;
-          if ((payload.status || '').toLowerCase() === 'ok') {
-            const records = Array.isArray(payload.records) ? payload.records : [];
-            const decoded = records.map(decodeRecord);
-            setData(mapRecords(decoded));
-          } else {
-            showNotification({
-              title: 'Error',
-              message: payload.message || 'Failed to load withdraw queue',
-              color: 'red',
-            });
-          }
+  const fetchList = useCallback(async ({ silent = false } = {}) => {
+    silent ? setRefreshing(true) : setLoading(true);
+    try {
+      const response = await withdrawAPI.getWithdrawQueue();
+      if (response.success && response.data) {
+        const payload = response.data;
+        if ((payload.status || '').toLowerCase() === 'ok') {
+          const records = Array.isArray(payload.records) ? payload.records : [];
+          const decoded = records.map(decodeRecord);
+          setData(mapRecords(decoded));
         } else {
           showNotification({
             title: 'Error',
-            message: response.error || 'Failed to load withdraw queue',
+            message: payload.message || 'Failed to load withdraw queue',
             color: 'red',
           });
         }
-      } catch (error) {
-        console.error('Withdraw queue list fetch error:', error);
+      } else {
         showNotification({
           title: 'Error',
-          message: 'Unable to load withdraw queue',
+          message: response.error || 'Failed to load withdraw queue',
           color: 'red',
         });
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
       }
-    },
-    []
-  );
+    } catch (error) {
+      console.error('Withdraw queue list fetch error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to load withdraw queue',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchList();
@@ -454,7 +460,7 @@ const WithdrawQueue = () => {
                 size="sm"
                 c="dimmed"
               >
-                Queue monitoring (styled like Deposit Pending)
+                Queue monitoring
               </Text>
             </Box>
 

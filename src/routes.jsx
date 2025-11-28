@@ -84,6 +84,32 @@ import WithdrawAssignment from './layouts/Withdrawal/WithdrawAssignment';
 import WithdrawAssignmentBulk from './layouts/Withdrawal/WithdrawAssignmentBulk';
 import WithdrawAssignmentPending from './layouts/Withdrawal/WithdrawAssignmentPending';
 import WithdrawQueue from './layouts/Withdrawal/WithdrawQueue';
+import TransactionById from './layouts/Transaction/TransactionById';
+import TransactionByIdBackup from './layouts/Transaction/TransactionByIdBackup';
+import TransactionByIdEquals from './layouts/Transaction/TransactionByIdEquals';
+import FindTransactionMember from './layouts/Transaction/FindTransactionMember';
+import TransactionRejected from './layouts/Transaction/TransactionRejected';
+import FindTrxid from './layouts/Transaction/FindTrxid';
+import TransactionByAccount from './layouts/Transaction/TransactionByAccount';
+import TransactionByAccountHistory from './layouts/Transaction/TransactionByAccountHistory';
+import TransactionResendCallback from './layouts/Transaction/TransactionResendCallback';
+import TransactionCallback502 from './layouts/Transaction/TransactionCallback502';
+import TransactionTodayComplete from './layouts/Transaction/TransactionTodayComplete';
+import TransactionByIdNoAction from './layouts/Transaction/TransactionByIdNoAction';
+import TransactionByIdBackupNoAction from './layouts/Transaction/TransactionByIdBackupNoAction';
+import SuspectedTransaction from './layouts/Transaction/SuspectedTransaction';
+import SubmittedTransaction from './layouts/Transaction/SubmittedTransaction';
+import TransactionPending from './layouts/Transaction/TransactionPending';
+import TransactionFlagM from './layouts/Transaction/TransactionFlagM';
+import TransactionNotMatchSameday from './layouts/Transaction/TransactionNotMatchSameday';
+import TransactionResubmitLog from './layouts/Transaction/TransactionResubmitLog';
+import TransactionResubmitAutoMatching from './layouts/Transaction/TransactionResubmitAutoMatching';
+import UpdateTransaction from './layouts/Transaction/UpdateTransaction';
+import UpdateTransactionStatusNew from './layouts/Transaction/UpdateTransactionStatusNew';
+import UpdateTransactionLog from './layouts/Transaction/UpdateTransactionLog';
+import CompanyAdjustment from './layouts/Transaction/CompanyAdjustment';
+import CompanyAdjustmentMerchant from './layouts/Transaction/CompanyAdjustmentMerchant';
+import TransactionResubmit from './layouts/Transaction/TransactionResubmit';
 
 export const mockdataRoutes = [
   {
@@ -167,7 +193,7 @@ export const mockdataRoutes = [
             label: 'Transaction by Id',
             icon: <IconTransfer />,
             link: '/transaction-by-id',
-            element: '',
+            element: <TransactionById />,
           },
           {
             label: 'MCO',
@@ -185,25 +211,25 @@ export const mockdataRoutes = [
             label: 'Transaction Resend Callback',
             icon: <IconBrandTelegram />,
             link: '/transaction-callback-empty',
-            element: '',
+            element: <TransactionResendCallback />,
           },
           {
             label: 'Resend Callback More Than 15 Minute',
             icon: <IconBrandTelegram />,
             link: '/transaction-callback-502',
-            element: '',
+            element: <TransactionCallback502 />,
           },
           {
             label: 'Resubmit Transaction',
             icon: <IconBolt />,
             link: '/resubmit-transaction',
-            element: '',
+            element: <TransactionResubmit />,
           },
           {
             label: 'Find Transaction Member',
             icon: <IconTransfer />,
             link: '/find-transaction-member',
-            element: '',
+            element: <FindTransactionMember />,
           },
           {
             label: 'SMS Failed Match',
@@ -239,7 +265,7 @@ export const mockdataRoutes = [
             label: 'Transaction by Id',
             icon: <IconTransfer />,
             link: '/transaction-by-id',
-            element: '',
+            element: <TransactionById />,
           },
           {
             label: 'Withdraw Check',
@@ -773,19 +799,19 @@ export const mockdataRoutes = [
         label: 'Transaction by Id',
         icon: <IconTransfer />,
         link: '/transaction-by-id',
-        element: '',
+        element: <TransactionById />,
       },
       {
         label: 'Transaction by Id Backup',
         icon: <IconTransfer />,
         link: '/transaction-by-id-backup',
-        element: '',
+        element: <TransactionByIdBackup />,
       },
       {
         label: 'Transaction by Id Backup (equals)',
         icon: <IconTransfer />,
         link: '/transaction-by-id-new',
-        element: '',
+        element: <TransactionByIdEquals />,
       },
       {
         label: 'Find Member Transaction',
@@ -797,133 +823,133 @@ export const mockdataRoutes = [
         label: 'Rejected transaction log',
         icon: <IconAlertTriangle />,
         link: '/rejected-transactions-log',
-        element: '',
+        element: <TransactionRejected />,
       },
       {
         label: 'Find Trxid',
         icon: <IconTransfer />,
         link: '/find-trxid',
-        element: '',
+        element: <FindTrxid />,
       },
       {
         label: 'Transaction By Account',
         icon: <IconTransfer />,
         link: '/transaction-account-by-company',
-        element: '',
+        element: <TransactionByAccount />,
       },
       {
         label: 'Transaction By Account History',
         icon: <IconFileText />,
         link: '/transaction-history',
-        element: '',
+        element: <TransactionByAccountHistory />,
       },
       {
         label: 'Transaction Resend Callback',
         icon: <IconBrandTelegram />,
         link: '/transaction-callback-empty',
-        element: '',
+        element: <TransactionResendCallback />,
       },
       {
         label: 'Resend Callback More Than 15 Minute',
         icon: <IconBrandTelegram />,
         link: '/transaction-callback-502',
-        element: '',
+        element: <TransactionCallback502 />,
       },
       {
         label: 'Transaction Completed Today',
         icon: <IconTransfer />,
         link: '/transaction-today-complete',
-        element: '',
+        element: <TransactionTodayComplete />,
       },
       {
         label: 'Transaction by Id NA',
         icon: <IconTransfer />,
         link: '/transaction-by-id-noact',
-        element: '',
+        element: <TransactionByIdNoAction />,
       },
       {
         label: 'Transaction by Id Backup NA',
         icon: <IconTransfer />,
         link: '/transaction-by-id-backup-noact',
-        element: '',
+        element: <TransactionByIdBackupNoAction />,
       },
       {
         label: 'Suspected Transaction',
         icon: <IconAlertTriangle />,
         link: '/suspected-transaction',
-        element: '',
+        element: <SuspectedTransaction />,
       },
       {
         label: 'Submitted Transaction',
         icon: <IconTransfer />,
         link: '/submitted-transaction',
-        element: '',
+        element: <SubmittedTransaction />,
       },
       {
         label: 'Transaction Pending',
         icon: <IconTransfer />,
         link: '/transaction-pending',
-        element: '',
+        element: <TransactionPending />,
       },
       {
         label: 'Transaction Flag by M',
         icon: <IconAlertTriangle />,
         link: '/transaction-flag-m',
-        element: '',
+        element: <TransactionFlagM />,
       },
       {
         label: 'Transaction By Not Match Sameday',
         icon: <IconTransfer />,
         link: '/transaction-by-notmatchsameday',
-        element: '',
+        element: <TransactionNotMatchSameday />,
       },
       {
         label: 'Resubmit Transaction',
         icon: <IconBolt />,
         link: '/resubmit-transaction',
-        element: '',
+        element: <TransactionResubmit />,
       },
-      {
-        label: 'Resubmit Transaction Log',
-        icon: <IconFileText />,
-        link: '/resubmit-transaction-log',
-        element: '',
-      },
+          {
+            label: 'Resubmit Transaction Log',
+            icon: <IconFileText />,
+            link: '/resubmit-transaction-log',
+            element: <TransactionResubmitLog />,
+          },
       {
         label: 'Resubmit Auto Matching',
         icon: <IconBolt />,
         link: '/resubmit-automatching',
-        element: '',
+        element: <TransactionResubmitAutoMatching />,
       },
       {
         label: 'Update Transaction',
         icon: <IconSettings />,
         link: '/update-transaction',
-        element: '',
+        element: <UpdateTransaction />,
       },
       {
         label: 'Update Transaction New',
         icon: <IconSettings />,
         link: '/update-transaction-status-new',
-        element: '',
+        element: <UpdateTransactionStatusNew />,
       },
       {
         label: 'Update Transaction Log',
         icon: <IconFileText />,
         link: '/update-transaction-log',
-        element: '',
+        element: <UpdateTransactionLog />,
       },
       {
         label: 'Adjustment Without Fee',
         icon: <IconCash />,
         link: '/company-adjustment-form',
-        element: '',
+        element: <CompanyAdjustment />,
       },
       {
         label: 'Adjustment Merchant',
         icon: <IconCash />,
         link: '/company-adjustment-merchant-form',
-        element: '',
+        element: <CompanyAdjustmentMerchant />,
       },
     ],
   },
