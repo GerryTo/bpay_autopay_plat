@@ -1,0 +1,63 @@
+<div>
+  <div class="page-header-container box">{{pagelang.pagetitle}}</div>
+  <div class="page-body box">
+    <form>
+      <div class="form-section-header">Service Center Whitelist</div>
+      <div class="row">
+        <div class="col-md-2">Service Center :</div>
+        <div class="col-md-6">
+          <input
+            type="text"
+            class="form-control form-control-sm"
+            placeholder=""
+            ng-model="data.serviceCenter"
+          />
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-2">Description :</div>
+        <div class="col-md-6">
+          <input
+            type="text"
+            class="form-control form-control-sm"
+            placeholder=""
+            ng-model="data.description"
+          />
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-2">Amount :</div>
+        <div class="col-md-6">
+          <input
+            type="number"
+            min="0"
+            class="form-control form-control-sm"
+            placeholder=""
+            ng-model="data.maxAmountAllowed"
+          />
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-2">Is Active :</div>
+        <div class="col-md-6">
+          <select class="form-control" ng-model="data.isActive">
+            <option value="Y">Active</option>
+            <option value="N">InActive</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-section-footer">
+        <button type="button" class="btn btn-primary btn-sm" ng-click="save()">
+          {{globallang.save}}
+        </button>
+        <button
+          type="button"
+          class="btn btn-default btn-sm"
+          ng-click="cancel()"
+        >
+          {{globallang.cancel}}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

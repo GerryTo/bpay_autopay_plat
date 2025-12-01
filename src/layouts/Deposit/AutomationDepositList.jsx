@@ -30,6 +30,7 @@ import {
   IconChecklist,
   IconFilter,
   IconRefresh,
+  IconX,
 } from '@tabler/icons-react';
 import { depositAPI } from '../../helper/api';
 import { showNotification } from '../../helper/showNotification';
@@ -779,6 +780,93 @@ const AutomationDepositList = () => {
     }
   };
 
+  const handleBulkFail = useCallback(async () => {
+    if (selectedKeys.length === 0) {
+      showNotification({
+        title: 'Validation',
+        message: 'Select at least one transaction to proceed',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const memoInput = window.prompt(
+      'Enter memo for failing selected deposits',
+      ''
+    );
+    if (memoInput === null) return;
+
+    const memo = memoInput.trim();
+    if (!memo) {
+      showNotification({
+        title: 'Validation',
+        message: 'Memo is required for bulk fail',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const items = data
+      .filter((item) => selectedKeys.includes(makeKey(item)))
+      .map((item) => ({
+        futuretrxid: item.futuretrxid,
+        memo,
+      }));
+
+    if (items.length === 0) {
+      showNotification({
+        title: 'Validation',
+        message: 'Selected rows are no longer available in the current list',
+        color: 'yellow',
+      });
+      setSelectedKeys([]);
+      return;
+    }
+
+    if (
+      !window.confirm(
+        'Are you sure you want to fail all selected transactions?'
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const response = await depositAPI.bulkFailAutomationDeposit(items);
+      if (response.success && response.data) {
+        const payload = response.data;
+        if ((payload.status || '').toLowerCase() === 'ok') {
+          showNotification({
+            title: 'Bulk Fail',
+            message: payload.message || 'Selected deposits marked as failed',
+            color: 'green',
+          });
+          setSelectedKeys([]);
+          await fetchList({ silent: true });
+        } else {
+          showNotification({
+            title: 'Bulk Fail',
+            message: payload.message || 'Failed to update selected deposits',
+            color: 'red',
+          });
+        }
+      } else {
+        showNotification({
+          title: 'Bulk Fail',
+          message: response.error || 'Failed to update selected deposits',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Automation deposit bulk fail error:', error);
+      showNotification({
+        title: 'Bulk Fail',
+        message: 'Unable to process bulk fail',
+        color: 'red',
+      });
+    }
+  }, [data, fetchList, selectedKeys]);
+
   const totalDebit = useMemo(
     () => data.reduce((acc, curr) => acc + (Number(curr.DB) || 0), 0),
     [data]
@@ -912,14 +1000,26 @@ const AutomationDepositList = () => {
                   style={{ minWidth: 240 }}
                 /> */}
 
-                <Button
+                {/* <Button
                   onClick={() => fetchList()}
                   leftSection={<IconChecklist size={18} />}
                   radius="md"
                   color="blue"
                 >
                   Apply
-                </Button>
+                </Button> */}
+                <Group gap="xs">
+                  <Button
+                    leftSection={<IconX size={18} />}
+                    color="red"
+                    radius="md"
+                    variant="light"
+                    disabled={selectedKeys.length === 0}
+                    onClick={handleBulkFail}
+                  >
+                    Bulk Fail
+                  </Button>
+                </Group>
               </Group>
 
               <Divider />

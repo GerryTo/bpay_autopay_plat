@@ -1,20 +1,20 @@
 <div>
-  <div class="page-header-container box">Automation Deposit List</div>
+  <div class="page-header-container box">Suspected Customer</div>
   <div class="page-body box">
     <div class="row">
-      <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+      <!-- <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
         <p class="input-group">
           <input
             type="text"
             class="form-control input-sm"
             uib-datepicker-popup="{{datepickerConfig.format}}"
-            ng-model="filter.dateFrom"
+            ng-model="filter.fromdate"
             is-open="popup1.opened"
             datepicker-options="dateOptions"
             ng-required="true"
             close-text="Close"
             alt-input-formats="datepickerConfig.altInputFormats"
-            placeholder="Pick Date From"
+            placeholder="Date"
           />
           <span class="input-group-btn">
             <button
@@ -26,20 +26,20 @@
             </button>
           </span>
         </p>
-      </div>
-      <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+      </div> -->
+      <!-- <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
         <p class="input-group">
           <input
             type="text"
             class="form-control input-sm"
             uib-datepicker-popup="{{datepickerConfig.format}}"
-            ng-model="filter.dateTo"
+            ng-model="filter.todate"
             is-open="popup2.opened"
             datepicker-options="dateOptions"
             ng-required="true"
             close-text="Close"
             alt-input-formats="datepickerConfig.altInputFormats"
-            placeholder="Pick Date To"
+            placeholder="To date"
           />
           <span class="input-group-btn">
             <button
@@ -51,29 +51,16 @@
             </button>
           </span>
         </p>
-      </div>
-      <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
-        <select
-          class="form-control input-sm"
-          ng-model="filter.filter"
-          ng-init="filter.filter = 'T'"
-        >
-          <option value="9">Pending</option>
-          <option value="T">Order Need To Check</option>
-          <option value="0">Completed</option>
-          <option value="1">Failed</option>
-          <option value="ALL">All</option>
+      </div> -->
+      <!-- <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+        <select class="form-control input-sm" ng-model="filter.user">
+          <option value="">- ALL -</option>
+          <option ng-repeat="item in phoneUsers" value="{{item.user}}">
+            {{item.user}}
+          </option>
         </select>
-      </div>
-      <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
-        <p class="input-group">
-            <select class="form-control" ng-model="filter.agent" id="agent">
-                <option value="">ALL</option>
-                <option ng-repeat="item in agentList" value="{{item.bankAccNo}}">{{item.bankAccName}}</option>
-            </select>
-          </p>
-      </div>
-      <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+      </div> -->
+      <div class="col-xs-12 col-sm-4 col-md-1 col-lg-1">
         <div class="button-container">
           <button
             type="button"
@@ -83,16 +70,16 @@
           >
             {{globallang.refresh}}
           </button>
-          <button
-            type="button"
-            class="btn btn-danger btn-sm"
-            ng-click="bulkFail()"
-            ng-disabled="gridIsLoading==true"
-          >
-            Bulk Fail
-          </button>
         </div>
       </div>
+      <!-- <div style="margin-top: 4px" class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+        <input
+          class="form-check-input"
+          ng-model="filter.history"
+          type="checkbox"
+        />
+        <label class="form-check-label"> History </label>
+      </div> -->
     </div>
     <div
       id="grid1"
@@ -100,8 +87,8 @@
       class="grid"
       ui-grid-resize-columns
       ui-grid-auto-resize
+      ui-grid-pinning
       ui-grid-exporter
-      ui-grid-selection
       ng-style="{'height': getHeight()+'px'}"
     >
       <div

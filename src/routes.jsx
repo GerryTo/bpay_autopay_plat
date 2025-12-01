@@ -74,6 +74,23 @@ import WithdrawDashboard from './layouts/Withdrawal/WithdrawDashboard';
 import WithdrawList from './layouts/Withdrawal/WithdrawList';
 import AutomationWithdrawList from './layouts/Withdrawal/AutomationWithdrawList';
 import AppiumWithdrawList from './layouts/Withdrawal/AppiumWithdrawList';
+import SmsLogById from './layouts/SMS/SmsLogById';
+import SmsCriteriaNotMatchingById from './layouts/SMS/SmsCriteriaNotMatchingById';
+import SmsLogBackup from './layouts/SMS/SmsLogBackup';
+import SmsLogByBalanceDiff from './layouts/SMS/SmsLogByBalanceDiff';
+import SmsLogByCustomerPhone from './layouts/SMS/SmsLogByCustomerPhone';
+import SuspectedSms from './layouts/SMS/SuspectedSms';
+import SuspectedCustomer from './layouts/SMS/SuspectedCustomer';
+import SmsFailedMatch from './layouts/SMS/SmsFailedMatch';
+import SmsFailedMatchByNotMatchSameday from './layouts/SMS/SmsFailedMatchByNotMatchSameday';
+import DuplicateSms from './layouts/SMS/DuplicateSms';
+import SmsLogHistory from './layouts/SMS/SmsLogHistory';
+import SmsLastAck from './layouts/SMS/SmsLastAck';
+import SmsLastAckActive from './layouts/SMS/SmsLastAckActive';
+import ReportSms from './layouts/SMS/ReportSms';
+import PhoneWhitelist from './layouts/SMS/PhoneWhitelist';
+import ServiceCenterWhitelist from './layouts/SMS/ServiceCenterWhitelist';
+import SmsLog from './layouts/SMS/SmsLog';
 import WithdrawCheck from './layouts/Withdrawal/WithdrawCheck';
 import WithdrawCheckAutomation from './layouts/Withdrawal/WithdrawCheckAutomation';
 import WithdrawCheckFilter from './layouts/Withdrawal/WithdrawCheckFilter';
@@ -175,7 +192,7 @@ export const mockdataRoutes = [
             label: 'SMS Log',
             icon: <IconMessage />,
             link: '/sms-log',
-            element: '',
+            element: <SmsLog />,
           },
           {
             label: 'Crawler List',
@@ -187,7 +204,7 @@ export const mockdataRoutes = [
             label: 'SMS Log by Id',
             icon: <IconMessage />,
             link: '/smslog-by-id',
-            element: '',
+            element: <SmsLogById />,
           },
           {
             label: 'Transaction by Id',
@@ -235,7 +252,7 @@ export const mockdataRoutes = [
             label: 'SMS Failed Match',
             icon: <IconMessage />,
             link: '/sms-failed-match',
-            element: '',
+            element: <SmsFailedMatch />,
           },
           {
             label: 'Automation Deposit List',
@@ -259,7 +276,7 @@ export const mockdataRoutes = [
             label: 'SMS Log',
             icon: <IconMessage />,
             link: '/sms-log',
-            element: '',
+            element: <SmsLog />,
           },
           {
             label: 'Transaction by Id',
@@ -909,12 +926,12 @@ export const mockdataRoutes = [
         link: '/resubmit-transaction',
         element: <TransactionResubmit />,
       },
-          {
-            label: 'Resubmit Transaction Log',
-            icon: <IconFileText />,
-            link: '/resubmit-transaction-log',
-            element: <TransactionResubmitLog />,
-          },
+      {
+        label: 'Resubmit Transaction Log',
+        icon: <IconFileText />,
+        link: '/resubmit-transaction-log',
+        element: <TransactionResubmitLog />,
+      },
       {
         label: 'Resubmit Auto Matching',
         icon: <IconBolt />,
@@ -960,103 +977,103 @@ export const mockdataRoutes = [
         label: 'SMS Log by Id',
         icon: <IconMessage />,
         link: '/smslog-by-id',
-        element: '',
+        element: <SmsLogById />,
       },
       {
         label: 'SMS Criteria not Matching by Id',
         icon: <IconMessage />,
         link: '/sms-criteria-not-matching-by-id',
-        element: '',
+        element: <SmsCriteriaNotMatchingById />,
       },
       {
         label: 'SMS Log',
         icon: <IconMessage />,
         link: '/sms-log',
-        element: '',
+        element: <SmsLog />,
       },
       {
         label: 'SMS Log Backup',
         icon: <IconMessage />,
         link: '/sms-log-backup',
-        element: '',
+        element: <SmsLogBackup />,
       },
       {
         label: 'SMS Log by Balance Diff',
         icon: <IconMessage />,
         link: '/sms-log-by-balance-diff',
-        element: '',
+        element: <SmsLogByBalanceDiff />,
       },
       {
         label: 'SMS Log by Customer Phone',
         icon: <IconMessage />,
         link: '/sms-log-by-customer-phone',
-        element: '',
+        element: <SmsLogByCustomerPhone />,
       },
       {
         label: 'Suspected SMS',
         icon: <IconAlertTriangle />,
         link: '/suspected-sms',
-        element: '',
+        element: <SuspectedSms />,
       },
       {
         label: 'Suspected Customer',
         icon: <IconAlertTriangle />,
         link: '/suspected-customer',
-        element: '',
+        element: <SuspectedCustomer />,
       },
       {
         label: 'SMS Failed Match',
         icon: <IconMessage />,
         link: '/sms-failed-match',
-        element: '',
+        element: <SmsFailedMatch />,
       },
       {
         label: 'SMS Failed Match by Not Match Sameday',
         icon: <IconMessage />,
         link: '/sms-failed-match-by-notmatchsameday',
-        element: '',
+        element: <SmsFailedMatchByNotMatchSameday />,
       },
       {
         label: 'Duplicate SMS',
         icon: <IconMessage />,
         link: '/duplicate-sms',
-        element: '',
+        element: <DuplicateSms />,
       },
       {
         label: 'SMS Log History',
         icon: <IconFileText />,
         link: '/smslog-history',
-        element: '',
+        element: <SmsLogHistory />,
       },
       {
         label: 'SMS Last ACK',
         icon: <IconMessage />,
         link: '/sms-lastack',
-        element: '',
+        element: <SmsLastAck />,
       },
       {
         label: 'SMS Last ACK Active',
         icon: <IconMessage />,
         link: '/sms-lastack-active',
-        element: '',
+        element: <SmsLastAckActive />,
       },
       {
         label: 'Report SMS',
         icon: <IconReportMoney />,
         link: '/report-sms',
-        element: '',
+        element: <ReportSms />,
       },
       {
         label: 'Phone Whitelist',
         icon: <IconUserShield />,
         link: '/phone-whitelist',
-        element: '',
+        element: <PhoneWhitelist />,
       },
       {
         label: 'Service Center Whitelist',
         icon: <IconUserShield />,
         link: '/servicecenter-whitelist',
-        element: '',
+        element: <ServiceCenterWhitelist />,
       },
     ],
   },

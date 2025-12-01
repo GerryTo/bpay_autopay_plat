@@ -86,7 +86,6 @@ app.controller("newDepositListCtrl", [
                   }
               });
               // console.log(data.records);
-              
               $scope.agentList = deduplicated;
               console.log($scope.agentList)
               if (deduplicated.length > 0) {
@@ -122,7 +121,9 @@ app.controller("newDepositListCtrl", [
           },
         },
         { name: "Date", field: "insert", width: 150 },
+        { name: "Date GMT+6", field: "insertGmt6", width: 150 },
         { name: "Complete Date", field: "completedate", width: 150 },
+        { name: "Complete Date GMT+6", field: "completedateGmt6", width: 150 },
         { name: "Merchant Code", field: "merchantcode", width: 100 },
         { name: "Customer Code", field: "customercode", width: 180 },
         { name: "CCY", field: "ccy", visible: false },
@@ -379,6 +380,81 @@ app.controller("newDepositListCtrl", [
         }
       );
     };
+
+    $scope.bulkFail = function () {
+    var selected = $scope.gridApi.selection.getSelectedRows();
+    if (selected.length === 0) {
+        alert("No transactions selected!");
+        return;
+    }
+    // Buka modal untuk ambil MEMO, futuretrxid tidak dibawa ke modal!
+    var modalInstance = $uibModal.open({
+        animation: true,
+        templateUrl: "js/Modal/FailModalNew/FailModalNew.template.html?v=2",
+        controller: "FailModalNewCtrl",
+        size: "sm",
+        scope: $scope,
+        resolve: {
+            items: function () {
+                return { transactiontype: "D" };
+            }
+        }
+    });
+    modalInstance.result.then(
+        function (memoFromUser) {
+            // Setelah modal return memo → kirim bulk ke backend
+            $scope.sendBulkFail(selected, memoFromUser);
+        },
+        function () {
+            console.log("Modal dismissed");
+        }
+      );
+    };
+
+    $scope.sendBulkFail = function (rows, memo) {
+
+        if (!confirm("Are you sure to FAIL all selected transactions?")) {
+            return;
+        }
+        // Format bulk harus sama seperti upline: array of items
+        var items = [];
+        for (var i = 0; i < rows.length; i++) {
+            items.push({
+                futuretrxid: rows[i].futuretrxid, // FUTURE TRX ID DARI SELECTION
+                memo: memo                         // MEMO DARI MODAL
+            });
+        }
+        var payload = {
+            type: "bulkFailDeposit",
+            items: items
+        };
+        var encrypted = CRYPTO.encrypt(payload);
+        $http({
+            method: "POST",
+            url: webservicesUrl + "/transaction_bulkFail.php",
+            data: { data: encrypted },
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+            },
+        }).then(
+            function (response) {
+                var data = CRYPTO.decrypt(response.data.data);
+
+                if (data.status.toLowerCase() === "ok") {
+                    alert("Bulk Fail completed successfully!");
+                } else {
+                    alert(data.message);
+                }
+
+                $scope.getListData();
+            },
+            function (err) {
+                console.log(err);
+            }
+        );
+    };
+
+
 
     $scope.validate = function (row) {
       //((row.entity.status == \'Order need to check\' && row.entity.transactiontype == \'D\') || (row.entity.status == \'Pending\' && row.entity.transactiontype == \'D\') || (row.entity.status == \'Transaction Failed\' && row.entity.transactiontype == \'D\')) && row.entity.disable ==\'1\' && (\''+$scope.currentLoginInfo.type+'\'==\'S\' || \''+$scope.currentLoginInfo.type+'\' == \'A\')

@@ -1593,6 +1593,40 @@ export const depositAPI = {
   },
 
   /**
+   * Bulk fail automation deposit items (encrypted)
+   * @param {Array<{futuretrxid: string, memo: string}>} items
+   */
+  bulkFailAutomationDeposit: async (items = []) => {
+    try {
+      const jsonData = CRYPTO.encrypt({ type: 'bulkFailDeposit', items });
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/transaction_bulkFail.php', formData);
+
+      if (response.data?.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Automation deposit bulk fail API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to bulk fail deposits',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
    * Get automation agent list (deduplicated) - returns decrypted data
    */
   getAutomationAgents: async () => {
@@ -1792,6 +1826,1083 @@ export const depositAPI = {
       return {
         success: false,
         error: error.message || 'Failed to load deposit queue alert',
+        details: error.response?.data || null,
+      };
+    }
+  },
+};
+
+// SMS Log API calls
+export const smsAPI = {
+  /**
+   * Get SMS log by Transaction ID (encrypted)
+   * @param {Object} params - { trxId: string, history?: boolean, similarSearch?: boolean }
+   */
+  getLogById: async ({ trxId, history = false, similarSearch = false } = {}) => {
+    try {
+      const payload = { id: trxId, history, similarSearch };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/smsLog_getById.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('SMS log by ID API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load SMS log data',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Expire a specific SMS (encrypted)
+   * @param {Object} params - { amount, bank, trxid, phonenumber }
+   */
+  expireSms: async ({ amount, bank, trxid, phonenumber }) => {
+    try {
+      const payload = { amount, bank, trxid, phonenumber };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/smsLog_expireSms.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('SMS expire API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to expire SMS',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Match SMS to a transaction (encrypted)
+   * @param {Object} params - { futuretrxid, amount, bank, trxid, phonenumber }
+   */
+  matchSms: async ({ futuretrxid, amount, bank, trxid, phonenumber }) => {
+    try {
+      const payload = { futuretrxid, amount, bank, trxid, phonenumber };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/smsLog_saveMatchTransaction.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('SMS match API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to match SMS',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get SMS Criteria Not Matching by Transaction ID (encrypted)
+   * @param {Object} params - { trxId: string, history?: boolean }
+   */
+  getCriteriaNotMatchingById: async ({ trxId, history = false } = {}) => {
+    try {
+      const payload = { id: trxId, history };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/smsCriteriaNotMatchingById.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('SMS criteria not matching by ID API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load SMS criteria not matching data',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get SMS log list (not encrypted)
+   * @param {Object} params - { datefrom: string (YYYY-MM-DD 00:00:00), dateto: string, type: string, user: string }
+   */
+  getLogList: async ({ datefrom, dateto, type = '2', user = '' } = {}) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data[datefrom]', datefrom);
+      formData.append('data[dateto]', dateto);
+      formData.append('data[type]', type);
+      formData.append('data[user]', user);
+
+      const response = await apiClient.post('/smsLog_getList.php', formData);
+
+      if (response.data && response.data.data) {
+        const parsed = typeof response.data.data === 'string'
+          ? JSON.parse(response.data.data)
+          : response.data.data;
+
+        if (parsed.records && Array.isArray(parsed.records)) {
+          parsed.records = parsed.records.map((record) =>
+            Object.entries(record || {}).reduce((acc, [key, value]) => {
+              if (typeof value === 'string') {
+                try {
+                  acc[key] = decodeURIComponent(value);
+                } catch (_) {
+                  acc[key] = value;
+                }
+              } else {
+                acc[key] = value;
+              }
+              return acc;
+            }, {})
+          );
+        }
+
+        return {
+          success: true,
+          data: parsed,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('SMS log list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load SMS log',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get SMS phone user list (not encrypted)
+   */
+  getPhoneUserList: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '');
+
+      const response = await apiClient.post('/smsLog_getPhoneUserList.php', formData);
+      if (response.data && response.data.data) {
+        const parsed = response.data.data;
+        return {
+          success: true,
+          data: parsed,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('SMS phone user list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load phone user list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get SMS log backup list (encrypted payload, plaintext response)
+   * @param {Object} params - { datefrom: string, dateto: string, type?: string, user?: string }
+   */
+  getLogBackupList: async ({ datefrom, dateto, type = '2', user = '' } = {}) => {
+    try {
+      const payload = { datefrom, dateto, type, user };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/smsLogBackup_getList.php', formData);
+
+      const parsed = response.data?.status ? response.data : response.data?.data;
+      if (parsed?.records && Array.isArray(parsed.records)) {
+        parsed.records = parsed.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: parsed || response.data,
+      };
+    } catch (error) {
+      console.error('SMS log backup list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load SMS log backup',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get SMS log backup phone user list (encrypted payload, plaintext response)
+   */
+  getBackupPhoneUserList: async () => {
+    try {
+      const jsonData = CRYPTO.encrypt({ data: '' });
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/smsLogBackup_getPhoneUserList.php', formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('SMS log backup phone user list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load backup phone users',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Expire an SMS from backup list (encrypted)
+   */
+  expireBackupSms: async ({ amount, bank, trxid, phonenumber }) => {
+    try {
+      const payload = { amount, bank, trxid, phonenumber };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/smsLogBackup_expireSms.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('SMS log backup expire API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to expire SMS (backup)',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Match an SMS from backup list (encrypted)
+   */
+  matchBackupSms: async ({ futuretrxid, amount, bank, trxid, phonenumber }) => {
+    try {
+      const payload = { futuretrxid, amount, bank, trxid, phonenumber };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/smsLogBackup_saveMatchTransaction.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('SMS log backup match API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to match SMS (backup)',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get SMS log by balance difference (not encrypted request)
+   * @param {Object} params - { type: '0' | '1' | '2' }
+   */
+  getLogByBalanceDiff: async ({ type = '0' } = {}) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data[type]', type);
+
+      const response = await apiClient.post('/smsLog_getByBalanceDiff.php', formData);
+
+      const payload = response.data?.data
+        ? JSON.parse(response.data.data)
+        : response.data;
+
+      if (payload?.records && Array.isArray(payload.records)) {
+        payload.records = payload.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: payload || response.data,
+      };
+    } catch (error) {
+      console.error('SMS log by balance diff API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load SMS log by balance diff',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get SMS log by customer phone (encrypted)
+   * @param {Object} params - { customerPhone: string }
+   */
+  getLogByCustomerPhone: async ({ customerPhone } = {}) => {
+    try {
+      const payload = { customerPhone };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/smsLog_getByCustomerPhone.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('SMS log by customer phone API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load SMS log by customer phone',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get suspected SMS list (encrypted)
+   * @param {Object} params - { datefrom: string (YYYY-MM-DD 00:00:00), dateto: string (YYYY-MM-DD 23:59:59), user?: string }
+   */
+  getSuspectedSmsList: async ({ datefrom, dateto, user = '' } = {}) => {
+    try {
+      const payload = { datefrom, dateto, user };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/suspectedSms_getList.php', formData);
+
+      const parsed = response.data?.data ? response.data.data : response.data;
+      const dataPayload = typeof parsed === 'string' ? JSON.parse(parsed) : parsed;
+
+      if (dataPayload?.records && Array.isArray(dataPayload.records)) {
+        dataPayload.records = dataPayload.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: dataPayload || response.data,
+      };
+    } catch (error) {
+      console.error('Suspected SMS list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load suspected SMS data',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get suspected customer summary (encrypted)
+   */
+  getSuspectedCustomerList: async () => {
+    try {
+      const payload = {};
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/suspectedCustomer_getList.php', formData);
+
+      const parsed = response.data?.data ? response.data.data : response.data;
+      const dataPayload = typeof parsed === 'string' ? JSON.parse(parsed) : parsed;
+
+      return {
+        success: true,
+        data: dataPayload || response.data,
+      };
+    } catch (error) {
+      console.error('Suspected customer list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load suspected customer data',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Mark suspected customer as checked (encrypted)
+   * @param {Object} params - { customerPhone: string }
+   */
+  setSuspectedCustomerChecked: async ({ customerPhone }) => {
+    try {
+      const payload = { customerPhone };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/suspectedCustomer_checked.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Suspected customer checked API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to flag suspected customer',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get SMS Failed Match list (encrypted)
+   * @param {Object} params - { datefrom: string (YYYY-MM-DD 00:00:00), dateto: string (YYYY-MM-DD 23:59:59), history?: boolean }
+   */
+  getFailedMatchList: async ({ datefrom, dateto, history = false } = {}) => {
+    try {
+      const payload = { datefrom, dateto, history };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/smsFailedMatch_getList.php', formData);
+
+      const parsed = response.data?.data ? response.data.data : response.data;
+      const dataPayload = typeof parsed === 'string' ? JSON.parse(parsed) : parsed;
+
+      return {
+        success: true,
+        data: dataPayload || response.data,
+      };
+    } catch (error) {
+      console.error('SMS failed match list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load SMS failed match data',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Bulk fail SMS failed match items (encrypted)
+   */
+  bulkFailFailedMatch: async (list = []) => {
+    try {
+      const jsonData = CRYPTO.encrypt({ list });
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/smsFailedMatch_bulkFail.php', formData);
+      const parsed = response.data?.data ? response.data.data : response.data;
+      return {
+        success: true,
+        data: parsed,
+      };
+    } catch (error) {
+      console.error('SMS failed match bulk fail API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to bulk fail items',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Bulk success SMS failed match items (encrypted)
+   */
+  bulkSuccessFailedMatch: async (list = []) => {
+    try {
+      const jsonData = CRYPTO.encrypt({ list });
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/smsFailedMatch_bulkSuccess.php', formData);
+      const parsed = response.data?.data ? response.data.data : response.data;
+      return {
+        success: true,
+        data: parsed,
+      };
+    } catch (error) {
+      console.error('SMS failed match bulk success API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to bulk success items',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get SMS Failed Match by Not Match Sameday list (encrypted)
+   * @param {Object} params - { datefrom: string (YYYY-MM-DD 00:00:00), dateto: string (YYYY-MM-DD 23:59:59) }
+   */
+  getFailedMatchByNotMatchSameday: async ({ datefrom, dateto } = {}) => {
+    try {
+      const payload = { datefrom, dateto };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/smsFailedMatchByNotMatchSameday_getList.php', formData);
+
+      // Legacy API returns plain JSON in response.data
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('SMS failed match by not match sameday API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load SMS failed match by not match sameday data',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get duplicate SMS list (encrypted)
+   * @param {Object} params - { datefrom: string (YYYY-MM-DD 00:00:00), dateto: string (YYYY-MM-DD 23:59:59) }
+   */
+  getDuplicateSmsList: async ({ datefrom, dateto } = {}) => {
+    try {
+      const payload = { datefrom, dateto };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/duplicateSms_getList.php', formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Duplicate SMS list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load duplicate SMS data',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get SMS log history (encrypted)
+   * @param {Object} params - { datefrom: string (YYYY-MM-DD 00:00:00), dateto: string (YYYY-MM-DD 23:59:59), type?: string, user?: string }
+   */
+  getLogHistory: async ({ datefrom, dateto, type = '2', user = '' } = {}) => {
+    try {
+      const payload = { datefrom, dateto, type, user };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/smsLogHistory_getList.php', formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('SMS log history API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load SMS log history',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Expire an SMS from history (encrypted)
+   */
+  expireSmsHistory: async ({ amount, bank, trxid, phonenumber }) => {
+    try {
+      const payload = { amount, bank, trxid, phonenumber };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/smsLogHistory_expireSms.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('SMS log history expire API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to expire SMS history item',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Match an SMS from history (encrypted)
+   */
+  matchSmsHistory: async ({ futuretrxid, amount, bank, trxid, phonenumber }) => {
+    try {
+      const payload = { futuretrxid, amount, bank, trxid, phonenumber };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/smsLogHistory_saveMatchTransaction.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('SMS log history match API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to match SMS history item',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get SMS Last ACK list (encrypted)
+   * @param {Object} params - optional { datefrom, dateto } for future compatibility
+   */
+  getLastAckList: async ({ datefrom = '', dateto = '' } = {}) => {
+    try {
+      const payload = datefrom && dateto ? { datefrom, dateto } : { data: '' };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/smsLastAck_getData.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('SMS last ACK API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load SMS last ACK data',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get SMS Last ACK Active list (encrypted)
+   * @param {Object} params - optional { datefrom, dateto } for future compatibility
+   */
+  getLastAckActiveList: async ({ datefrom = '', dateto = '' } = {}) => {
+    try {
+      const payload = datefrom && dateto ? { datefrom, dateto } : { data: '' };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/smsLastAckActive_getData.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('SMS last ACK active API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load SMS last ACK active data',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get SMS report (encrypted)
+   * @param {Object} params - { datefrom: string (YYYY-MM-DD 00:00:00), dateto: string (YYYY-MM-DD 23:59:59) }
+   */
+  getReportSms: async ({ datefrom, dateto } = {}) => {
+    try {
+      const payload = { datefrom, dateto };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/reportSms_getReport.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('SMS report API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load SMS report data',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get phone whitelist (encrypted)
+   */
+  getPhoneWhitelist: async () => {
+    try {
+      const jsonData = CRYPTO.encrypt({ data: '' });
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/phoneWhitelist_getList.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Phone whitelist API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load phone whitelist',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get service center whitelist (encrypted)
+   */
+  getServiceCenterWhitelist: async () => {
+    try {
+      const jsonData = CRYPTO.encrypt({ data: '' });
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/serviceCenterWhitelist_getList.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Service center whitelist API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load service center whitelist',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Save phone whitelist entry (encrypted)
+   * @param {Object} params - { id?: number|string|null, phoneNumber: string, description?: string, isActive?: 'Y'|'N' }
+   */
+  savePhoneWhitelist: async ({ id = null, phoneNumber, description = '', isActive = 'Y' }) => {
+    try {
+      const payload = { id, phoneNumber, description, isActive };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/phoneWhitelistForm_saveData.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Save phone whitelist API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to save phone whitelist',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Save service center whitelist entry (encrypted)
+   * @param {Object} params - { id?: number|string|null, serviceCenter: string, description?: string, isActive?: 'Y'|'N', maxAmountAllowed?: number }
+   */
+  saveServiceCenterWhitelist: async ({
+    id = null,
+    serviceCenter,
+    description = '',
+    isActive = 'Y',
+    maxAmountAllowed = 0,
+  }) => {
+    try {
+      const payload = { id, serviceCenter, description, isActive, maxAmountAllowed };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/serviceCenterWhitelistForm_saveData.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Save service center whitelist API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to save service center whitelist',
         details: error.response?.data || null,
       };
     }
