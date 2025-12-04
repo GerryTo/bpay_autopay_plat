@@ -423,13 +423,33 @@ export const serverAPI = {
   getServerList: async () => {
     try {
       const formData = new URLSearchParams();
-      formData.append('data', 'get');
+      formData.append('data', '');
 
       const response = await apiClient.post('/serverList_getList.php', formData);
 
+      const payload = response.data ?? {};
+      const records = Array.isArray(payload.records) ? payload.records : [];
+      const normalized = records.map((record) =>
+        Object.entries(record || {}).reduce((acc, [key, value]) => {
+          if (typeof value === 'string') {
+            try {
+              acc[key] = decodeURIComponent(value);
+            } catch (_) {
+              acc[key] = value;
+            }
+          } else {
+            acc[key] = value;
+          }
+          return acc;
+        }, {})
+      );
+
       return {
         success: true,
-        data: response.data,
+        data: {
+          ...payload,
+          records: normalized,
+        },
       };
     } catch (error) {
       console.error('API call error:', error);
@@ -3215,6 +3235,69 @@ export const transactionAPI = {
       return {
         success: false,
         error: error.message || 'Failed to load account list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get available account date list (encrypted)
+   */
+  getAvailableAccountDates: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '');
+
+      const response = await apiClient.post('/getAvailableAccountDate.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Available account dates API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load available dates',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Update group priority for selected filters (plain payload)
+   * @param {Object} payload - { date, bank, group }
+   */
+  updateGroupPriority: async (payload = {}) => {
+    try {
+      const response = await apiClient.post(
+        '/updateGroup.php',
+        { data: payload },
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Update group priority error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to update group',
         details: error.response?.data || null,
       };
     }
@@ -6017,6 +6100,2001 @@ export const withdrawAPI = {
       return {
         success: false,
         error: error.message || 'Failed to update withdraw status',
+        details: error.response?.data || null,
+      };
+    }
+  },
+};
+
+// Crawler / Appium API calls
+export const crawlerAPI = {
+  /**
+   * Get crawler (appium) list
+   * @param {Object} params
+   * @param {String} params.datefrom - YYYY-MM-DD
+   * @param {String} params.dateto - YYYY-MM-DD
+   * @param {Boolean} params.history - include history
+   */
+  getAppiumList: async ({ datefrom, dateto, history = false }) => {
+    try {
+      const payload = {
+        data: {
+          datefrom: `${datefrom} 00:00:00`,
+          dateto: `${dateto} 23:59:59`,
+          history,
+        },
+      };
+
+      const response = await apiClient.post('/appiumList_getList.php', payload, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const payloadData = response.data;
+
+      if (payloadData?.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Appium list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load appium list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get crawler (appium) not match list
+   * @param {Object} params
+   * @param {String} params.datefrom - YYYY-MM-DD
+   * @param {String} params.dateto - YYYY-MM-DD
+   * @param {Boolean} params.history - include history
+   */
+  getAppiumListNotMatch: async ({ datefrom, dateto, history = false }) => {
+    try {
+      const payload = {
+        data: {
+          datefrom: `${datefrom} 00:00:00`,
+          dateto: `${dateto} 23:59:59`,
+          history,
+        },
+      };
+
+      const response = await apiClient.post('/appiumList_getListNotMatch.php', payload, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const payloadData = response.data;
+
+      if (payloadData?.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Appium not match list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load appium not match list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get appium withdraw queue list
+   * @param {Object} params
+   * @param {String} params.datefrom - YYYY-MM-DD
+   * @param {String} params.dateto - YYYY-MM-DD
+   */
+  getWithdrawQueue: async ({ datefrom, dateto }) => {
+    try {
+      const payload = {
+        data: {
+          datefrom: `${datefrom} 00:00:00`,
+          dateto: `${dateto} 23:59:59`,
+        },
+      };
+
+      const response = await apiClient.post('/appiumWithdrawQueue_getList.php', payload, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      // Backend sometimes wraps payload in `data`
+      const payloadData = response.data?.data ?? response.data;
+
+      if (payloadData?.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Appium withdraw queue API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load appium withdraw queue',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get account appium status (new)
+   */
+  getAccountStatusNew: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '{}');
+
+      const response = await apiClient.post('/accountAppiumStatusNew_getList.php', formData);
+      const payloadData = response.data?.data ?? response.data;
+
+      if (payloadData?.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Account appium status new API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load account status',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get appium error log list
+   * @param {Object} params
+   * @param {String} params.datefrom - YYYY-MM-DD
+   * @param {String} params.dateto - YYYY-MM-DD
+   */
+  getErrorLog: async ({ datefrom, dateto }) => {
+    try {
+      const payload = {
+        data: {
+          datefrom: `${datefrom} 00:00:00`,
+          dateto: `${dateto} 23:59:59`,
+        },
+      };
+
+      const response = await apiClient.post('/appiumErrorLog_getList.php', payload, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const payloadData = response.data?.data ?? response.data;
+
+      if (payloadData?.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Appium error log API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load appium error log',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get list agent failed summary
+   * @param {Object} params
+   * @param {String} params.date - YYYY-MM-DD
+   * @param {String} params.type - phase/type flag
+   */
+  getAgentFailedSummary: async ({ date, type }) => {
+    try {
+      const payload = { data: { date, type } };
+      const response = await apiClient.post('/getfailedsummary.php', payload, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const payloadData = response.data?.data ?? response.data;
+
+      if (payloadData?.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Agent failed summary API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load agent failed summary',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Recrawl a single account
+   * @param {String} accountNo
+   */
+  recrawlAccount: async (accountNo) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data[accountNo]', accountNo);
+
+      const response = await apiClient.post('/setCrawlSummary.php', formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Recrawl account API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to recrawl account',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Recrawl bulk accounts (encrypted)
+   * @param {Array<{account: string, bank: string, user: string}>} items
+   * @param {String} groupname
+   */
+  recrawlBulkAccounts: async (items = [], groupname = 'defaultGroup') => {
+    try {
+      const jsonData = CRYPTO.encrypt({ groupname, items });
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/setCrawlSummaryBulk.php', formData);
+
+      if (response.data?.data) {
+        const decrypted = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decrypted,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Recrawl bulk accounts API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to recrawl accounts',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Mark error on selected accounts (encrypted)
+   * @param {Array<{account: string, bank: string, user: string}>} items
+   * @param {String} groupname
+   */
+  markAccountsError: async (items = [], groupname = '') => {
+    try {
+      const jsonData = CRYPTO.encrypt({ groupname, items });
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/markerror.php', formData);
+
+      if (response.data?.data) {
+        const decrypted = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decrypted,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Mark error accounts API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to mark accounts as error',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get account balance log
+   * @param {Object} params
+   * @param {String} params.date - YYYY-MM-DD
+   * @param {String} params.type - phase flag (1,2,3)
+   */
+  getAccountBalanceLog: async ({ date, type }) => {
+    try {
+      const payload = { data: { date, type } };
+      const response = await apiClient.post('/getAccountBalanceLog.php', payload, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const payloadData = response.data?.data ?? response.data;
+
+      if (payloadData?.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Account balance log API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load account balance log',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get agent summary report
+   * @param {String} date - YYYY-MM-DD
+   */
+  getAgentSummary: async (date) => {
+    try {
+      const payload = { data: { date } };
+      const response = await apiClient.post('/agentSummary_report.php', payload, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const payloadData = response.data?.data ?? response.data;
+
+      if (payloadData?.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Agent summary API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load agent summary',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get monthly summary report
+   * @param {String} date - YYYY-MM-DD (use first day of month)
+   */
+  getMonthlySummary: async (date) => {
+    try {
+      const payload = { data: { date } };
+      const response = await apiClient.post('/monthlySummary_list.php', payload, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const payloadData = response.data?.data ?? response.data;
+
+      if (payloadData?.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Monthly summary API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load monthly summary',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get report difference
+   * @param {String} date - YYYY-MM-DD
+   */
+  getReportDifference: async (date) => {
+    try {
+      const payload = { data: { date } };
+      const response = await apiClient.post('/reportDifference_list.php', payload, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const payloadData = response.data?.data ?? response.data;
+
+      if (payloadData?.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Report difference API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load report difference',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get credentials BKASHM (service list)
+   */
+  getCredentialsBkashm: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '{}');
+
+      const response = await apiClient.post('/GetServiceList.php', formData);
+
+      const payloadData = response.data?.data ?? response.data;
+
+      if (payloadData?.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Credentials BKASHM API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load credentials',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get settlement & topup (request manual) list
+   * @param {Object} params
+   * @param {String} params.datefrom - YYYY-MM-DD
+   * @param {String} params.dateto - YYYY-MM-DD
+   * @param {String} params.accountno
+   */
+  getSettlementTopup: async ({ datefrom, dateto, accountno = '0' }) => {
+    try {
+      const payload = { datefrom: `${datefrom} 00:00:00`, dateto: `${dateto} 23:59:59`, accountno };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/getRequestManual.php', formData);
+
+      const encrypted = response.data?.data;
+      let payloadData = response.data;
+
+      if (encrypted) {
+        payloadData = CRYPTO.decrypt(encrypted);
+      }
+
+      if (payloadData?.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Settlement & topup list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load settlement & topup list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get request list (settlement/topup)
+   */
+  getRequestList: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '');
+
+      const response = await apiClient.post('/getRequestList.php', formData);
+
+      const encrypted = response.data?.data;
+      let payloadData = response.data;
+
+      if (encrypted) {
+        payloadData = CRYPTO.decrypt(encrypted);
+      }
+
+      if (payloadData?.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Request list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load request list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get B2B send list
+   * @param {Object} params
+   * @param {String} params.datefrom - YYYY-MM-DD
+   * @param {String} params.dateto - YYYY-MM-DD
+   * @param {String} params.accountno
+   */
+  getB2bSendList: async ({ datefrom, dateto, accountno = '0' }) => {
+    try {
+      const payload = { datefrom: `${datefrom} 00:00:00`, dateto: `${dateto} 23:59:59`, accountno };
+      const response = await apiClient.post('/getAgent.php', { data: payload }, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const payloadData = response.data?.data ?? response.data;
+
+      if (payloadData?.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('B2B send list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load B2B send list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+};
+
+// CP Journal API calls
+export const cpJournalAPI = {
+  /**
+   * Get CP journal list by date
+   * @param {String} filterDate - YYYY-MM-DD
+   */
+  getList: async (filterDate) => {
+    try {
+      const payload = { filterdate: `${filterDate} 00:00:00` };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/getCPJournal.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('CP Journal API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load CP journal',
+        details: error.response?.data || null,
+      };
+    }
+  },
+};
+
+// Available Account API calls
+export const availableAccountAPI = {
+  /**
+   * Get available account list (not encrypted)
+   */
+  getList: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '');
+
+      const response = await apiClient.post('/AvailableAccountList.php', formData);
+      const payload = response.data ?? {};
+      const records = Array.isArray(payload.records) ? payload.records : [];
+      const normalized = records.map((record) =>
+        Object.entries(record || {}).reduce((acc, [key, value]) => {
+          if (typeof value === 'string') {
+            try {
+              acc[key] = decodeURIComponent(value);
+            } catch (_) {
+              acc[key] = value;
+            }
+          } else {
+            acc[key] = value;
+          }
+          return acc;
+        }, {})
+      );
+
+      return {
+        success: true,
+        data: {
+          ...payload,
+          records: normalized,
+        },
+      };
+    } catch (error) {
+      console.error('Available account list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load available account list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Update use flag for an account (encrypted payload)
+   * @param {Object} payload - Account data plus { isUsed }
+   */
+  updateUse: async (payload = {}) => {
+    try {
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/UpdateAvailableAccountUse.php', formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Update available account use error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to update account use',
+        details: error.response?.data || null,
+      };
+    }
+  },
+};
+
+// Whitelist Merchant IP API calls
+export const whitelistMerchantIpAPI = {
+  /**
+   * Get whitelist merchant IP list (encrypted response)
+   */
+  getList: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '');
+
+      const response = await apiClient.post('/whitelistMerchantIp_getList.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Whitelist merchant IP list error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load whitelist merchant IP list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get whitelist merchant IP detail (encrypted response)
+   * @param {Number|String} id
+   */
+  getDetail: async (id) => {
+    try {
+      const payload = { id };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/whitelistMerchantIpForm_getData.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        if (decryptedData.records && Array.isArray(decryptedData.records)) {
+          decryptedData.records = decryptedData.records.map((record) =>
+            CRYPTO.decodeRawUrl(record)
+          );
+        }
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Whitelist merchant IP detail error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load whitelist merchant IP detail',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Save whitelist merchant IP (encrypted payload)
+   * @param {Object} payload - { id, merchantCode, ip }
+   */
+  save: async (payload) => {
+    try {
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/whitelistMerchantIpForm_saveData.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Whitelist merchant IP save error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to save whitelist merchant IP',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Delete whitelist merchant IP (encrypted payload)
+   * @param {Number|String} id
+   */
+  delete: async (id) => {
+    try {
+      const jsonData = CRYPTO.encrypt({ id });
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/whitelistMerchantIp_delete.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Whitelist merchant IP delete error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to delete whitelist merchant IP',
+        details: error.response?.data || null,
+      };
+    }
+  },
+};
+
+// Available Account New Deposit API calls
+export const availableAccountNewAPI = {
+  /**
+   * Get available account new list (not encrypted)
+   */
+  getList: async () => {
+    try {
+      const response = await apiClient.post('/availableAccountNew.php', {});
+      const payload = response.data ?? {};
+      const records = Array.isArray(payload.records) ? payload.records : [];
+      const normalized = records.map((record) =>
+        Object.entries(record || {}).reduce((acc, [key, value]) => {
+          if (typeof value === 'string') {
+            try {
+              acc[key] = decodeURIComponent(value);
+            } catch (_) {
+              acc[key] = value;
+            }
+          } else {
+            acc[key] = value;
+          }
+          return acc;
+        }, {})
+      );
+
+      return {
+        success: true,
+        data: {
+          ...payload,
+          records: normalized,
+        },
+      };
+    } catch (error) {
+      console.error('Available account new list error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load available account new list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Update selected accounts to a group (encrypted)
+   * @param {Object} payload - { group, list: [] }
+   */
+  updateSelected: async (payload = {}) => {
+    try {
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/updateAvailableAccountSelected.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Update selected available account error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to update selected accounts',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Update group for a single account (plain payload)
+   * @param {Object} payload - { groupid, bankCode, merchant, user }
+   */
+  updateSingleGroup: async (payload = {}) => {
+    try {
+      const response = await apiClient.post('/updateGroupAvailableAccountNew.php', payload, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Update group (single) error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to update group',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Rerun available account new process (plain payload)
+   */
+  rerun: async () => {
+    try {
+      const response = await apiClient.post('/availableAccountNew_rerun.php', {});
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Available account new rerun error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to rerun',
+        details: error.response?.data || null,
+      };
+    }
+  },
+};
+
+// Available Account with Mybank (New Deposit) API calls
+export const availableAccountMybankAPI = {
+  /**
+   * Get available account with mybank list (not encrypted)
+   * @param {String} group - A | D | W
+   */
+  getList: async (group = 'A') => {
+    try {
+      const payload = { data: { group } };
+      const response = await apiClient.post('/getAvailableAccount.php', payload, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+      });
+      const payloadData = response.data ?? {};
+      const records = Array.isArray(payloadData.records) ? payloadData.records : [];
+      const normalized = records.map((record) =>
+        Object.entries(record || {}).reduce((acc, [key, value]) => {
+          if (typeof value === 'string') {
+            try {
+              acc[key] = decodeURIComponent(value);
+            } catch (_) {
+              acc[key] = value;
+            }
+          } else {
+            acc[key] = value;
+          }
+          return acc;
+        }, {})
+      );
+
+      return {
+        success: true,
+        data: {
+          ...payloadData,
+          records: normalized,
+        },
+      };
+    } catch (error) {
+      console.error('Available account mybank list error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load available account mybank list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+};
+
+// Count Available Account New (with Mybank) API calls
+export const countAvailableAccountAPI = {
+  /**
+   * Get count available account new list (not encrypted)
+   */
+  getList: async () => {
+    try {
+      const response = await apiClient.post('/countavailableAccountNew.php', {});
+      const payload = response.data ?? {};
+      const records = Array.isArray(payload.records) ? payload.records : [];
+      const normalized = records.map((record) =>
+        Object.entries(record || {}).reduce((acc, [key, value]) => {
+          if (typeof value === 'string') {
+            try {
+              acc[key] = decodeURIComponent(value);
+            } catch (_) {
+              acc[key] = value;
+            }
+          } else {
+            acc[key] = value;
+          }
+          return acc;
+        }, {})
+      );
+
+      return {
+        success: true,
+        data: {
+          ...payload,
+          records: normalized,
+        },
+      };
+    } catch (error) {
+      console.error('Count available account list error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load count available account list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+};
+
+// Available Account New Withdraw API calls
+export const availableAccountNewWdAPI = {
+  /**
+   * Get available account new withdraw list (not encrypted)
+   */
+  getList: async () => {
+    try {
+      const response = await apiClient.post('/availableAccountNewWd.php', {});
+      const payload = response.data ?? {};
+      const records = Array.isArray(payload.records) ? payload.records : [];
+      const normalized = records.map((record) =>
+        Object.entries(record || {}).reduce((acc, [key, value]) => {
+          if (typeof value === 'string') {
+            try {
+              acc[key] = decodeURIComponent(value);
+            } catch (_) {
+              acc[key] = value;
+            }
+          } else {
+            acc[key] = value;
+          }
+          return acc;
+        }, {})
+      );
+
+      return {
+        success: true,
+        data: {
+          ...payload,
+          records: normalized,
+        },
+      };
+    } catch (error) {
+      console.error('Available account new withdraw list error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load available account new withdraw list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Update selected accounts (encrypted)
+   * @param {Object} payload - { group, list: [] }
+   */
+  updateSelected: async (payload = {}) => {
+    try {
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/updateAvailableAccountSelectedWd.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Update selected available account withdraw error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to update selected accounts',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Update group for a single account (plain payload)
+   * @param {Object} payload - { groupid, bankCode, merchant, user }
+   */
+  updateSingleGroup: async (payload = {}) => {
+    try {
+      const response = await apiClient.post('/updateGroupAvailableAccountNewWd.php', payload, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Update group withdraw (single) error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to update group',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Rerun available account new withdraw process (plain payload)
+   */
+  rerun: async () => {
+    try {
+      const response = await apiClient.post('/availableAccountNewWd_rerun.php', {});
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Available account new withdraw rerun error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to rerun',
+        details: error.response?.data || null,
+      };
+    }
+  },
+};
+
+// Service Selenium list / execution
+export const serviceAutomationAPI = {
+  /**
+   * Get service list (GetServiceList.php)
+   */
+  getList: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '{}');
+
+      const response = await apiClient.post('/GetServiceList.php', formData);
+      const payloadData = response.data?.data ?? response.data;
+
+      if (payloadData?.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Service list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load service list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Execute service python (restart/start/stop)
+   * @param {Object} payload - { statment, servicename, server }
+   */
+  execute: async (payload = {}) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', JSON.stringify(payload));
+
+      const response = await apiClient.post('/executeServicePython.php', formData);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Execute service error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to execute service',
+        details: error.response?.data || null,
+      };
+    }
+  },
+};
+
+// Service Nagad API list / execution
+export const serviceNagadAPI = {
+  /**
+   * Get Nagad API service list
+   */
+  getList: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '{}');
+
+      const response = await apiClient.post('/GetServiceNagadAPI.php', formData);
+      const payloadData = response.data?.data ?? response.data;
+
+      if (payloadData?.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Service Nagad list error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load Nagad services',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Execute Nagad service (restart/start/stop)
+   * @param {Object} payload - { statment, servicename }
+   */
+  execute: async (payload = {}) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', JSON.stringify(payload));
+
+      const response = await apiClient.post('/executeServiceNagadAPI.php', formData);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Execute Nagad service error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to execute Nagad service',
+        details: error.response?.data || null,
+      };
+    }
+  },
+};
+
+// Service Bkash API list / execution
+export const serviceBkashAPI = {
+  /**
+   * Get Bkash API service list
+   */
+  getList: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '{}');
+
+      const response = await apiClient.post('/GetServiceBkashAPI.php', formData);
+      const payloadData = response.data?.data ?? response.data;
+
+      if (payloadData?.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Service Bkash list error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load Bkash services',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Execute Bkash service (restart/start/stop)
+   * @param {Object} payload - { statment, servicename }
+   */
+  execute: async (payload = {}) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', JSON.stringify(payload));
+
+      const response = await apiClient.post('/executeServiceBkashAPI.php', formData);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Execute Bkash service error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to execute Bkash service',
+        details: error.response?.data || null,
+      };
+    }
+  },
+};
+
+// Service Resend Callback list / execution
+export const serviceResendCallbackAPI = {
+  /**
+   * Get resend callback service list
+   */
+  getList: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '{}');
+
+      const response = await apiClient.post('/GetResendCallbackServiceList.php', formData);
+      const payloadData = response.data?.data ?? response.data;
+
+      if (payloadData?.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Resend callback service list error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load resend callback services',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Execute resend callback service
+   * @param {Number|String} id
+   */
+  execute: async (id) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', JSON.stringify({ id }));
+
+      const response = await apiClient.post('/executeResendCallbackServicePython.php', formData);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Execute resend callback error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to execute resend callback',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Add resend callback batch
+   */
+  addResendCallback: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '{}');
+
+      const response = await apiClient.post('/addResendCallback.php', formData);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Add resend callback error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to add resend callback',
+        details: error.response?.data || null,
+      };
+    }
+  },
+};
+
+// Agent Tracker API calls
+export const agentTrackerAPI = {
+  /**
+   * Get dashboard stats
+   */
+  getDashboard: async () => {
+    try {
+      const response = await apiClient.get('/AgentTrackerAPI.php', {
+        params: { action: 'dashboard' },
+      });
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Agent tracker dashboard error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load agent tracker dashboard',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get agents list (optional bankcode filter)
+   */
+  getAgents: async (bankcode) => {
+    try {
+      const params = { action: 'agents' };
+      if (bankcode) params.bankcode = bankcode;
+
+      const response = await apiClient.get('/AgentTrackerAPI.php', { params });
+      const payload = response.data ?? {};
+      const recordsObj = payload.data?.agents || {};
+      const agents = Array.isArray(recordsObj)
+        ? recordsObj
+        : Object.values(recordsObj || {});
+
+      const normalized = agents.map((record) =>
+        Object.entries(record || {}).reduce((acc, [key, value]) => {
+          if (typeof value === 'string') {
+            try {
+              acc[key] = decodeURIComponent(value);
+            } catch (_) {
+              acc[key] = value;
+            }
+          } else {
+            acc[key] = value;
+          }
+          return acc;
+        }, {})
+      );
+
+      return {
+        success: true,
+        data: {
+          ...payload,
+          records: normalized,
+          lastUpdate: payload.data?.lastUpdate,
+        },
+      };
+    } catch (error) {
+      console.error('Agent tracker list error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load agent tracker list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get agent detail
+   */
+  getDetail: async ({ bankcode, accountNo }) => {
+    try {
+      const response = await apiClient.get('/AgentTrackerAPI.php', {
+        params: { action: 'detail', bankcode, accountNo },
+      });
+      const payload = response.data ?? {};
+      const record = payload.data?.agent || {};
+      const normalized = Object.entries(record).reduce((acc, [key, value]) => {
+        if (typeof value === 'string') {
+          try {
+            acc[key] = decodeURIComponent(value);
+          } catch (_) {
+            acc[key] = value;
+          }
+        } else {
+          acc[key] = value;
+        }
+        return acc;
+      }, {});
+
+      return {
+        success: true,
+        data: { ...payload, agent: normalized },
+      };
+    } catch (error) {
+      console.error('Agent tracker detail error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load agent detail',
+        details: error.response?.data || null,
+      };
+    }
+  },
+};
+
+// Merchant Dashboard API calls
+export const merchantDashboardAPI = {
+  /**
+   * Get merchant list (decrypt response)
+   */
+  getMerchantList: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '');
+
+      const response = await apiClient.post('/masterMerchant_getList.php', formData);
+      const payload = response.data ?? {};
+      let records = [];
+
+      if (payload.data) {
+        const decrypted = CRYPTO.decrypt(payload.data);
+        const list = decrypted?.records || decrypted?.data || [];
+        records = Array.isArray(list) ? list : [];
+      } else if (Array.isArray(payload.records)) {
+        records = payload.records;
+      }
+
+      const normalized = records.map((record) => CRYPTO.decodeRawUrl(record));
+      const withAll = [...normalized];
+      if (!withAll.some((item) => (item?.merchantcode || '').toUpperCase() === 'ALL')) {
+        withAll.push({ merchantcode: 'ALL' });
+      }
+
+      return {
+        success: true,
+        data: {
+          ...payload,
+          records: withAll,
+          data: withAll,
+        },
+      };
+    } catch (error) {
+      console.error('Merchant list fetch error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load merchants',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get dashboard summary per merchant (encrypted request)
+   * @param {Object} params - { dateFrom, dateTo, merchantCode }
+   */
+  getSummary: async ({ dateFrom, dateTo, merchantCode = 'ALL' }) => {
+    try {
+      const payload = {
+        datefrom: dateFrom,
+        dateto: dateTo,
+        merchantcode: merchantCode || 'ALL',
+      };
+      const encrypted = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', encrypted);
+
+      const response = await apiClient.post('/getDashboardMerchant.php', formData);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Merchant dashboard fetch error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load dashboard data',
+        details: error.response?.data || null,
+      };
+    }
+  },
+};
+
+// Emergency Deposit API calls
+export const emergencyDepositAPI = {
+  /**
+   * Get emergency deposit list (not encrypted)
+   * @param {Object} params - { dateFrom, dateTo }
+   */
+  getList: async ({ dateFrom, dateTo }) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', JSON.stringify({ dateFrom, dateTo }));
+
+      const response = await apiClient.post('/emergency_deposit_getList.php', formData);
+      const payload = response.data ?? {};
+      const records = Array.isArray(payload.records) ? payload.records : [];
+      const normalized = records.map((record) =>
+        Object.entries(record || {}).reduce((acc, [key, value]) => {
+          if (typeof value === 'string') {
+            try {
+              acc[key] = decodeURIComponent(value);
+            } catch (_) {
+              acc[key] = value;
+            }
+          } else {
+            acc[key] = value;
+          }
+          return acc;
+        }, {})
+      );
+
+      return {
+        success: true,
+        data: {
+          ...payload,
+          records: normalized,
+        },
+      };
+    } catch (error) {
+      console.error('Emergency deposit list error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load emergency deposit list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Trigger emergency deposit process (not encrypted)
+   * @param {Object} params - { dateFrom, dateTo }
+   */
+  runEmergency: async ({ dateFrom, dateTo }) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', JSON.stringify({ dateFrom, dateTo }));
+
+      const response = await apiClient.post('/Emergencydeposit.php', formData);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Emergency deposit run error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to run emergency deposit',
+        details: error.response?.data || null,
+      };
+    }
+  },
+};
+
+// System Setting API calls
+export const systemAPI = {
+  /**
+   * Get system settings list (not encrypted)
+   */
+  getSettings: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '');
+
+      const response = await apiClient.post('/system_getSetting.php', formData);
+      const payload = response.data ?? {};
+      const rawList = Array.isArray(payload.data)
+        ? payload.data
+        : Array.isArray(payload.records)
+          ? payload.records
+          : [];
+
+      const settings = rawList.map((item) =>
+        Object.entries(item || {}).reduce((acc, [key, value]) => {
+          if (typeof value === 'string') {
+            try {
+              acc[key] = decodeURIComponent(value);
+            } catch (_) {
+              acc[key] = value;
+            }
+          } else {
+            acc[key] = value;
+          }
+          return acc;
+        }, {})
+      );
+
+      return {
+        success: true,
+        data: {
+          ...payload,
+          data: settings,
+          records: settings,
+        },
+      };
+    } catch (error) {
+      console.error('System settings fetch error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load system settings',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Save system settings (encrypted)
+   * @param {Array} settings - Array of system setting objects
+   */
+  saveSettings: async (settings = []) => {
+    try {
+      const encryptedPayload = CRYPTO.encrypt(settings);
+      const formData = new URLSearchParams();
+      formData.append('data', encryptedPayload);
+
+      const response = await apiClient.post('/system_saveSetting.php', formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('System settings save error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to save system settings',
         details: error.response?.data || null,
       };
     }

@@ -1,0 +1,117 @@
+<div>
+  <div class="page-header-container box">Emergency Deposit Page</div>
+  <div class="page-body box">
+    <div class="row">
+      <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+        <p class="input-group">
+          <input
+            type="text"
+            class="form-control input-sm"
+            uib-datepicker-popup="{{datepickerConfig.format}}"
+            ng-model="filter.dateFrom"
+            is-open="popup1.opened"
+            datepicker-options="dateOptions"
+            ng-required="true"
+            close-text="Close"
+            alt-input-formats="datepickerConfig.altInputFormats"
+            placeholder="Pick Date From"
+          />
+          <span class="input-group-btn">
+            <button
+              type="button"
+              class="btn btn-default btn-sm"
+              ng-click="open1()"
+            >
+              <i class="glyphicon glyphicon-calendar"></i>
+            </button>
+          </span>
+        </p>
+      </div>
+      <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+        <p class="input-group">
+          <input
+            type="text"
+            class="form-control input-sm"
+            uib-datepicker-popup="{{datepickerConfig.format}}"
+            ng-model="filter.dateTo"
+            is-open="popup2.opened"
+            datepicker-options="dateOptions"
+            ng-required="true"
+            close-text="Close"
+            alt-input-formats="datepickerConfig.altInputFormats"
+            placeholder="Pick Date To"
+          />
+          <span class="input-group-btn">
+            <button
+              type="button"
+              class="btn btn-default btn-sm"
+              ng-click="open2()"
+            >
+              <i class="glyphicon glyphicon-calendar"></i>
+            </button>
+          </span>
+        </p>
+      </div>
+      <!-- <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+        <select
+          class="form-control input-sm"
+          ng-model="filter.filter"
+          ng-init="filter.filter = 'T'"
+        >
+          <option value="9">Pending</option>
+          <option value="T">Order Need To Check</option>
+          <option value="0">Completed</option>
+          <option value="1">Failed</option>
+          <option value="ALL">All</option>
+        </select>
+      </div>
+      <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+        <p class="input-group">
+            <select class="form-control" ng-model="filter.agent" id="agent">
+                <option value="">ALL</option>
+                <option ng-repeat="item in agentList" value="{{item.bankAccNo}}">{{item.bankAccName}}</option>
+            </select>
+          </p>
+      </div> -->
+      <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+        <div class="button-container">
+          <button
+            type="button"
+            class="btn btn-default btn-sm"
+            ng-click="refresh()"
+            ng-disabled="gridIsLoading==true"
+          >
+            {{globallang.refresh}}
+          </button>
+          <button
+            type="button"
+            class="btn btn-default btn-sm"
+            ng-click="emergency()"
+            ng-disabled="gridIsLoading==true"
+          >
+            Emergency
+          </button>
+        </div>
+      </div>
+    </div>
+    <div
+      id="grid1"
+      ui-grid="gridOptions"
+      class="grid"
+      ui-grid-resize-columns
+      ui-grid-auto-resize
+      ui-grid-exporter
+      ng-style="{'height': getHeight()+'px'}"
+    >
+      <div
+        class="grid-nodata-container"
+        ng-show="gridOptions.data.length == 0 && !gridIsLoading"
+      >
+        No Data Available
+      </div>
+      <div class="grid-loading-container" ng-show="gridIsLoading">
+        <img src="images/loading.gif" />
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,23 @@
+<div>
+    <div class="page-header-container box">Control Panel Journal</div>
+    <div class="page-body box">
+        <div class="button-container">
+	    <p class="input-group">
+	    <input type="text" class="form-control input-sm" uib-datepicker-popup="{{datepickerConfig.format}}" ng-model="filterdate" is-open="popup1.opened"
+		datepicker-options="dateOptions" ng-required="true" close-text="Close" alt-input-formats="datepickerConfig.altInputFormats" placeholder="date"/>
+	    <span class="input-group-btn">
+		<button type="button" class="btn btn-default btn-sm" ng-click="open1()">
+		    <i class="glyphicon glyphicon-calendar"></i>
+		</button>
+            <button type="button" class="btn btn-primary btn-sm" ng-click="refresh()">{{globallang.refresh}}</button>
+	    </span>
+            </p>
+        </div>
+        <div id="grid1" ui-grid="gridOptions" class="grid" ui-grid-resize-columns ui-grid-auto-resize ui-grid-exporter ng-style="{'height': getHeight()+'px'}">
+            <div class="grid-nodata-container" ng-show="gridOptions.data.length == 0 && !gridIsLoading">No Data Available</div>
+            <div class="grid-loading-container" ng-show="gridIsLoading">
+                <img src="images/loading.gif" />
+            </div>
+        </div>
+    </div>
+</div>

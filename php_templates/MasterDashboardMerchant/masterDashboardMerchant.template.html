@@ -1,0 +1,103 @@
+<div>
+  <div class="page-header-container box">Dashboard Merchant
+    <div style="padding-top:8px;">
+      <div class="row">
+        <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+          <p class="input-group">
+            <input type="text" class="form-control input-sm"
+                   uib-datepicker-popup="{{datepickerConfig.format}}"
+                   ng-model="filter.fromdate"
+                   is-open="popup1.opened"
+                   datepicker-options="dateOptions"
+                   placeholder="From date" />
+            <span class="input-group-btn">
+              <button type="button" class="btn btn-default btn-sm" ng-click="open1()">
+                <i class="glyphicon glyphicon-calendar"></i>
+              </button>
+            </span>
+          </p>
+        </div>
+
+        <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+          <p class="input-group">
+            <input type="text" class="form-control input-sm"
+                   uib-datepicker-popup="{{datepickerConfig.format}}"
+                   ng-model="filter.todate"
+                   is-open="popup2.opened"
+                   datepicker-options="dateOptions"
+                   placeholder="To date" />
+            <span class="input-group-btn">
+              <button type="button" class="btn btn-default btn-sm" ng-click="open2()">
+                <i class="glyphicon glyphicon-calendar"></i>
+              </button>
+            </span>
+          </p>
+        </div>
+
+        <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+          <select class="form-control" ng-model="filter.merchantCode">
+            <option value="ALL">ALL</option>
+            <option ng-repeat="item in merchantList" value="{{item.merchantcode}}">
+              {{item.merchantcode}}
+            </option>
+          </select>
+        </div>
+
+        <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+          <div class="button-container">
+            <button type="button" class="btn btn-default btn-sm"
+                    ng-click="refresh()"
+                    ng-disabled="gridIsLoading==true">
+              {{globallang.refresh}}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔹 TOTAL KESELURUHAN -->
+  <div class="page-header-container" style="padding-left:0px; padding-right:0px;">
+    <div class="container-fluid" style="padding-left:0px; padding-right:0px;">
+      <div class="row">
+        <div class="col-md-2">
+          <div class="box dashboard-panel">
+            <div class="dashboard-panel-title">Total Deposit (All Merchant)</div>
+            <div class="dashboard-panel-value">
+              <span></span> {{ totalAllDeposit | number:0 }}
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-2">
+          <div class="box dashboard-panel">
+            <div class="dashboard-panel-title">Total Withdraw (All Merchant)</div>
+            <div class="dashboard-panel-value">
+              <span></span> {{ totalAllWithdraw | number:0 }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔹 PER MERCHANT -->
+  <div class="page-header-container" style="padding-left:0px; padding-right:0px;">
+    <div class="container-fluid" style="padding-left:0px; padding-right:0px;">
+      <div class="row">
+        <div class="col-md-2 col-sm-4 col-xs-6"
+             ng-repeat="item in dataSummary track by $index">
+          <div class="box dashboard-panel">
+            <div class="dashboard-panel-title">
+              {{ item.merchantcode }}
+            </div>
+            <div class="dashboard-panel-value">
+              Deposit: {{ item.total_deposit | number:0 }}<br>
+              Withdraw: {{ item.total_withdraw | number:0 }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

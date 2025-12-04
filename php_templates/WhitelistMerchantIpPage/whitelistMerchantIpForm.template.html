@@ -1,0 +1,53 @@
+<div>
+  <div class="page-header-container box">Whitelist Merchant IP Form</div>
+  <div class="page-body box">
+    <form>
+      <div class="form-section-header">Form</div>
+      <div class="row">
+        <div class="col-md-2">Merchant :</div>
+        <div class="col-md-6">
+          <!-- <input
+            type="text"
+            class="form-control form-control-sm"
+            placeholder=""
+            ng-model="data.merchantCode"
+          /> -->
+          <select
+            class="form-control form-control-sm"
+            ng-model="data.merchantCode"
+          >
+            <option
+              ng-repeat="item in merchantList"
+              value="{{item.merchantcode}}"
+            >
+              {{item.merchantcode}}
+            </option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-2">IP :</div>
+        <div class="col-md-6">
+          <input
+            type="text"
+            class="form-control form-control-sm"
+            placeholder=""
+            ng-model="data.ip"
+          />
+        </div>
+      </div>
+      <div class="form-section-footer">
+        <button type="button" class="btn btn-primary btn-sm" ng-click="save()">
+          {{globallang.save}}
+        </button>
+        <button
+          type="button"
+          class="btn btn-default btn-sm"
+          ng-click="cancel()"
+        >
+          {{globallang.cancel}}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,504 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Badge,
+  Box,
+  Button,
+  Card,
+  Group,
+  LoadingOverlay,
+  Pagination,
+  Popover,
+  ScrollArea,
+  Select,
+  SimpleGrid,
+  Stack,
+  Table,
+  Text,
+  TextInput,
+} from '@mantine/core';
+import { DateRangePicker } from 'react-date-range';
+import { format } from 'date-fns';
+import {
+  IconBuildingBank,
+  IconCalendar,
+  IconFilter,
+  IconRefresh,
+  IconReportMoney,
+} from '@tabler/icons-react';
+import { merchantDashboardAPI } from '../../helper/api';
+import { showNotification } from '../../helper/showNotification';
+import 'react-date-range/dist/styles.css';
+import 'react-date-range/dist/theme/default.css';
+
+const formatNumber = (value) => {
+  if (value === null || value === undefined || value === '') return '-';
+  const num = Number(value);
+  if (Number.isNaN(num)) return value;
+  return num.toLocaleString('en-US', { maximumFractionDigits: 0 });
+};
+
+const DashboardMerchant = () => {
+  const [dateRange, setDateRange] = useState([
+    {
+      startDate: new Date(),
+      endDate: new Date(),
+      key: 'selection',
+    },
+  ]);
+  const [datePickerOpened, setDatePickerOpened] = useState(false);
+  const [merchantOptions, setMerchantOptions] = useState([{ value: 'ALL', label: 'ALL' }]);
+  const [selectedMerchant, setSelectedMerchant] = useState('ALL');
+  const [search, setSearch] = useState('');
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  const includesValue = (field, value) => {
+    if (!value) return true;
+    return (field ?? '').toString().toLowerCase().includes(value.toLowerCase());
+  };
+
+  const fetchMerchantList = useCallback(async () => {
+    try {
+      const response = await merchantDashboardAPI.getMerchantList();
+      if (response.success && response.data) {
+        const list = Array.isArray(response.data.records) ? response.data.records : [];
+        const options = list
+          .map((item) => item?.merchantcode || item?.merchantCode || '')
+          .filter(Boolean);
+        const unique = Array.from(new Set(['ALL', ...options])).map((code) => ({
+          value: code,
+          label: code,
+        }));
+        setMerchantOptions(unique);
+      } else {
+        showNotification({
+          title: 'Error',
+          message: response.error || 'Failed to load merchants',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Merchant list error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to load merchants',
+        color: 'red',
+      });
+    }
+  }, []);
+
+  const fetchSummary = useCallback(
+    async ({ silent = false } = {}) => {
+      silent ? setRefreshing(true) : setLoading(true);
+      try {
+        const start = format(dateRange[0].startDate ?? new Date(), 'yyyy-MM-dd');
+        const end = format(dateRange[0].endDate ?? dateRange[0].startDate ?? new Date(), 'yyyy-MM-dd');
+
+        const response = await merchantDashboardAPI.getSummary({
+          dateFrom: `${start} 00:00:00`,
+          dateTo: `${end} 23:59:59`,
+          merchantCode: selectedMerchant || 'ALL',
+        });
+
+        if (response.success && response.data) {
+          const payload = response.data;
+          const status = (payload.status || '').toLowerCase();
+          if (!payload.status || status === 'ok' || status === 'success') {
+            const records = Array.isArray(payload.records)
+              ? payload.records
+              : Array.isArray(payload.data)
+                ? payload.data
+                : [];
+            const normalized = records.map((item, idx) => ({
+              ...item,
+              merchantcode: item.merchantcode || item.merchantCode || '-',
+              total_deposit: Number(item.total_deposit ?? item.totalDeposit ?? 0),
+              total_withdraw: Number(item.total_withdraw ?? item.totalWithdraw ?? 0),
+              _rowKey: `${item.merchantcode || item.merchantCode || 'merchant'}-${idx}`,
+            }));
+            setData(normalized);
+          } else {
+            showNotification({
+              title: 'Error',
+              message: payload.message || 'Failed to load dashboard',
+              color: 'red',
+            });
+          }
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.error || 'Failed to load dashboard',
+            color: 'red',
+          });
+        }
+      } catch (error) {
+        console.error('Dashboard merchant fetch error:', error);
+        showNotification({
+          title: 'Error',
+          message: 'Unable to load dashboard data',
+          color: 'red',
+        });
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [dateRange, selectedMerchant]
+  );
+
+  useEffect(() => {
+    fetchMerchantList();
+  }, [fetchMerchantList]);
+
+  useEffect(() => {
+    fetchSummary();
+  }, [fetchSummary]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, selectedMerchant]);
+
+  const resetFilters = () => {
+    setDateRange([
+      {
+        startDate: new Date(),
+        endDate: new Date(),
+        key: 'selection',
+      },
+    ]);
+    setSelectedMerchant('ALL');
+    setSearch('');
+    setItemsPerPage(10);
+    setCurrentPage(1);
+  };
+
+  const filteredData = useMemo(() => {
+    let list = data;
+    if (selectedMerchant && selectedMerchant !== 'ALL') {
+      list = list.filter(
+        (item) =>
+          (item.merchantcode || '').toString().toLowerCase() === selectedMerchant.toLowerCase()
+      );
+    }
+    if (search) {
+      list = list.filter((item) => includesValue(item.merchantcode, search));
+    }
+    return list;
+  }, [data, search, selectedMerchant]);
+
+  const totals = useMemo(
+    () =>
+      filteredData.reduce(
+        (acc, item) => {
+          acc.deposit += Number(item.total_deposit || 0);
+          acc.withdraw += Number(item.total_withdraw || 0);
+          return acc;
+        },
+        { deposit: 0, withdraw: 0 }
+      ),
+    [filteredData]
+  );
+
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedData = filteredData.slice(startIndex, endIndex);
+
+  return (
+    <Box p="md">
+      <Card shadow="sm" padding="lg" radius="md" withBorder>
+        <LoadingOverlay
+          visible={loading}
+          overlayProps={{ radius: 'md', blur: 2 }}
+          loaderProps={{ color: 'blue', type: 'dots' }}
+        />
+
+        <Stack gap="lg">
+          <Group justify="space-between" align="center">
+            <Box>
+              <Group gap={8}>
+                <IconReportMoney size={22} color="#1d4ed8" />
+                <Text size="xl" fw={700}>
+                  Merchant Dashboard
+                </Text>
+              </Group>
+              <Text size="sm" c="dimmed">
+                Monitor total deposit and withdraw per merchant.
+              </Text>
+            </Box>
+
+            <Group gap="xs">
+              <Button
+                leftSection={<IconRefresh size={18} />}
+                variant="light"
+                color="blue"
+                radius="md"
+                loading={refreshing}
+                onClick={() => fetchSummary({ silent: true })}
+              >
+                Refresh
+              </Button>
+              <Button
+                variant="light"
+                color="gray"
+                radius="md"
+                size="sm"
+                leftSection={<IconFilter size={18} />}
+                onClick={resetFilters}
+              >
+                Reset
+              </Button>
+            </Group>
+          </Group>
+
+          <Card withBorder radius="md" padding="md" shadow="xs">
+            <Group gap="md" wrap="wrap" align="flex-end">
+              <Popover
+                width="auto"
+                trapFocus
+                position="bottom-start"
+                shadow="md"
+                opened={datePickerOpened}
+                onChange={setDatePickerOpened}
+              >
+                <Popover.Target>
+                  <Button
+                    variant="light"
+                    color="blue"
+                    radius="md"
+                    leftSection={<IconCalendar size={18} />}
+                    onClick={() => setDatePickerOpened((o) => !o)}
+                  >
+                    {`${format(dateRange[0].startDate, 'dd MMM yyyy')} - ${format(
+                      dateRange[0].endDate,
+                      'dd MMM yyyy'
+                    )}`}
+                  </Button>
+                </Popover.Target>
+                <Popover.Dropdown p={0}>
+                  <DateRangePicker
+                    onChange={(item) => setDateRange([item.selection])}
+                    showSelectionPreview
+                    moveRangeOnFirstSelection={false}
+                    months={1}
+                    ranges={dateRange}
+                    direction="horizontal"
+                  />
+                </Popover.Dropdown>
+              </Popover>
+
+              <Select
+                label="Merchant"
+                data={merchantOptions}
+                value={selectedMerchant}
+                onChange={(val) => setSelectedMerchant(val || 'ALL')}
+                style={{ minWidth: 200 }}
+              />
+
+              <TextInput
+                label="Search"
+                placeholder="Search merchant code..."
+                value={search}
+                onChange={(e) => setSearch(e.currentTarget.value)}
+                style={{ minWidth: 220 }}
+              />
+            </Group>
+          </Card>
+
+          <SimpleGrid cols={3} spacing="sm" breakpoints={[{ maxWidth: 'md', cols: 1 }]}>
+            <Card withBorder padding="md" radius="md" shadow="xs">
+              <Group justify="space-between" align="center">
+                <Text size="sm" c="dimmed">
+                  Total Deposit
+                </Text>
+                <IconReportMoney size={16} color="#2563eb" />
+              </Group>
+              <Text fw={700} size="lg">
+                {formatNumber(totals.deposit)}
+              </Text>
+            </Card>
+
+            <Card withBorder padding="md" radius="md" shadow="xs">
+              <Group justify="space-between" align="center">
+                <Text size="sm" c="dimmed">
+                  Total Withdraw
+                </Text>
+                <IconReportMoney size={16} color="#dc2626" />
+              </Group>
+              <Text fw={700} size="lg">
+                {formatNumber(totals.withdraw)}
+              </Text>
+            </Card>
+
+            <Card withBorder padding="md" radius="md" shadow="xs">
+              <Group justify="space-between" align="center">
+                <Text size="sm" c="dimmed">
+                  Merchants
+                </Text>
+                <IconBuildingBank size={16} color="#16a34a" />
+              </Group>
+              <Text fw={700} size="lg">
+                {filteredData.length}
+              </Text>
+            </Card>
+          </SimpleGrid>
+
+          <Card withBorder radius="md" padding="md" shadow="xs">
+            <Stack gap="sm">
+              <Text fw={700}>Merchant Overview</Text>
+              <SimpleGrid cols={4} spacing="sm" breakpoints={[{ maxWidth: 'md', cols: 2 }]}>
+                {filteredData.map((item) => (
+                  <Card key={item._rowKey} withBorder padding="md" radius="md" shadow="xs">
+                    <Group justify="space-between" align="center" mb={6}>
+                      <Text fw={700}>{item.merchantcode}</Text>
+                      <Badge color="blue" variant="light">
+                        Deposit
+                      </Badge>
+                    </Group>
+                    <Text size="sm" fw={600}>
+                      {formatNumber(item.total_deposit)}
+                    </Text>
+                    <Group justify="space-between" align="center" mt={8}>
+                      <Text size="sm" c="dimmed">
+                        Withdraw
+                      </Text>
+                      <Text fw={600}>{formatNumber(item.total_withdraw)}</Text>
+                    </Group>
+                  </Card>
+                ))}
+                {filteredData.length === 0 && (
+                  <Card withBorder padding="md" radius="md" shadow="xs">
+                    <Text size="sm" c="dimmed">
+                      No merchant data available.
+                    </Text>
+                  </Card>
+                )}
+              </SimpleGrid>
+            </Stack>
+          </Card>
+
+          <Box pos="relative">
+            <ScrollArea type="auto" h="60vh">
+              <Table
+                highlightOnHover
+                withTableBorder
+                withColumnBorders
+                horizontalSpacing="sm"
+                verticalSpacing="xs"
+                styles={{
+                  th: { backgroundColor: '#f8f9fa', fontWeight: 600 },
+                }}
+              >
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th style={{ minWidth: 160 }}>
+                      <Text size="sm" fw={600}>
+                        Merchant
+                      </Text>
+                    </Table.Th>
+                    <Table.Th style={{ minWidth: 160 }}>
+                      <Text size="sm" fw={600}>
+                        Total Deposit
+                      </Text>
+                    </Table.Th>
+                    <Table.Th style={{ minWidth: 160 }}>
+                      <Text size="sm" fw={600}>
+                        Total Withdraw
+                      </Text>
+                    </Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {paginatedData.length > 0 ? (
+                    paginatedData.map((item) => (
+                      <Table.Tr key={item._rowKey}>
+                        <Table.Td>
+                          <Text size="sm" fw={600}>
+                            {item.merchantcode}
+                          </Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="sm">{formatNumber(item.total_deposit)}</Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="sm">{formatNumber(item.total_withdraw)}</Text>
+                        </Table.Td>
+                      </Table.Tr>
+                    ))
+                  ) : (
+                    <Table.Tr>
+                      <Table.Td colSpan={3}>
+                        <Text ta="center" c="dimmed">
+                          No data available
+                        </Text>
+                      </Table.Td>
+                    </Table.Tr>
+                  )}
+                </Table.Tbody>
+                <Table.Tfoot>
+                  <Table.Tr>
+                    <Table.Td>
+                      <Text size="sm" fw={600}>
+                        Totals
+                      </Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <Text size="sm" fw={600}>
+                        {formatNumber(totals.deposit)}
+                      </Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <Text size="sm" fw={600}>
+                        {formatNumber(totals.withdraw)}
+                      </Text>
+                    </Table.Td>
+                  </Table.Tr>
+                </Table.Tfoot>
+              </Table>
+            </ScrollArea>
+          </Box>
+
+          <Group justify="space-between" align="center">
+            <Group gap="sm" align="center">
+              <Text size="sm" c="dimmed">
+                Rows per page:
+              </Text>
+              <Select
+                value={String(itemsPerPage)}
+                onChange={(value) => {
+                  setItemsPerPage(Number(value));
+                  setCurrentPage(1);
+                }}
+                data={[
+                  { value: '10', label: '10' },
+                  { value: '25', label: '25' },
+                  { value: '50', label: '50' },
+                  { value: '100', label: '100' },
+                ]}
+                style={{ width: 90 }}
+                size="sm"
+              />
+              <Text size="sm" fw={600}>
+                Rows: {paginatedData.length}
+              </Text>
+            </Group>
+
+            <Pagination
+              total={totalPages}
+              value={currentPage}
+              onChange={setCurrentPage}
+              size="sm"
+              radius="md"
+              withEdges
+            />
+          </Group>
+        </Stack>
+      </Card>
+    </Box>
+  );
+};
+
+export default DashboardMerchant;

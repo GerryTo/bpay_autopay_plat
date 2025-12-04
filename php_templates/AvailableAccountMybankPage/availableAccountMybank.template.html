@@ -1,0 +1,73 @@
+<div>
+  <div class="page-header-container box">Available Account With Mybank</div>
+  <div class="page-body box">
+    <div class="row">
+      <!-- <div class="col-md-1 col-lg-1" style="padding-right: 0; width: 3%">
+        group:
+      </div> -->
+      <div class="col-xs-12 col-sm-4 col-md-2">
+        <select class="form-control input-sm" ng-model="filter.group">
+          <option value="A">Deposit & Withdraw</option>
+          <option value="D">Deposit</option>
+          <option value="W">Withdraw</option>
+        </select>
+      </div>
+      <div class="col-xs-12 col-sm-4 col-md-1 col-lg-1">
+        <div class="button-container">
+          <button
+            type="button"
+            class="btn btn-default btn-sm"
+            ng-click="refresh()"
+            ng-disabled="gridIsLoading==true"
+          >
+            {{globallang.refresh}}
+          </button>
+        </div>
+      </div>
+      <!-- <div class="col-xs-12 col-sm-2 col-md-2 col-lg-1">
+        <button
+          type="button"
+          class="btn btn-success btn-sm"
+          ng-click="submit()"
+          ng-disabled="gridIsLoading==true"
+        >
+          Submit
+        </button>
+      </div> -->
+      <!-- <div
+        class="col-xs-12 col-sm-2 col-md-2 col-lg-1"
+        style="text-align: right"
+      >
+        <button
+          type="button"
+          class="btn btn-warning btn-sm"
+          ng-click="rerun()"
+          ng-disabled="gridIsLoading==true"
+        >
+          Re-Run
+        </button>
+      </div> -->
+    </div>
+
+    <div
+      id="grid1"
+      ui-grid="gridOptions"
+      class="grid"
+      ui-grid-resize-columns
+      ui-grid-auto-resize
+      ui-grid-selection
+      ui-grid-exporter
+      ng-style="{'height': 700}"
+    >
+      <div
+        class="grid-nodata-container"
+        ng-show="gridOptions.data.length == 0 && !gridIsLoading"
+      >
+        No Data Available
+      </div>
+      <div class="grid-loading-container" ng-show="gridIsLoading">
+        <img src="images/loading.gif" />
+      </div>
+    </div>
+  </div>
+</div>

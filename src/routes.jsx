@@ -17,7 +17,7 @@ import {
   IconSettings,
   IconBrandTelegram,
 } from '@tabler/icons-react';
-import Dashboard from './layouts/dashboardPage';
+import DashboardMerchant from './layouts/Merchant/DashboardMerchant';
 import AccountList from './layouts/userManagement/accountList';
 import AccountForm from './layouts/userManagement/accountForm';
 import AutomationList from './layouts/userManagement/automationList';
@@ -74,6 +74,35 @@ import WithdrawDashboard from './layouts/Withdrawal/WithdrawDashboard';
 import WithdrawList from './layouts/Withdrawal/WithdrawList';
 import AutomationWithdrawList from './layouts/Withdrawal/AutomationWithdrawList';
 import AppiumWithdrawList from './layouts/Withdrawal/AppiumWithdrawList';
+import AppiumList from './layouts/Crawler/AppiumList';
+import AppiumListNotMatch from './layouts/Crawler/AppiumListNotMatch';
+import AppiumWithdrawQueue from './layouts/Crawler/AppiumWithdrawQueue';
+import AccountStatusNew from './layouts/Crawler/AccountStatusNew';
+import AppiumErrorLog from './layouts/Crawler/AppiumErrorLog';
+import ListAgentFailedSummary from './layouts/Crawler/ListAgentFailedSummary';
+import AccountBalanceLog from './layouts/Crawler/AccountBalanceLog';
+import AgentSummary from './layouts/Crawler/AgentSummary';
+import MonthlySummaryReport from './layouts/Crawler/MonthlySummaryReport';
+import ReportDifference from './layouts/Crawler/ReportDifference';
+import CredentialsBkashm from './layouts/Crawler/CredentialsBkashm';
+import SettlementTopup from './layouts/Settlement/SettlementTopup';
+import RequestList from './layouts/Settlement/RequestList';
+import B2bSendList from './layouts/Settlement/B2bSendList';
+import SystemSetting from './layouts/Setting/SystemSetting';
+import UpdateGroup from './layouts/Setting/UpdateGroup';
+import CpJournal from './layouts/Setting/CpJournal';
+import AvailableAccountList from './layouts/Setting/AvailableAccountList';
+import WhitelistMerchantIp from './layouts/Setting/WhitelistMerchantIp';
+import AvailableAccountNew from './layouts/Setting/AvailableAccountNew';
+import AvailableAccountWithMybank from './layouts/Setting/AvailableAccountWithMybank';
+import CountAvailableAccountNew from './layouts/Setting/CountAvailableAccountNew';
+import AvailableAccountNewWithdraw from './layouts/Setting/AvailableAccountNewWithdraw';
+import EmergencyDeposit from './layouts/Setting/EmergencyDeposit';
+import ServiceSeleniumList from './layouts/Setting/ServiceSeleniumList';
+import ServiceNagadApi from './layouts/Setting/ServiceNagadApi';
+import ServiceBkashApi from './layouts/Setting/ServiceBkashApi';
+import ServiceResendCallback from './layouts/Setting/ServiceResendCallback';
+import AgentTrackerDashboard from './layouts/Setting/AgentTrackerDashboard';
 import SmsLogById from './layouts/SMS/SmsLogById';
 import SmsCriteriaNotMatchingById from './layouts/SMS/SmsCriteriaNotMatchingById';
 import SmsLogBackup from './layouts/SMS/SmsLogBackup';
@@ -136,7 +165,7 @@ export const mockdataRoutes = [
         label: 'Dashboard Merchant',
         icon: <IconLayoutDashboard />,
         link: '/dashboard-merchant',
-        element: <Dashboard />,
+        element: <DashboardMerchant />,
       },
     ],
   },
@@ -177,7 +206,13 @@ export const mockdataRoutes = [
         label: 'Account Status New',
         icon: <IconSettings />,
         link: '/status-account-crawler-new',
-        element: '',
+        element: <AccountStatusNew />,
+      },
+      {
+        label: 'Agent Tracker Dashboard',
+        icon: <IconUsers />,
+        link: '/agent-tracker-dashboard',
+        element: <AgentTrackerDashboard />,
       },
     ],
   },
@@ -198,7 +233,13 @@ export const mockdataRoutes = [
             label: 'Crawler List',
             icon: <IconRobot />,
             link: '/appium-list',
-            element: '',
+            element: <AppiumList />,
+          },
+          {
+            label: 'Crawler List Not Match',
+            icon: <IconRobot />,
+            link: '/appium-list-not-match',
+            element: <AppiumListNotMatch />,
           },
           {
             label: 'SMS Log by Id',
@@ -332,12 +373,12 @@ export const mockdataRoutes = [
             link: '/report',
             element: <DownloadReport />,
           },
-          {
-            label: 'Account Balance Log',
-            icon: <IconBuildingBank />,
-            link: '/account-balance-log',
-            element: '',
-          },
+      {
+        label: 'Account Balance Log',
+        icon: <IconBuildingBank />,
+        link: '/account-balance-log',
+        element: <AccountBalanceLog />,
+      },
           {
             label: 'Merchant Daily (GMT+6)',
             icon: <IconReportMoney />,
@@ -1084,19 +1125,19 @@ export const mockdataRoutes = [
         label: 'Crawler List',
         icon: <IconRobot />,
         link: '/appium-list',
-        element: '',
+        element: <AppiumList />,
       },
       {
         label: 'Crawler List Not Match',
         icon: <IconRobot />,
         link: '/appium-list-not-match',
-        element: '',
+        element: <AppiumListNotMatch />,
       },
       {
         label: 'Withdraw Queue',
         icon: <IconArrowUpCircle />,
         link: '/crawler-wd-queue',
-        element: '',
+        element: <AppiumWithdrawQueue />,
       },
       {
         label: 'Account Status New',
@@ -1114,43 +1155,43 @@ export const mockdataRoutes = [
         label: 'Error Log',
         icon: <IconAlertTriangle />,
         link: '/crawler-errorlog',
-        element: '',
+        element: <AppiumErrorLog />,
       },
       {
         label: 'List Agent Failed Summary',
         icon: <IconFileText />,
         link: '/list-agent-failed-summary',
-        element: '',
+        element: <ListAgentFailedSummary />,
       },
       {
         label: 'Account Balance Log',
         icon: <IconBuildingBank />,
         link: '/account-balance-log',
-        element: '',
+        element: <AccountBalanceLog />,
       },
       {
         label: 'Agent Summary',
         icon: <IconReportMoney />,
         link: '/agent-summary',
-        element: '',
+        element: <AgentSummary />,
       },
       {
         label: 'Monthly Summary Report',
         icon: <IconReportMoney />,
         link: '/monthly-summary-report',
-        element: '',
+        element: <MonthlySummaryReport />,
       },
       {
         label: 'Report Difference',
         icon: <IconReportMoney />,
         link: '/report-difference',
-        element: '',
+        element: <ReportDifference />,
       },
       {
         label: 'Credentials BKASHM',
         icon: <IconUserShield />,
         link: '/credentials-bkashm-list',
-        element: '',
+        element: <CredentialsBkashm />,
       },
     ],
   },
@@ -1161,19 +1202,19 @@ export const mockdataRoutes = [
         label: 'Settlement & Topup',
         icon: <IconCash />,
         link: '/request-manual',
-        element: '',
+        element: <SettlementTopup />,
       },
       {
         label: 'Request List',
         icon: <IconFileText />,
         link: '/request-list',
-        element: '',
+        element: <RequestList />,
       },
       {
         label: 'B2b Send',
         icon: <IconTransfer />,
         link: '/B2b-Send',
-        element: '',
+        element: <B2bSendList />,
       },
     ],
   },
@@ -1184,79 +1225,85 @@ export const mockdataRoutes = [
         label: 'Update Group',
         icon: <IconSettings />,
         link: '/update-group',
-        element: '',
+        element: <UpdateGroup />,
       },
       {
         label: 'System Setting',
         icon: <IconSettings />,
         link: '/system-setting',
-        element: '',
+        element: <SystemSetting />,
       },
       {
         label: 'CP Journal',
         icon: <IconFileText />,
         link: '/cp-journal',
-        element: '',
+        element: <CpJournal />,
       },
       {
         label: 'Available Account List',
         icon: <IconBuildingBank />,
         link: '/available-account-list',
-        element: '',
+        element: <AvailableAccountList />,
       },
       {
         label: 'Whitelist Merchant IP',
         icon: <IconUserShield />,
         link: '/whitelist-merchant-ip',
-        element: '',
+        element: <WhitelistMerchantIp />,
       },
       {
         label: 'Available Account New Deposit',
         icon: <IconBuildingBank />,
         link: '/available-account-new-deposit',
-        element: '',
+        element: <AvailableAccountNew />,
       },
       {
         label: 'Available Account With Mybank',
         icon: <IconBuildingBank />,
         link: '/available-account-with-mybank',
-        element: '',
+        element: <AvailableAccountWithMybank />,
       },
       {
         label: 'Count Available Account New Deposit',
         icon: <IconReportMoney />,
         link: '/count-available-account-new-deposit',
-        element: '',
+        element: <CountAvailableAccountNew />,
       },
       {
         label: 'Available Account New Withdraw',
         icon: <IconBuildingBank />,
         link: '/available-account-new-withdraw',
-        element: '',
+        element: <AvailableAccountNewWithdraw />,
       },
       {
         label: 'Emergency Deposit Page',
         icon: <IconAlertTriangle />,
         link: '/emergency-deposit-page',
-        element: '',
+        element: <EmergencyDeposit />,
       },
       {
         label: 'Service Selenium List',
         icon: <IconRobot />,
         link: '/service-selenium-list',
-        element: '',
+        element: <ServiceSeleniumList />,
       },
       {
         label: 'Service NAGAD API',
         icon: <IconSettings />,
         link: '/service-nagad-api',
-        element: '',
+        element: <ServiceNagadApi />,
+      },
+      {
+        label: 'Service BKASH API',
+        icon: <IconSettings />,
+        link: '/service-bkash-api',
+        element: <ServiceBkashApi />,
       },
       {
         label: 'Service Resend Callback',
         icon: <IconBrandTelegram />,
         link: '/service-resend-callback',
-        element: '',
+        element: <ServiceResendCallback />,
       },
     ],
   },

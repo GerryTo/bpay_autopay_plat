@@ -1,0 +1,23 @@
+<div></div>
+<div class="page-header-container box">Service Resend Callback</div>
+<div class="page-body box">
+  <div class="row">
+     <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+       <div class="button-container" style="display:flex; gap:5px;">
+        <button type="button" class="btn btn-default btn-sm" ng-click="refresh()"
+          ng-disabled="gridIsLoading==true">{{globallang.refresh}}</button>
+        <button type="button" class="btn btn-success  btn-sm" ng-click="AddResendCallback()"
+          ng-disabled="gridIsLoading==true">Resend Callback</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="grid1" ui-grid="gridOptions" class="grid" ui-grid-resize-columns ui-grid-auto-resize ui-grid-exporter
+    ng-style="{'height': 700}">
+    <div class="grid-nodata-container" ng-show="gridOptions.data.length == 0 && !gridIsLoading">No Data Available
+    </div>
+    <div class="grid-loading-container" ng-show="gridIsLoading">
+      <img src="images/loading.gif" />
+    </div>
+  </div>
+</div>

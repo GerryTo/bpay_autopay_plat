@@ -1,0 +1,172 @@
+<div>
+    <div class="page-header-container box">Dashboard Merchant</div>
+   <div class="row">
+   <div class="col-md-8">
+    <div class="page-body box">
+
+<div class="row">
+<div class="col-md-2">
+<center>
+<div class="title-dashboard">
+Total Deposit
+</div>
+<div class="bullet-dashboard">
+<div class="isi-bullet">
+{{total_deposit | number:0 }}
+</div>
+
+</div>
+
+</center>
+
+</div>
+<div class="col-md-2">
+<center>
+<div class="title-dashboard">
+Total Withdrawal
+</div>
+<div class="bullet-dashboard">
+<div class="isi-bullet">
+{{total_widthraw | number:0}}
+</div>
+</div>
+</center>
+
+</div>
+
+<div class="col-md-2">
+<center>
+<div class="title-dashboard">
+Total Available Earnings (-FEE)
+</div>
+<div class="bullet-dashboard">
+<div class="isi-bullet">
+{{ availableEarning | number:0 }}
+</div>
+</div>
+</center>
+
+</div>
+
+<div class="col-md-2">
+<center>
+<div class="title-dashboard">
+Total Lifetime Earnings (-FEE)
+
+</div>
+<div class="bullet-dashboard">
+<div class="isi-bullet">
+{{dataToday.lifeEarning | number:0 }}
+</div>
+
+</div>
+</center>
+
+</div>
+
+<div class="col-md-2">
+<center>
+<div class="title-dashboard">
+Total Withdrawn
+
+</div>
+<div class="bullet-dashboard">
+<div class="isi-bullet">
+{{dataToday.totalwithdraw | number:0}}
+</div>
+</div>
+</center>
+
+</div>
+
+</div>
+    </div>
+	</div>
+	<div class="col-md-4">
+	<!--
+		<div class="col-md-12">
+		<div class="canvas-matauang">
+		<div class="sub-matauang">
+		MYR
+		</div>	
+		<div class="sub-matauang">
+		THB
+		</div>
+		<div class="sub-matauang">
+		IDR
+		</div>		
+		<div class="live-matauang">
+		MYR
+		</div>
+		
+		</div>
+		</div>
+		
+			<div class="col-md-12">
+				<div class="canvas-matauang" style="height:50px">
+		<p><b>Available</b>&nbsp;&nbsp; : RM-</p>
+		<p><b>Withdrawn</b> : RM-</p>
+		</div>
+		</div>
+-->		
+	</div>
+</div>
+
+
+    <div class="page-body box">
+        <div class="row">
+            <!--<div class="col-xs-12 col-sm-2 col-md-2 col-lg-2">
+                Date : 
+            </div>-->
+            <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+                <p class="input-group">
+                    <input type="text" class="form-control input-sm" uib-datepicker-popup="{{datepickerConfig.format}}" ng-model="filter.fromdate" is-open="popup1.opened"
+                        datepicker-options="dateOptions" ng-required="true" close-text="Close" alt-input-formats="datepickerConfig.altInputFormats" placeholder="From date"
+                    />
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default btn-sm" ng-click="open1()">
+                            <i class="glyphicon glyphicon-calendar"></i>
+                        </button>
+                    </span>
+                </p>
+            </div>
+            <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+                <p class="input-group">
+                    <input type="text" class="form-control input-sm" uib-datepicker-popup="{{datepickerConfig.format}}" ng-model="filter.todate" is-open="popup2.opened"
+                        datepicker-options="dateOptions" ng-required="true" close-text="Close" alt-input-formats="datepickerConfig.altInputFormats" placeholder="To date"
+                    />
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-default btn-sm" ng-click="open2()">
+                            <i class="glyphicon glyphicon-calendar"></i>
+                        </button>
+                    </span>
+                </p>
+            </div>
+            <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+                <div class="button-container">
+                    <button type="button" class="btn btn-default btn-sm" ng-click="refresh()" ng-disabled="gridIsLoading==true">{{globallang.refresh}}</button>
+
+                    <!--<button type="button" class="btn btn-warning btn-sm" ng-click="adjustment()">Adjustment</button>-->
+                </div>
+            </div>			
+        </div>
+
+        <!--<div class="row">
+            <div class="col-xs-12 col-sm-2 col-md-2 col-lg-2">
+                Account : 
+            </div>
+            <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+                <select class="form-control input-sm" ng-model="filter.accountno">
+                    <option value="0">- ALL ACCOUNT -</option>
+                    <option ng-repeat="item in acclist" value="{{item.bankaccountno}}">{{item.bankaccountno}}</option>
+                </select>
+            </div>
+        </div>-->
+        <div id="grid1" ui-grid="gridOptions" class="grid" ui-grid-resize-columns ui-grid-auto-resize ui-grid-exporter ng-style="{'height': getHeight()+'px'}">
+            <div class="grid-nodata-container" ng-show="gridOptions.data.length == 0 && !gridIsLoading">No Data Available</div>
+            <div class="grid-loading-container" ng-show="gridIsLoading">
+                <img src="images/loading.gif" />
+            </div>
+        </div>
+    </div>
+</div>

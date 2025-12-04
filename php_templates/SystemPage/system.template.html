@@ -1,0 +1,19 @@
+<div>
+    <div class="page-header-container box">System Setting</div>
+    <div class="page-body box">
+        <form>
+            <div class="form-group" ng-repeat="item in settingList">
+                <label for="{{item.id}}">{{item.label == '' ? item.id : item.label}}</label>
+                <input type="text" class="form-control form-control-sm" id="{{item.id}}" placeholder="" ng-model="item.value" ng-show="item.options.length == 0"/>
+                <select class="form-control" ng-model="item.value" id="{{item.id}}" ng-show="item.options.length > 0">
+                    <option ng-repeat="ops in item.options" value="{{ops.optionId}}">{{ops.optionLabel}}</option>
+                </select>
+            </div>
+	
+            <div class="form-section-footer">
+                <button type="button" class="btn btn-primary btn-sm" ng-click="save()" ng-disabled="isloading" >{{globallang.save}}</button>
+                <!--<button type="button" class="btn btn-default btn-sm" ng-click="cancel()">{{globallang.cancel}}</button>-->
+            </div>
+        </form>
+    </div>
+</div>
