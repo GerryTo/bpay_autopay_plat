@@ -37,6 +37,10 @@ import MerchantMaster from './layouts/Merchant/MerchantMaster';
 import MerchantForm from './layouts/Merchant/MerchantForm';
 import MerchantBankAcc from './layouts/Merchant/MerchantBankAcc';
 import MerchantTransaction from './layouts/Merchant/MerchantTransaction';
+import ResubmitExpress from './layouts/Resubmit/ResubmitExpress';
+import ResubmitExpressSuperAdmin from './layouts/Resubmit/ResubmitExpressSuperAdmin';
+import ReportResubmitWithoutAutomation from './layouts/Resubmit/ReportResubmitWithoutAutomation';
+import ReportResubmitWithoutAutomationSummary from './layouts/Resubmit/ReportResubmitWithoutAutomationSummary';
 import MerchantTransactionHistory from './layouts/Merchant/MerchantTransactionHistory';
 import ReportMerchant from './layouts/Merchant/ReportMerchant';
 import MerchantDailyReportGMT6 from './layouts/Report/MerchantDailyReportGMT6';
@@ -45,6 +49,7 @@ import AgentDailyComplete from './layouts/Report/AgentDailyComplete';
 import AgentDailyCompleteGMT6 from './layouts/Report/AgentDailyCompleteGMT6';
 import AgentRealtimeReport from './layouts/Report/AgentRealtimeReport';
 import AgentRealtimeReportGMT6 from './layouts/Report/AgentRealtimeReportGMT6';
+import MybankInactiveLog from './layouts/MyBank/MybankInactiveLog';
 import BalanceDifference from './layouts/Report/BalanceDifference';
 import SmsLogByAgentReport from './layouts/Report/SmsLogByAgentReport';
 import DownloadReport from './layouts/Report/DownloadReport';
@@ -176,31 +181,31 @@ export const mockdataRoutes = [
         label: 'Mybank Inactive Log',
         icon: <IconFileText />,
         link: '/mybank-inactive-log',
-        element: '',
+        element: <MybankInactiveLog />,
       },
       {
         label: 'Resubmit Express',
         icon: <IconBolt />,
         link: '/resubmit-express',
-        element: '',
+        element: <ResubmitExpress />,
       },
       {
         label: 'Resubmit Express - Super Admin',
         icon: <IconBolt />,
         link: '/resubmit-express-new',
-        element: '',
+        element: <ResubmitExpressSuperAdmin />,
       },
       {
         label: 'Report Resubmit without Automation',
         icon: <IconFileText />,
         link: '/report-resubmit-without-automation',
-        element: '',
+        element: <ReportResubmitWithoutAutomation />,
       },
       {
         label: 'Report Resubmit without Automation Summary',
         icon: <IconFileText />,
         link: '/report-resubmit-without-automation-summary',
-        element: '',
+        element: <ReportResubmitWithoutAutomationSummary />,
       },
       {
         label: 'Account Status New',

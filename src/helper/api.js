@@ -894,6 +894,43 @@ export const myBankAPI = {
         success: false,
         error: error.message || 'Failed to load inactive mybank',
         details: error.response?.data || null,
+        };
+      }
+    },
+
+  /**
+   * Get MyBank inactive log list
+   */
+  getInactiveLog: async () => {
+    try {
+      const encrypted = CRYPTO.encrypt({});
+      const formData = new URLSearchParams();
+      formData.append('data', encrypted);
+
+      const response = await apiClient.post('/mybankInactiveLog_getList.php', formData);
+      const payload = response.data?.data || response.data || {};
+      const rawRecords =
+        Array.isArray(payload.records) && payload.records.length > 0
+          ? payload.records
+          : Array.isArray(response.data?.records)
+            ? response.data.records
+            : [];
+
+      const records = rawRecords.map((rec) => CRYPTO.decodeRawUrl(rec));
+
+      return {
+        success: true,
+        data: {
+          ...payload,
+          records,
+        },
+      };
+    } catch (error) {
+      console.error('Get inactive mybank log error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load inactive mybank log',
+        details: error.response?.data || null,
       };
     }
   },
@@ -8095,6 +8132,143 @@ export const systemAPI = {
       return {
         success: false,
         error: error.message || 'Failed to save system settings',
+        details: error.response?.data || null,
+      };
+    }
+  },
+};
+
+/**
+ * Resubmit Express API calls
+ */
+export const resubmitExpressAPI = {
+  /**
+   * Get resubmit express list
+   * @param {{type?: string|number, amount?: number}} filter
+   */
+  getList: async (filter = {}) => {
+    const decodeSafe = (value) => {
+      if (typeof value !== 'string') return value ?? '';
+      try {
+        return decodeURIComponent(value);
+      } catch {
+        return value;
+      }
+    };
+
+    try {
+      const payload = {
+        type: filter.type ?? '2',
+        amount: filter.amount ?? 1000,
+      };
+      const encrypted = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', encrypted);
+
+      const response = await apiClient.post('/resubmitExpress_getList.php', formData);
+      let payloadData = response.data?.data ? CRYPTO.decrypt(response.data.data) : response.data;
+
+      if (payloadData?.records && Array.isArray(payloadData.records)) {
+        payloadData = {
+          ...payloadData,
+          records: payloadData.records.map((rec) => ({
+            ...rec,
+            message: decodeSafe(rec.message),
+            from: decodeSafe(rec.from),
+          })),
+        };
+      }
+
+      return { success: true, data: payloadData };
+    } catch (error) {
+      console.error('Get resubmit express list error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load resubmit express list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Submit selected resubmit express items
+   * @param {Object} payload - typically { type, amount, list }
+   */
+  submit: async (payload = {}) => {
+    try {
+      const encrypted = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', encrypted);
+
+      const response = await apiClient.post('/resubmitExpress_submit.php', formData);
+      const payloadData = response.data?.data ? CRYPTO.decrypt(response.data.data) : response.data;
+
+      return { success: true, data: payloadData };
+    } catch (error) {
+      console.error('Submit resubmit express error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to submit resubmit express',
+        details: error.response?.data || null,
+      };
+    }
+  },
+};
+
+/**
+ * Report Resubmit Without Automation API calls
+ */
+export const reportResubmitAPI = {
+  /**
+   * Get report resubmit without automation list
+   * @param {{from: string, to: string}} params
+   */
+  getWithoutAutomationList: async (params = {}) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', JSON.stringify(params));
+
+      const response = await apiClient.post('/reportResubmitWithoutAutomation_getList.php', formData);
+      const payload = response.data?.data ? response.data.data : response.data;
+
+      return {
+        success: true,
+        data: payload,
+      };
+    } catch (error) {
+      console.error('Report resubmit without automation list error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load report resubmit without automation',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get report resubmit without automation summary list
+   * @param {{from: string, to: string}} params
+   */
+  getWithoutAutomationSummary: async (params = {}) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', JSON.stringify(params));
+
+      const response = await apiClient.post(
+        '/reportResubmitWithoutAutomationSummary_getList.php',
+        formData
+      );
+      const payload = response.data?.data ? response.data.data : response.data;
+
+      return {
+        success: true,
+        data: payload,
+      };
+    } catch (error) {
+      console.error('Report resubmit without automation summary error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load report resubmit without automation summary',
         details: error.response?.data || null,
       };
     }

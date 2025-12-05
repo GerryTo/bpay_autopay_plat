@@ -13,8 +13,6 @@ const LoginData = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    console.log(loading);
-
     const handleLogin = async () => {
         try {
             setLoading(true);

@@ -1,0 +1,68 @@
+<div>
+  <div class="page-header-container box">Resubmit Transaction</div>
+  <div class="page-body box">
+    <!-- <div class="row">
+      <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+        <select class="form-control input-sm" ng-model="filter.type">
+          <option value="0">Amount less than</option>
+          <option value="1">Phone Number do not Match</option>
+          <option value="2">Sms need to check</option>
+          <option value="3">Different Trx Id</option>
+          <option value="4">Different Amount</option>
+        </select>
+      </div>
+      <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+        <input
+          class="form-control input-sm"
+          ng-show="filter.type == 0"
+          type="number"
+          placeholder="AMOUNT"
+          ng-model="filter.amount"
+        />
+      </div>
+    </div> -->
+    <div class="row" style="margin-top: 8px">
+      <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+        <div class="button-container">
+          <button
+            type="button"
+            class="btn btn-default btn-sm"
+            ng-click="refresh()"
+            ng-disabled="gridIsLoading==true"
+          >
+            {{globallang.refresh}}
+          </button>
+          <button
+            type="button"
+            class="btn btn-success btn-sm"
+            ng-click="submit()"
+            ng-disabled="gridIsLoading==true"
+          >
+            Submit
+          </button>
+        </div>
+      </div>
+    </div>
+    <div
+      id="grid1"
+      ui-grid="gridOptions"
+      class="grid"
+      ui-grid-resize-columns
+      ui-grid-auto-resize
+      ui-grid-selection
+      ui-grid-pinning
+      ui-grid-exporter
+      ng-style="{'height': getHeight()+'px'}"
+    >
+      <div
+        class="grid-nodata-container"
+        ng-show="gridOptions.data.length == 0 && !gridIsLoading"
+      >
+        No Data Available
+      </div>
+      <div class="grid-loading-container" ng-show="gridIsLoading">
+        <img src="images/loading.gif" />
+      </div>
+    </div>
+  </div>
+</div>

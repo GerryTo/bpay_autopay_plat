@@ -136,7 +136,10 @@ const AgentTrackerDashboard = () => {
         includesValue(item.accountNo, columnFilters.accountNo) &&
         includesValue(item.state, columnFilters.state) &&
         includesValue(item.lastHeartbeat, columnFilters.lastHeartbeat) &&
-        includesValue(item.lastTransactionSuccess, columnFilters.lastTransactionSuccess) &&
+        includesValue(
+          item.lastTransactionSuccess,
+          columnFilters.lastTransactionSuccess
+        ) &&
         includesValue(item.lastTransactionId, columnFilters.lastTransactionId)
       );
     });
@@ -149,7 +152,10 @@ const AgentTrackerDashboard = () => {
         label: 'Status',
         minWidth: 110,
         render: (item) => (
-          <Badge color={item.isOnline ? 'green' : 'red'} variant="filled">
+          <Badge
+            color={item.isOnline ? 'green' : 'red'}
+            variant="filled"
+          >
             {item.isOnline ? 'ONLINE' : 'OFFLINE'}
           </Badge>
         ),
@@ -176,7 +182,9 @@ const AgentTrackerDashboard = () => {
             placeholder="Filter bank..."
             size="xs"
             value={columnFilters.bankcode}
-            onChange={(e) => handleFilterChange('bankcode', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('bankcode', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -190,7 +198,9 @@ const AgentTrackerDashboard = () => {
             placeholder="Filter username..."
             size="xs"
             value={columnFilters.username}
-            onChange={(e) => handleFilterChange('username', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('username', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -204,7 +214,9 @@ const AgentTrackerDashboard = () => {
             placeholder="Filter account..."
             size="xs"
             value={columnFilters.accountNo}
-            onChange={(e) => handleFilterChange('accountNo', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('accountNo', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -213,7 +225,10 @@ const AgentTrackerDashboard = () => {
         label: 'State',
         minWidth: 120,
         render: (item) => (
-          <Badge variant="light" color={stateColors[item.state] || 'gray'}>
+          <Badge
+            variant="light"
+            color={stateColors[item.state] || 'gray'}
+          >
             {item.state || 'IDLE'}
           </Badge>
         ),
@@ -236,7 +251,9 @@ const AgentTrackerDashboard = () => {
             placeholder="Filter heartbeat..."
             size="xs"
             value={columnFilters.lastHeartbeat}
-            onChange={(e) => handleFilterChange('lastHeartbeat', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('lastHeartbeat', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -244,14 +261,19 @@ const AgentTrackerDashboard = () => {
         key: 'lastTransactionSuccess',
         label: 'Last Trx Success',
         minWidth: 180,
-        render: (item) => <Text size="sm">{item.lastTransactionSuccess || '-'}</Text>,
+        render: (item) => (
+          <Text size="sm">{item.lastTransactionSuccess || '-'}</Text>
+        ),
         filter: (
           <TextInput
             placeholder="Filter last success..."
             size="xs"
             value={columnFilters.lastTransactionSuccess}
             onChange={(e) =>
-              handleFilterChange('lastTransactionSuccess', e.currentTarget.value)
+              handleFilterChange(
+                'lastTransactionSuccess',
+                e.currentTarget.value
+              )
             }
           />
         ),
@@ -260,13 +282,17 @@ const AgentTrackerDashboard = () => {
         key: 'lastTransactionId',
         label: 'Last Trx ID',
         minWidth: 150,
-        render: (item) => <Text size="sm">{item.lastTransactionId || '-'}</Text>,
+        render: (item) => (
+          <Text size="sm">{item.lastTransactionId || '-'}</Text>
+        ),
         filter: (
           <TextInput
             placeholder="Filter last trx id..."
             size="xs"
             value={columnFilters.lastTransactionId}
-            onChange={(e) => handleFilterChange('lastTransactionId', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('lastTransactionId', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -289,12 +315,15 @@ const AgentTrackerDashboard = () => {
     [columnFilters, handleFilterChange]
   );
 
-  const { visibleColumns, sortConfig, handleHideColumn, handleSort, handleResetAll } = useTableControls(
-    columns,
-    {
-      onResetFilters: () => setColumnFilters(defaultFilters),
-    }
-  );
+  const {
+    visibleColumns,
+    sortConfig,
+    handleHideColumn,
+    handleSort,
+    handleResetAll,
+  } = useTableControls(columns, {
+    onResetFilters: () => setColumnFilters(defaultFilters),
+  });
 
   const sortedData = useMemo(() => {
     if (!sortConfig) return filteredData;
@@ -351,10 +380,14 @@ const AgentTrackerDashboard = () => {
           const payload = response.data;
           const status = (payload.status || '').toLowerCase();
           if (!payload.status || status === 'success' || status === 'ok') {
-            const records = Array.isArray(payload.records) ? payload.records : [];
+            const records = Array.isArray(payload.records)
+              ? payload.records
+              : [];
             const withKeys = records.map((item, idx) => ({
               ...item,
-              _rowKey: `${item.bankcode || 'bank'}-${item.accountNo || 'acct'}-${idx}`,
+              _rowKey: `${item.bankcode || 'bank'}-${
+                item.accountNo || 'acct'
+              }-${idx}`,
             }));
             setData(withKeys);
             setLastUpdate(payload.lastUpdate || '');
@@ -477,7 +510,8 @@ const AgentTrackerDashboard = () => {
                 size="sm"
                 c="dimmed"
               >
-                Monitor agent status and activity. Last update: {lastUpdate || '-'}
+                Monitor agent status and activity. Last update:{' '}
+                {lastUpdate || '-'}
               </Text>
             </Box>
 
@@ -500,7 +534,13 @@ const AgentTrackerDashboard = () => {
                 color={autoRefresh ? 'green' : 'gray'}
                 radius="md"
                 size="sm"
-                leftSection={autoRefresh ? <IconPlayerStop size={18} /> : <IconPlayerPlay size={18} />}
+                leftSection={
+                  autoRefresh ? (
+                    <IconPlayerStop size={18} />
+                  ) : (
+                    <IconPlayerPlay size={18} />
+                  )
+                }
                 onClick={() => setAutoRefresh((prev) => !prev)}
               >
                 {autoRefresh ? 'Stop Auto Refresh' : 'Start Auto Refresh'}
@@ -518,56 +558,137 @@ const AgentTrackerDashboard = () => {
             </Group>
           </Group>
 
-          <SimpleGrid cols={4} spacing="sm" breakpoints={[{ maxWidth: 'md', cols: 2 }]}>
-            <Card withBorder padding="md" radius="md" shadow="xs">
-              <Group justify="space-between" align="center">
-                <Text size="sm" c="dimmed">
+          <SimpleGrid
+            cols={4}
+            spacing="sm"
+            breakpoints={[{ maxWidth: 'md', cols: 2 }]}
+          >
+            <Card
+              withBorder
+              padding="md"
+              radius="md"
+              shadow="xs"
+            >
+              <Group
+                justify="space-between"
+                align="center"
+              >
+                <Text
+                  size="sm"
+                  c="dimmed"
+                >
                   Total Agents
                 </Text>
-                <IconUsers size={16} color="#2563eb" />
+                <IconUsers
+                  size={16}
+                  color="#2563eb"
+                />
               </Group>
-              <Text fw={700} size="lg">
+              <Text
+                fw={700}
+                size="lg"
+              >
                 {stats.totalAgents}
               </Text>
             </Card>
-            <Card withBorder padding="md" radius="md" shadow="xs">
-              <Group justify="space-between" align="center">
-                <Text size="sm" c="dimmed">
+            <Card
+              withBorder
+              padding="md"
+              radius="md"
+              shadow="xs"
+            >
+              <Group
+                justify="space-between"
+                align="center"
+              >
+                <Text
+                  size="sm"
+                  c="dimmed"
+                >
                   Online
                 </Text>
-                <IconActivity size={16} color="green" />
+                <IconActivity
+                  size={16}
+                  color="green"
+                />
               </Group>
-              <Text fw={700} size="lg">
+              <Text
+                fw={700}
+                size="lg"
+              >
                 {stats.totalOnline}
               </Text>
             </Card>
-            <Card withBorder padding="md" radius="md" shadow="xs">
-              <Group justify="space-between" align="center">
-                <Text size="sm" c="dimmed">
+            <Card
+              withBorder
+              padding="md"
+              radius="md"
+              shadow="xs"
+            >
+              <Group
+                justify="space-between"
+                align="center"
+              >
+                <Text
+                  size="sm"
+                  c="dimmed"
+                >
                   Offline
                 </Text>
-                <IconActivity size={16} color="red" />
+                <IconActivity
+                  size={16}
+                  color="red"
+                />
               </Group>
-              <Text fw={700} size="lg">
+              <Text
+                fw={700}
+                size="lg"
+              >
                 {stats.totalOffline}
               </Text>
             </Card>
-            <Card withBorder padding="md" radius="md" shadow="xs">
-              <Group justify="space-between" align="center">
-                <Text size="sm" c="dimmed">
+            <Card
+              withBorder
+              padding="md"
+              radius="md"
+              shadow="xs"
+            >
+              <Group
+                justify="space-between"
+                align="center"
+              >
+                <Text
+                  size="sm"
+                  c="dimmed"
+                >
                   Online %
                 </Text>
-                <IconActivity size={16} color="#7c3aed" />
+                <IconActivity
+                  size={16}
+                  color="#7c3aed"
+                />
               </Group>
-              <Text fw={700} size="lg">
+              <Text
+                fw={700}
+                size="lg"
+              >
                 {stats.onlinePercentage}%
               </Text>
             </Card>
           </SimpleGrid>
 
-          <Card withBorder radius="md" padding="md" shadow="xs">
+          <Card
+            withBorder
+            radius="md"
+            padding="md"
+            shadow="xs"
+          >
             <Stack gap="md">
-              <Group gap="md" wrap="wrap" align="flex-end">
+              <Group
+                gap="md"
+                wrap="wrap"
+                align="flex-end"
+              >
                 <Select
                   label="Status"
                   data={statusFilterOptions}
@@ -582,7 +703,9 @@ const AgentTrackerDashboard = () => {
                     { value: '', label: 'All Banks' },
                     ...bankStats.map((b) => ({
                       value: b.bankcode || b.bankCode || '',
-                      label: `${b.bankcode || b.bankCode} (${b.online || 0}/${b.total || 0})`,
+                      label: `${b.bankcode || b.bankCode} (${b.online || 0}/${
+                        b.total || 0
+                      })`,
                     })),
                   ]}
                   value={selectedBank}
@@ -596,7 +719,10 @@ const AgentTrackerDashboard = () => {
                   onChange={(e) => setSearch(e.currentTarget.value)}
                   style={{ minWidth: 280 }}
                 />
-                <Badge variant="light" color="gray">
+                <Badge
+                  variant="light"
+                  color="gray"
+                >
                   Last update: {lastUpdate || '-'}
                 </Badge>
               </Group>
@@ -604,31 +730,71 @@ const AgentTrackerDashboard = () => {
           </Card>
 
           {bankOverview.length > 0 && (
-            <Card withBorder radius="md" padding="md" shadow="xs">
+            <Card
+              withBorder
+              radius="md"
+              padding="md"
+              shadow="xs"
+            >
               <Stack gap="sm">
-                <Group justify="space-between" align="center">
+                <Group
+                  justify="space-between"
+                  align="center"
+                >
                   <Text fw={700}>Bank Overview</Text>
-                  <Text size="sm" c="dimmed">
+                  <Text
+                    size="sm"
+                    c="dimmed"
+                  >
                     Online and total agents per bank
                   </Text>
                 </Group>
-                <SimpleGrid cols={4} spacing="sm" breakpoints={[{ maxWidth: 'md', cols: 2 }]}>
+                <SimpleGrid
+                  cols={4}
+                  spacing="sm"
+                  breakpoints={[{ maxWidth: 'md', cols: 2 }]}
+                >
                   {bankOverview.map((bank) => (
-                    <Card key={bank.key} withBorder padding="md" radius="md" shadow="xs">
-                      <Group justify="space-between" align="center" mb={6}>
+                    <Card
+                      key={bank.key}
+                      withBorder
+                      padding="md"
+                      radius="md"
+                      shadow="xs"
+                    >
+                      <Group
+                        justify="space-between"
+                        align="center"
+                        mb={6}
+                      >
                         <Text fw={700}>{bank.bankCode}</Text>
-                        <Badge color={bank.online > 0 ? 'green' : 'red'} variant="light">
+                        <Badge
+                          color={bank.online > 0 ? 'green' : 'red'}
+                          variant="light"
+                        >
                           {bank.online} online
                         </Badge>
                       </Group>
-                      <Group justify="space-between" align="center">
-                        <Text size="sm" c="dimmed">
+                      <Group
+                        justify="space-between"
+                        align="center"
+                      >
+                        <Text
+                          size="sm"
+                          c="dimmed"
+                        >
                           Offline
                         </Text>
                         <Text fw={600}>{bank.offline}</Text>
                       </Group>
-                      <Group justify="space-between" align="center">
-                        <Text size="sm" c="dimmed">
+                      <Group
+                        justify="space-between"
+                        align="center"
+                      >
+                        <Text
+                          size="sm"
+                          c="dimmed"
+                        >
                           Total
                         </Text>
                         <Text fw={600}>{bank.total}</Text>
@@ -641,7 +807,10 @@ const AgentTrackerDashboard = () => {
           )}
 
           <Box pos="relative">
-            <ScrollArea type="auto" h="60vh">
+            <ScrollArea
+              type="auto"
+              h="60vh"
+            >
               <Table
                 highlightOnHover
                 withTableBorder
@@ -655,9 +824,18 @@ const AgentTrackerDashboard = () => {
                 <Table.Thead>
                   <Table.Tr>
                     {visibleColumns.map((col) => (
-                      <Table.Th key={col.key} style={{ minWidth: col.minWidth || 120 }}>
-                        <Group gap={8} align="center">
-                          <Text size="sm" fw={600}>
+                      <Table.Th
+                        key={col.key}
+                        style={{ minWidth: col.minWidth || 120 }}
+                      >
+                        <Group
+                          gap={8}
+                          align="center"
+                        >
+                          <Text
+                            size="sm"
+                            fw={600}
+                          >
                             {col.label}
                           </Text>
                           <ColumnActionMenu
@@ -696,14 +874,17 @@ const AgentTrackerDashboard = () => {
                   ) : (
                     <Table.Tr>
                       <Table.Td colSpan={visibleColumns.length}>
-                        <Text ta="center" c="dimmed">
+                        <Text
+                          ta="center"
+                          c="dimmed"
+                        >
                           No data available
                         </Text>
                       </Table.Td>
                     </Table.Tr>
                   )}
                 </Table.Tbody>
-                <Table.Tfoot>
+                {/* <Table.Tfoot>
                   <Table.Tr>
                     <Table.Td colSpan={visibleColumns.length}>
                       <Group justify="space-between" align="center">
@@ -716,14 +897,23 @@ const AgentTrackerDashboard = () => {
                       </Group>
                     </Table.Td>
                   </Table.Tr>
-                </Table.Tfoot>
+                </Table.Tfoot> */}
               </Table>
             </ScrollArea>
           </Box>
 
-          <Group justify="space-between" align="center">
-            <Group gap="sm" align="center">
-              <Text size="sm" c="dimmed">
+          <Group
+            justify="space-between"
+            align="center"
+          >
+            <Group
+              gap="sm"
+              align="center"
+            >
+              <Text
+                size="sm"
+                c="dimmed"
+              >
                 Rows per page:
               </Text>
               <Select
@@ -741,7 +931,10 @@ const AgentTrackerDashboard = () => {
                 style={{ width: 90 }}
                 size="sm"
               />
-              <Text size="sm" fw={600}>
+              <Text
+                size="sm"
+                fw={600}
+              >
                 Rows: {paginatedData.length}
               </Text>
             </Group>
@@ -767,11 +960,20 @@ const AgentTrackerDashboard = () => {
         {detailData ? (
           <Stack gap="xs">
             {Object.entries(detailData).map(([key, value]) => (
-              <Group key={key} justify="space-between">
-                <Text size="sm" c="dimmed">
+              <Group
+                key={key}
+                justify="space-between"
+              >
+                <Text
+                  size="sm"
+                  c="dimmed"
+                >
                   {key}
                 </Text>
-                <Text size="sm" fw={600}>
+                <Text
+                  size="sm"
+                  fw={600}
+                >
                   {value ?? '-'}
                 </Text>
               </Group>
