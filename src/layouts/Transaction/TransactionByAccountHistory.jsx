@@ -835,7 +835,7 @@ const TransactionByAccountHistory = () => {
               >
                 Search
               </Button>
-              <Stack gap={4}>
+              {/* <Stack gap={4}>
                 <Group gap={6}>
                   <IconArrowDownCircle
                     size={16}
@@ -879,7 +879,7 @@ const TransactionByAccountHistory = () => {
                   </Text>
                 </Group>
                 <Text fw={700}>{formatNumber(totals.fee)}</Text>
-              </Stack>
+              </Stack> */}
             </Group>
           </Card>
 

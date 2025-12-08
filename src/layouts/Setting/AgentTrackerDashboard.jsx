@@ -712,13 +712,13 @@ const AgentTrackerDashboard = () => {
                   onChange={(val) => setSelectedBank(val || '')}
                   style={{ minWidth: 220 }}
                 />
-                <TextInput
+                {/* <TextInput
                   label="Search"
                   placeholder="Search username, account, bank, state..."
                   value={search}
                   onChange={(e) => setSearch(e.currentTarget.value)}
                   style={{ minWidth: 280 }}
-                />
+                /> */}
                 <Badge
                   variant="light"
                   color="gray"

@@ -49,6 +49,7 @@ import AgentDailyComplete from './layouts/Report/AgentDailyComplete';
 import AgentDailyCompleteGMT6 from './layouts/Report/AgentDailyCompleteGMT6';
 import AgentRealtimeReport from './layouts/Report/AgentRealtimeReport';
 import AgentRealtimeReportGMT6 from './layouts/Report/AgentRealtimeReportGMT6';
+import MerchantTransactionPerHour from './layouts/Merchant/MerchantTransactionPerHour';
 import MybankInactiveLog from './layouts/MyBank/MybankInactiveLog';
 import BalanceDifference from './layouts/Report/BalanceDifference';
 import SmsLogByAgentReport from './layouts/Report/SmsLogByAgentReport';
@@ -75,6 +76,7 @@ import DepositQueueToday from './layouts/Deposit/DepositQueueToday';
 import DepositQueueTodayBDT from './layouts/Deposit/DepositQueueTodayBDT';
 import DepositQueue from './layouts/Deposit/DepositQueue';
 import DepositQueueAlert from './layouts/Deposit/DepositQueueAlert';
+import MybankCheckDeposit from './layouts/Deposit/MybankCheckDeposit';
 import WithdrawDashboard from './layouts/Withdrawal/WithdrawDashboard';
 import WithdrawList from './layouts/Withdrawal/WithdrawList';
 import AutomationWithdrawList from './layouts/Withdrawal/AutomationWithdrawList';
@@ -259,6 +261,12 @@ export const mockdataRoutes = [
             element: <TransactionById />,
           },
           {
+            label: 'Transaction Merchant Hour',
+            icon: <IconReportMoney />,
+            link: '/transaction-merchant-per-hour',
+            element: <MerchantTransactionPerHour />,
+          },
+          {
             label: 'MCO',
             icon: <IconAlertTriangle />,
             link: '/report-flag',
@@ -310,7 +318,7 @@ export const mockdataRoutes = [
             label: 'Mybank Check Deposit',
             icon: <IconBuildingBank />,
             link: '/mybank-check-deposit',
-            element: '',
+            element: <MybankCheckDeposit />,
           },
         ],
       },
@@ -358,7 +366,7 @@ export const mockdataRoutes = [
             label: 'Transaction Merchant Hour',
             icon: <IconShoppingCart />,
             link: '/merchant-transaction-per-hour',
-            element: '',
+            element: <MerchantTransactionPerHour />,
           },
           {
             label: 'ALL Automation Withdraw List',
@@ -378,12 +386,12 @@ export const mockdataRoutes = [
             link: '/report',
             element: <DownloadReport />,
           },
-      {
-        label: 'Account Balance Log',
-        icon: <IconBuildingBank />,
-        link: '/account-balance-log',
-        element: <AccountBalanceLog />,
-      },
+          {
+            label: 'Account Balance Log',
+            icon: <IconBuildingBank />,
+            link: '/account-balance-log',
+            element: <AccountBalanceLog />,
+          },
           {
             label: 'Merchant Daily (GMT+6)',
             icon: <IconReportMoney />,
@@ -393,7 +401,7 @@ export const mockdataRoutes = [
           {
             label: 'Merchant Daily (GMT+8)',
             icon: <IconReportMoney />,
-            link: '/master-report-daily-admin-complete',
+            link: '/master-report-daily-admin-complete-gmt8',
             element: <MerchantDailyReportGMT8 />,
           },
           {

@@ -529,7 +529,7 @@ const TransactionResendCallback = () => {
               >
                 Search
               </Button>
-              <Stack gap={4}>
+              {/* <Stack gap={4}>
                 <Text
                   size="sm"
                   c="dimmed"
@@ -537,7 +537,7 @@ const TransactionResendCallback = () => {
                   Total Rows
                 </Text>
                 <Text fw={700}>{data.length}</Text>
-              </Stack>
+              </Stack> */}
             </Group>
           </Card>
 

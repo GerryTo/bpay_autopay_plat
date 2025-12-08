@@ -14,7 +14,13 @@ import {
   Text,
   TextInput,
 } from '@mantine/core';
-import { IconBrandTelegram, IconFilter, IconRefresh, IconSearch, IconShieldCheck } from '@tabler/icons-react';
+import {
+  IconBrandTelegram,
+  IconFilter,
+  IconRefresh,
+  IconSearch,
+  IconShieldCheck,
+} from '@tabler/icons-react';
 import ColumnActionMenu from '../../components/ColumnActionMenu';
 import { transactionAPI } from '../../helper/api';
 import { showNotification } from '../../helper/showNotification';
@@ -63,7 +69,10 @@ const TransactionCallback502 = () => {
         label: 'Future Trx ID',
         minWidth: 140,
         render: (item) => (
-          <Text size="sm" fw={600}>
+          <Text
+            size="sm"
+            fw={600}
+          >
             {item.futuretrxid}
           </Text>
         ),
@@ -72,7 +81,9 @@ const TransactionCallback502 = () => {
             placeholder="Filter trx id..."
             size="xs"
             value={columnFilters.futuretrxid}
-            onChange={(e) => handleFilterChange('futuretrxid', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('futuretrxid', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -86,7 +97,9 @@ const TransactionCallback502 = () => {
             placeholder="Filter date..."
             size="xs"
             value={columnFilters.insert}
-            onChange={(e) => handleFilterChange('insert', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('insert', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -100,7 +113,9 @@ const TransactionCallback502 = () => {
             placeholder="Filter complete date..."
             size="xs"
             value={columnFilters.completedate}
-            onChange={(e) => handleFilterChange('completedate', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('completedate', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -114,7 +129,9 @@ const TransactionCallback502 = () => {
             placeholder="Filter merchant..."
             size="xs"
             value={columnFilters.merchantcode}
-            onChange={(e) => handleFilterChange('merchantcode', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('merchantcode', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -128,7 +145,9 @@ const TransactionCallback502 = () => {
             placeholder="Filter customer..."
             size="xs"
             value={columnFilters.customercode}
-            onChange={(e) => handleFilterChange('customercode', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('customercode', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -142,7 +161,9 @@ const TransactionCallback502 = () => {
             placeholder="Filter type..."
             size="xs"
             value={columnFilters.transactiontype}
-            onChange={(e) => handleFilterChange('transactiontype', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('transactiontype', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -165,7 +186,10 @@ const TransactionCallback502 = () => {
         label: 'Status',
         minWidth: 140,
         render: (item) => (
-          <Badge color="gray" variant="outline">
+          <Badge
+            color="gray"
+            variant="outline"
+          >
             {item.status || '-'}
           </Badge>
         ),
@@ -174,7 +198,9 @@ const TransactionCallback502 = () => {
             placeholder="Filter status..."
             size="xs"
             value={columnFilters.status}
-            onChange={(e) => handleFilterChange('status', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('status', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -188,7 +214,9 @@ const TransactionCallback502 = () => {
             placeholder="Filter trans id..."
             size="xs"
             value={columnFilters.transactionid}
-            onChange={(e) => handleFilterChange('transactionid', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('transactionid', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -202,7 +230,9 @@ const TransactionCallback502 = () => {
             placeholder="Filter notes 3..."
             size="xs"
             value={columnFilters.notes3}
-            onChange={(e) => handleFilterChange('notes3', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('notes3', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -210,14 +240,19 @@ const TransactionCallback502 = () => {
         key: 'merchantcallbackresponse',
         label: 'Callback Status',
         minWidth: 200,
-        render: (item) => <Text size="sm">{item.merchantcallbackresponse || '-'}</Text>,
+        render: (item) => (
+          <Text size="sm">{item.merchantcallbackresponse || '-'}</Text>
+        ),
         filter: (
           <TextInput
             placeholder="Filter callback..."
             size="xs"
             value={columnFilters.merchantcallbackresponse}
             onChange={(e) =>
-              handleFilterChange('merchantcallbackresponse', e.currentTarget.value)
+              handleFilterChange(
+                'merchantcallbackresponse',
+                e.currentTarget.value
+              )
             }
           />
         ),
@@ -226,12 +261,18 @@ const TransactionCallback502 = () => {
     [columnFilters, handleFilterChange]
   );
 
-  const { visibleColumns, sortConfig, handleHideColumn, handleSort, handleResetAll } =
-    useTableControls(columns, {
-      onResetFilters: () => setColumnFilters(defaultFilters),
-    });
+  const {
+    visibleColumns,
+    sortConfig,
+    handleHideColumn,
+    handleSort,
+    handleResetAll,
+  } = useTableControls(columns, {
+    onResetFilters: () => setColumnFilters(defaultFilters),
+  });
 
-  const makeKey = (item) => `${item.futuretrxid || ''}-${item.transactionid || ''}`;
+  const makeKey = (item) =>
+    `${item.futuretrxid || ''}-${item.transactionid || ''}`;
 
   const includesValue = (field, value) => {
     if (!value) return true;
@@ -292,10 +333,13 @@ const TransactionCallback502 = () => {
 
       if (response.success && response.data) {
         if ((response.data.status || '').toLowerCase() === 'ok') {
-          const records = Array.isArray(response.data.records) ? response.data.records : [];
+          const records = Array.isArray(response.data.records)
+            ? response.data.records
+            : [];
           const mapped = records.map((item) => ({
             ...item,
-            merchantcallbackresponse: item.merchantcallbackresponse || item.callbackresponse,
+            merchantcallbackresponse:
+              item.merchantcallbackresponse || item.callbackresponse,
           }));
           setData(mapped);
         } else {
@@ -343,12 +387,20 @@ const TransactionCallback502 = () => {
     setLoading(true);
     try {
       const payload = data.map((item) => ({ id: item.futuretrxid }));
-      const response = await transactionAPI.resendTransactionCallback502(payload);
+      const response = await transactionAPI.resendTransactionCallback502(
+        payload
+      );
       if (response.success && response.data) {
         showNotification({
-          title: (response.data.status || '').toLowerCase() === 'ok' ? 'Success' : 'Info',
+          title:
+            (response.data.status || '').toLowerCase() === 'ok'
+              ? 'Success'
+              : 'Info',
           message: response.data.message || 'Resend callback completed',
-          Color: (response.data.status || '').toLowerCase() === 'ok' ? 'green' : 'yellow',
+          Color:
+            (response.data.status || '').toLowerCase() === 'ok'
+              ? 'green'
+              : 'yellow',
         });
         fetchData({ silent: true });
       } else {
@@ -379,19 +431,40 @@ const TransactionCallback502 = () => {
 
   return (
     <Box p="md">
-      <Card shadow="sm" padding="lg" radius="md" withBorder>
-        <LoadingOverlay visible={loading} overlayProps={{ radius: 'md', blur: 2 }} />
+      <Card
+        shadow="sm"
+        padding="lg"
+        radius="md"
+        withBorder
+      >
+        <LoadingOverlay
+          visible={loading}
+          overlayProps={{ radius: 'md', blur: 2 }}
+        />
 
         <Stack gap="lg">
-          <Group justify="space-between" align="center">
+          <Group
+            justify="space-between"
+            align="center"
+          >
             <Box>
               <Group gap={8}>
-                <IconBrandTelegram size={22} color="#1d4ed8" />
-                <Text size="xl" fw={700}>
+                <IconBrandTelegram
+                  size={22}
+                  color="#1d4ed8"
+                />
+                <Text
+                  size="xl"
+                  fw={700}
+                >
                   Transaction Callback 502
                 </Text>
               </Group>
-              <Text size="sm" c="dimmed" mt={4}>
+              <Text
+                size="sm"
+                c="dimmed"
+                mt={4}
+              >
                 Callback resend list styled like Deposit Pending.
               </Text>
             </Box>
@@ -430,8 +503,17 @@ const TransactionCallback502 = () => {
             </Group>
           </Group>
 
-          <Card withBorder radius="md" padding="md" shadow="xs">
-            <Group align="flex-end" gap="md" wrap="wrap">
+          <Card
+            withBorder
+            radius="md"
+            padding="md"
+            shadow="xs"
+          >
+            <Group
+              align="flex-end"
+              gap="md"
+              wrap="wrap"
+            >
               <TextInput
                 label="Date"
                 placeholder="YYYY-MM-DD"
@@ -439,20 +521,28 @@ const TransactionCallback502 = () => {
                 onChange={(e) => setDate(e.currentTarget.value)}
                 style={{ minWidth: 180 }}
               />
-              <Button leftSection={<IconSearch size={18} />} color="blue" radius="md" onClick={() => fetchData()}>
+              <Button
+                leftSection={<IconSearch size={18} />}
+                color="blue"
+                radius="md"
+                onClick={() => fetchData()}
+              >
                 Search
               </Button>
-              <Stack gap={4}>
+              {/* <Stack gap={4}>
                 <Text size="sm" c="dimmed">
                   Total Rows
                 </Text>
                 <Text fw={700}>{data.length}</Text>
-              </Stack>
+              </Stack> */}
             </Group>
           </Card>
 
           <Box pos="relative">
-            <ScrollArea type="auto" h="60vh">
+            <ScrollArea
+              type="auto"
+              h="60vh"
+            >
               <Table
                 highlightOnHover
                 withTableBorder
@@ -466,9 +556,18 @@ const TransactionCallback502 = () => {
                 <Table.Thead>
                   <Table.Tr>
                     {visibleColumns.map((col) => (
-                      <Table.Th key={col.key} style={{ minWidth: col.minWidth || 120 }}>
-                        <Group gap={6} align="center">
-                          <Text size="sm" fw={600}>
+                      <Table.Th
+                        key={col.key}
+                        style={{ minWidth: col.minWidth || 120 }}
+                      >
+                        <Group
+                          gap={6}
+                          align="center"
+                        >
+                          <Text
+                            size="sm"
+                            fw={600}
+                          >
                             {col.label}
                           </Text>
                           <ColumnActionMenu
@@ -507,7 +606,10 @@ const TransactionCallback502 = () => {
                   ) : (
                     <Table.Tr>
                       <Table.Td colSpan={visibleColumns.length}>
-                        <Text ta="center" c="dimmed">
+                        <Text
+                          ta="center"
+                          c="dimmed"
+                        >
                           No data available
                         </Text>
                       </Table.Td>
@@ -518,9 +620,18 @@ const TransactionCallback502 = () => {
             </ScrollArea>
           </Box>
 
-          <Group justify="space-between" align="center">
-            <Group gap="sm" align="center">
-              <Text size="sm" c="dimmed">
+          <Group
+            justify="space-between"
+            align="center"
+          >
+            <Group
+              gap="sm"
+              align="center"
+            >
+              <Text
+                size="sm"
+                c="dimmed"
+              >
                 Rows per page:
               </Text>
               <Select
@@ -541,10 +652,22 @@ const TransactionCallback502 = () => {
             </Group>
 
             <Group gap="xs">
-              <Button variant="light" size="xs" onClick={handleResetAll} leftSection={<IconRefresh size={14} />}>
+              <Button
+                variant="light"
+                size="xs"
+                onClick={handleResetAll}
+                leftSection={<IconRefresh size={14} />}
+              >
                 Reset Columns/Sort
               </Button>
-              <Pagination total={totalPages} value={currentPage} onChange={setCurrentPage} size="sm" radius="md" withEdges />
+              <Pagination
+                total={totalPages}
+                value={currentPage}
+                onChange={setCurrentPage}
+                size="sm"
+                radius="md"
+                withEdges
+              />
             </Group>
           </Group>
         </Stack>

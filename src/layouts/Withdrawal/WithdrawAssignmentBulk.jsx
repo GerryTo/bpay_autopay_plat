@@ -1049,7 +1049,7 @@ const WithdrawAssignmentBulk = () => {
                 </Button>
               </Group>
 
-              <Group gap="sm">
+              {/* <Group gap="sm">
                 <Badge
                   variant="light"
                   color="blue"
@@ -1062,7 +1062,7 @@ const WithdrawAssignmentBulk = () => {
                 >
                   Records: {data.length}
                 </Badge>
-              </Group>
+              </Group> */}
             </Stack>
           </Card>
 

@@ -14,7 +14,14 @@ import {
   Text,
   TextInput,
 } from '@mantine/core';
-import { IconArrowDownCircle, IconCash, IconFilter, IconRefresh, IconSearch, IconTransfer } from '@tabler/icons-react';
+import {
+  IconArrowDownCircle,
+  IconCash,
+  IconFilter,
+  IconRefresh,
+  IconSearch,
+  IconTransfer,
+} from '@tabler/icons-react';
 import ColumnActionMenu from '../../components/ColumnActionMenu';
 import { transactionAPI } from '../../helper/api';
 import { showNotification } from '../../helper/showNotification';
@@ -83,7 +90,10 @@ const TransactionByIdBackupNoAction = () => {
         label: 'Future Trx ID',
         minWidth: 140,
         render: (item) => (
-          <Text size="sm" fw={600}>
+          <Text
+            size="sm"
+            fw={600}
+          >
             {item.futuretrxid}
           </Text>
         ),
@@ -92,7 +102,9 @@ const TransactionByIdBackupNoAction = () => {
             placeholder="Filter trx id..."
             size="xs"
             value={columnFilters.futuretrxid}
-            onChange={(e) => handleFilterChange('futuretrxid', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('futuretrxid', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -106,7 +118,9 @@ const TransactionByIdBackupNoAction = () => {
             placeholder="Filter date..."
             size="xs"
             value={columnFilters.timestamp}
-            onChange={(e) => handleFilterChange('timestamp', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('timestamp', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -120,7 +134,9 @@ const TransactionByIdBackupNoAction = () => {
             placeholder="Filter complete date..."
             size="xs"
             value={columnFilters.completedate}
-            onChange={(e) => handleFilterChange('completedate', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('completedate', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -134,7 +150,9 @@ const TransactionByIdBackupNoAction = () => {
             placeholder="Filter merchant..."
             size="xs"
             value={columnFilters.merchantcode}
-            onChange={(e) => handleFilterChange('merchantcode', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('merchantcode', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -148,7 +166,9 @@ const TransactionByIdBackupNoAction = () => {
             placeholder="Filter customer..."
             size="xs"
             value={columnFilters.customercode}
-            onChange={(e) => handleFilterChange('customercode', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('customercode', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -157,7 +177,10 @@ const TransactionByIdBackupNoAction = () => {
         label: 'Bank',
         minWidth: 100,
         render: (item) => (
-          <Badge color="blue" variant="light">
+          <Badge
+            color="blue"
+            variant="light"
+          >
             {item.bankcode || '-'}
           </Badge>
         ),
@@ -166,7 +189,9 @@ const TransactionByIdBackupNoAction = () => {
             placeholder="Filter bank..."
             size="xs"
             value={columnFilters.bankcode}
-            onChange={(e) => handleFilterChange('bankcode', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('bankcode', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -175,7 +200,10 @@ const TransactionByIdBackupNoAction = () => {
         label: 'Debit',
         minWidth: 120,
         render: (item) => (
-          <Text size="sm" className="grid-alignright">
+          <Text
+            size="sm"
+            className="grid-alignright"
+          >
             {formatNumber(item.DB)}
           </Text>
         ),
@@ -193,7 +221,10 @@ const TransactionByIdBackupNoAction = () => {
         label: 'Credit',
         minWidth: 120,
         render: (item) => (
-          <Text size="sm" className="grid-alignright">
+          <Text
+            size="sm"
+            className="grid-alignright"
+          >
             {formatNumber(item.CR)}
           </Text>
         ),
@@ -216,7 +247,9 @@ const TransactionByIdBackupNoAction = () => {
             placeholder="Filter type..."
             size="xs"
             value={columnFilters.transactiontype}
-            onChange={(e) => handleFilterChange('transactiontype', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('transactiontype', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -225,7 +258,10 @@ const TransactionByIdBackupNoAction = () => {
         label: 'Status',
         minWidth: 140,
         render: (item) => (
-          <Badge color="gray" variant="outline">
+          <Badge
+            color="gray"
+            variant="outline"
+          >
             {item.status || '-'}
           </Badge>
         ),
@@ -234,7 +270,9 @@ const TransactionByIdBackupNoAction = () => {
             placeholder="Filter status..."
             size="xs"
             value={columnFilters.status}
-            onChange={(e) => handleFilterChange('status', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('status', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -248,7 +286,9 @@ const TransactionByIdBackupNoAction = () => {
             placeholder="Filter callback..."
             size="xs"
             value={columnFilters.callbackresponse}
-            onChange={(e) => handleFilterChange('callbackresponse', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('callbackresponse', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -257,7 +297,10 @@ const TransactionByIdBackupNoAction = () => {
         label: 'Fee',
         minWidth: 120,
         render: (item) => (
-          <Text size="sm" className="grid-alignright">
+          <Text
+            size="sm"
+            className="grid-alignright"
+          >
             {formatNumber(item.fee)}
           </Text>
         ),
@@ -294,7 +337,9 @@ const TransactionByIdBackupNoAction = () => {
             placeholder="Filter notes 2..."
             size="xs"
             value={columnFilters.notes2}
-            onChange={(e) => handleFilterChange('notes2', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('notes2', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -308,7 +353,9 @@ const TransactionByIdBackupNoAction = () => {
             placeholder="Filter notes 3..."
             size="xs"
             value={columnFilters.notes3}
-            onChange={(e) => handleFilterChange('notes3', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('notes3', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -322,7 +369,9 @@ const TransactionByIdBackupNoAction = () => {
             placeholder="Filter sms phone..."
             size="xs"
             value={columnFilters.phonenumber}
-            onChange={(e) => handleFilterChange('phonenumber', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('phonenumber', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -350,7 +399,9 @@ const TransactionByIdBackupNoAction = () => {
             placeholder="Filter trans id..."
             size="xs"
             value={columnFilters.transactionid}
-            onChange={(e) => handleFilterChange('transactionid', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('transactionid', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -378,7 +429,9 @@ const TransactionByIdBackupNoAction = () => {
             placeholder="Filter acc source..."
             size="xs"
             value={columnFilters.accountno}
-            onChange={(e) => handleFilterChange('accountno', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('accountno', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -392,7 +445,9 @@ const TransactionByIdBackupNoAction = () => {
             placeholder="Filter source name..."
             size="xs"
             value={columnFilters.accountsrcname}
-            onChange={(e) => handleFilterChange('accountsrcname', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('accountsrcname', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -406,7 +461,9 @@ const TransactionByIdBackupNoAction = () => {
             placeholder="Filter acc dest..."
             size="xs"
             value={columnFilters.accountdst}
-            onChange={(e) => handleFilterChange('accountdst', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('accountdst', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -420,7 +477,9 @@ const TransactionByIdBackupNoAction = () => {
             placeholder="Filter dest name..."
             size="xs"
             value={columnFilters.accountdstname}
-            onChange={(e) => handleFilterChange('accountdstname', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('accountdstname', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -434,7 +493,9 @@ const TransactionByIdBackupNoAction = () => {
             placeholder="Filter server name..."
             size="xs"
             value={columnFilters.servername}
-            onChange={(e) => handleFilterChange('servername', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('servername', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -448,7 +509,9 @@ const TransactionByIdBackupNoAction = () => {
             placeholder="Filter server URL..."
             size="xs"
             value={columnFilters.serverurl}
-            onChange={(e) => handleFilterChange('serverurl', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('serverurl', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -470,12 +533,18 @@ const TransactionByIdBackupNoAction = () => {
     [columnFilters, handleFilterChange]
   );
 
-  const { visibleColumns, sortConfig, handleHideColumn, handleSort, handleResetAll } =
-    useTableControls(columns, {
-      onResetFilters: () => setColumnFilters(defaultFilters),
-    });
+  const {
+    visibleColumns,
+    sortConfig,
+    handleHideColumn,
+    handleSort,
+    handleResetAll,
+  } = useTableControls(columns, {
+    onResetFilters: () => setColumnFilters(defaultFilters),
+  });
 
-  const makeKey = (item) => `${item.futuretrxid || ''}-${item.transactionid || ''}`;
+  const makeKey = (item) =>
+    `${item.futuretrxid || ''}-${item.transactionid || ''}`;
 
   const includesValue = (field, value) => {
     if (!value) return true;
@@ -532,14 +601,20 @@ const TransactionByIdBackupNoAction = () => {
     silent ? setRefreshing(true) : setLoading(true);
 
     try {
-      const response = await transactionAPI.getBackupByTransactionId(transId.trim());
+      const response = await transactionAPI.getBackupByTransactionId(
+        transId.trim()
+      );
 
       if (response.success && response.data) {
         if ((response.data.status || '').toLowerCase() === 'ok') {
-          const records = Array.isArray(response.data.records) ? response.data.records : [];
+          const records = Array.isArray(response.data.records)
+            ? response.data.records
+            : [];
           const mapped = records.map((item) => {
             const amount = Number(item.amount) || 0;
-            const isDeposit = ['D', 'Topup', 'Y', 'I'].includes(item.transactiontype);
+            const isDeposit = ['D', 'Topup', 'Y', 'I'].includes(
+              item.transactiontype
+            );
             return {
               ...item,
               amount,
@@ -600,19 +675,40 @@ const TransactionByIdBackupNoAction = () => {
 
   return (
     <Box p="md">
-      <Card shadow="sm" padding="lg" radius="md" withBorder>
-        <LoadingOverlay visible={loading} overlayProps={{ radius: 'md', blur: 2 }} />
+      <Card
+        shadow="sm"
+        padding="lg"
+        radius="md"
+        withBorder
+      >
+        <LoadingOverlay
+          visible={loading}
+          overlayProps={{ radius: 'md', blur: 2 }}
+        />
 
         <Stack gap="lg">
-          <Group justify="space-between" align="center">
+          <Group
+            justify="space-between"
+            align="center"
+          >
             <Box>
               <Group gap={8}>
-                <IconTransfer size={22} color="#1d4ed8" />
-                <Text size="xl" fw={700}>
+                <IconTransfer
+                  size={22}
+                  color="#1d4ed8"
+                />
+                <Text
+                  size="xl"
+                  fw={700}
+                >
                   Transaction by ID Backup NA
                 </Text>
               </Group>
-              <Text size="sm" c="dimmed" mt={4}>
+              <Text
+                size="sm"
+                c="dimmed"
+                mt={4}
+              >
                 Read-only backup view styled like Deposit Pending.
               </Text>
             </Box>
@@ -641,8 +737,17 @@ const TransactionByIdBackupNoAction = () => {
             </Group>
           </Group>
 
-          <Card withBorder radius="md" padding="md" shadow="xs">
-            <Group align="flex-end" gap="md" wrap="wrap">
+          <Card
+            withBorder
+            radius="md"
+            padding="md"
+            shadow="xs"
+          >
+            <Group
+              align="flex-end"
+              gap="md"
+              wrap="wrap"
+            >
               <TextInput
                 label="Transaction ID"
                 placeholder="Enter Transaction ID"
@@ -650,10 +755,15 @@ const TransactionByIdBackupNoAction = () => {
                 onChange={(e) => setTransId(e.currentTarget.value)}
                 style={{ minWidth: 260 }}
               />
-              <Button leftSection={<IconSearch size={18} />} color="blue" radius="md" onClick={() => fetchData()}>
+              <Button
+                leftSection={<IconSearch size={18} />}
+                color="blue"
+                radius="md"
+                onClick={() => fetchData()}
+              >
                 Search
               </Button>
-              <Stack gap={4}>
+              {/* <Stack gap={4}>
                 <Group gap={6}>
                   <IconArrowDownCircle size={16} color="blue" />
                   <Text size="sm" c="dimmed">
@@ -679,12 +789,15 @@ const TransactionByIdBackupNoAction = () => {
                   </Text>
                 </Group>
                 <Text fw={700}>{formatNumber(totals.fee)}</Text>
-              </Stack>
+              </Stack> */}
             </Group>
           </Card>
 
           <Box pos="relative">
-            <ScrollArea type="auto" h="60vh">
+            <ScrollArea
+              type="auto"
+              h="60vh"
+            >
               <Table
                 highlightOnHover
                 withTableBorder
@@ -698,9 +811,18 @@ const TransactionByIdBackupNoAction = () => {
                 <Table.Thead>
                   <Table.Tr>
                     {visibleColumns.map((col) => (
-                      <Table.Th key={col.key} style={{ minWidth: col.minWidth || 120 }}>
-                        <Group gap={6} align="center">
-                          <Text size="sm" fw={600}>
+                      <Table.Th
+                        key={col.key}
+                        style={{ minWidth: col.minWidth || 120 }}
+                      >
+                        <Group
+                          gap={6}
+                          align="center"
+                        >
+                          <Text
+                            size="sm"
+                            fw={600}
+                          >
                             {col.label}
                           </Text>
                           <ColumnActionMenu
@@ -739,7 +861,10 @@ const TransactionByIdBackupNoAction = () => {
                   ) : (
                     <Table.Tr>
                       <Table.Td colSpan={visibleColumns.length}>
-                        <Text ta="center" c="dimmed">
+                        <Text
+                          ta="center"
+                          c="dimmed"
+                        >
                           No data available
                         </Text>
                       </Table.Td>
@@ -750,9 +875,18 @@ const TransactionByIdBackupNoAction = () => {
             </ScrollArea>
           </Box>
 
-          <Group justify="space-between" align="center">
-            <Group gap="sm" align="center">
-              <Text size="sm" c="dimmed">
+          <Group
+            justify="space-between"
+            align="center"
+          >
+            <Group
+              gap="sm"
+              align="center"
+            >
+              <Text
+                size="sm"
+                c="dimmed"
+              >
                 Rows per page:
               </Text>
               <Select
@@ -773,10 +907,22 @@ const TransactionByIdBackupNoAction = () => {
             </Group>
 
             <Group gap="xs">
-              <Button variant="light" size="xs" onClick={handleResetAll} leftSection={<IconRefresh size={14} />}>
+              <Button
+                variant="light"
+                size="xs"
+                onClick={handleResetAll}
+                leftSection={<IconRefresh size={14} />}
+              >
                 Reset Columns/Sort
               </Button>
-              <Pagination total={totalPages} value={currentPage} onChange={setCurrentPage} size="sm" radius="md" withEdges />
+              <Pagination
+                total={totalPages}
+                value={currentPage}
+                onChange={setCurrentPage}
+                size="sm"
+                radius="md"
+                withEdges
+              />
             </Group>
           </Group>
         </Stack>

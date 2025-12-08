@@ -1,0 +1,47 @@
+<div>
+  <div class="page-header-container box">Transaction Merchant Per Hour (Withdraw)</div>
+  <div class="page-body box">
+    <div class="row">
+      <!--<div class="col-xs-12 col-sm-2 col-md-2 col-lg-2">
+                Date : 
+            </div>-->
+      <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+        <p class="input-group">
+          <input type="text" class="form-control input-sm" uib-datepicker-popup="{{datepickerConfig.format}}"
+            ng-model="filter.fromdate" is-open="popup1.opened" datepicker-options="dateOptions" ng-required="true"
+            close-text="Close" alt-input-formats="datepickerConfig.altInputFormats" placeholder="From date" />
+          <span class="input-group-btn">
+            <button type="button" class="btn btn-default btn-sm" ng-click="open1()">
+              <i class="glyphicon glyphicon-calendar"></i>
+            </button>
+          </span>
+        </p>
+      </div>
+      <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
+        <select class="form-control input-sm" ng-model="filter.merchantcode">
+          <option value="0">- Choose Merchant -</option>
+          <option ng-repeat="item in merchantlist" value="{{item.merchantcode}}">
+            {{item.merchantname}}
+          </option>
+        </select>
+      </div>
+      <div class="col-xs-12 col-sm-4 col-md-6 col-lg-6">
+        <p class="input-group">
+          <button type="button" class="btn btn-default btn-sm" ng-click="refresh()" ng-disabled="gridIsLoading==true">
+            {{globallang.refresh}}
+          </button>
+          &nbsp;
+        </p>
+      </div>
+    </div>
+    <div id="grid1" ui-grid="gridOptions" class="grid" ui-grid-resize-columns ui-grid-auto-resize ui-grid-exporter
+      ng-style="{'height': getHeight()+'px'}">
+      <div class="grid-nodata-container" ng-show="gridOptions.data.length == 0 && !gridIsLoading">
+        No Data Available
+      </div>
+      <div class="grid-loading-container" ng-show="gridIsLoading">
+        <img src="images/loading.gif" />
+      </div>
+    </div>
+  </div>
+</div>

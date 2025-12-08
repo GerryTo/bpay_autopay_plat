@@ -18,7 +18,12 @@ import {
 import { Popover } from '@mantine/core';
 import { DateRangePicker } from 'react-date-range';
 import { format } from 'date-fns';
-import { IconCalendar, IconChecklist, IconFilter, IconRefresh } from '@tabler/icons-react';
+import {
+  IconCalendar,
+  IconChecklist,
+  IconFilter,
+  IconRefresh,
+} from '@tabler/icons-react';
 import ColumnActionMenu from '../../components/ColumnActionMenu';
 import { useTableControls } from '../../hooks/useTableControls';
 import { reportResubmitAPI } from '../../helper/api';
@@ -102,7 +107,9 @@ const ReportResubmitWithoutAutomationSummary = () => {
             placeholder="Filter..."
             size="xs"
             value={columnFilters.totalResubmit}
-            onChange={(e) => handleColumnFilterChange('totalResubmit', e.currentTarget.value)}
+            onChange={(e) =>
+              handleColumnFilterChange('totalResubmit', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -119,7 +126,10 @@ const ReportResubmitWithoutAutomationSummary = () => {
             size="xs"
             value={columnFilters.totalResubmitWithoutAppium}
             onChange={(e) =>
-              handleColumnFilterChange('totalResubmitWithoutAppium', e.currentTarget.value)
+              handleColumnFilterChange(
+                'totalResubmitWithoutAppium',
+                e.currentTarget.value
+              )
             }
           />
         ),
@@ -128,14 +138,22 @@ const ReportResubmitWithoutAutomationSummary = () => {
     [columnFilters, handleColumnFilterChange]
   );
 
-  const { visibleColumns, sortConfig, handleHideColumn, handleSort, handleResetAll } =
-    useTableControls(columns, {
-      onResetFilters: handleResetFilters,
-    });
+  const {
+    visibleColumns,
+    sortConfig,
+    handleHideColumn,
+    handleSort,
+    handleResetAll,
+  } = useTableControls(columns, {
+    onResetFilters: handleResetFilters,
+  });
 
   const filteredData = useMemo(() => {
     return data.filter((item) => {
-      if (!includesValue(String(item.totalResubmit), columnFilters.totalResubmit)) return false;
+      if (
+        !includesValue(String(item.totalResubmit), columnFilters.totalResubmit)
+      )
+        return false;
       if (
         !includesValue(
           String(item.totalResubmitWithoutAppium),
@@ -181,7 +199,9 @@ const ReportResubmitWithoutAutomationSummary = () => {
 
     silent ? setRefreshing(true) : setLoading(true);
     try {
-      const response = await reportResubmitAPI.getWithoutAutomationSummary(targetFilter);
+      const response = await reportResubmitAPI.getWithoutAutomationSummary(
+        targetFilter
+      );
       if (response.success && response.data) {
         const payload = response.data;
         if ((payload.status || '').toLowerCase() === 'ok') {
@@ -336,10 +356,10 @@ const ReportResubmitWithoutAutomationSummary = () => {
                       onClick={() => setDatePickerOpened((o) => !o)}
                     >
                       {activeRange
-                        ? `${format(activeRange[0].startDate, 'dd MMM yyyy')} - ${format(
-                            activeRange[0].endDate,
+                        ? `${format(
+                            activeRange[0].startDate,
                             'dd MMM yyyy'
-                          )}`
+                          )} - ${format(activeRange[0].endDate, 'dd MMM yyyy')}`
                         : 'Select date range'}
                     </Button>
                   </Popover.Target>
@@ -391,14 +411,12 @@ const ReportResubmitWithoutAutomationSummary = () => {
                 </Button>
               </Group>
 
-              <Divider />
-
-              <Text
+              {/* <Text
                 size="sm"
                 c="dimmed"
               >
                 Rows: {data.length}
-              </Text>
+              </Text> */}
             </Stack>
           </Card>
 
@@ -464,7 +482,9 @@ const ReportResubmitWithoutAutomationSummary = () => {
                       <Table.Tr key={`${item.totalResubmit || 'row'}-${idx}`}>
                         {visibleColumns.map((col) => (
                           <Table.Td key={`${col.key}-${idx}`}>
-                            {col.render ? col.render(item) : item[col.key] || '-'}
+                            {col.render
+                              ? col.render(item)
+                              : item[col.key] || '-'}
                           </Table.Td>
                         ))}
                       </Table.Tr>
@@ -494,14 +514,18 @@ const ReportResubmitWithoutAutomationSummary = () => {
                           c="dimmed"
                         >
                           Total rows: {filteredData.length}
-                          {filteredData.length !== data.length ? ` (filtered from ${data.length})` : ''}
+                          {filteredData.length !== data.length
+                            ? ` (filtered from ${data.length})`
+                            : ''}
                         </Text>
                         <Text
                           size="sm"
                           c="dimmed"
                         >
-                          Showing {paginatedData.length > 0 ? startIndex + 1 : 0}-
-                          {Math.min(endIndex, filteredData.length)} of {filteredData.length}
+                          Showing{' '}
+                          {paginatedData.length > 0 ? startIndex + 1 : 0}-
+                          {Math.min(endIndex, filteredData.length)} of{' '}
+                          {filteredData.length}
                         </Text>
                       </Group>
                     </Table.Td>

@@ -1577,6 +1577,158 @@ export const depositAPI = {
   },
 
   /**
+   * Get Mybank check deposit list (encrypted request)
+   * @param {{ from: string, to: string }} params - Date range with time e.g. 'YYYY-MM-DD HH:mm:ss'
+   */
+  getMybankCheckDepositList: async ({ from, to } = {}) => {
+    const decodeRecord = (record = {}) =>
+      Object.entries(record || {}).reduce((acc, [key, value]) => {
+        if (typeof value === 'string') {
+          try {
+            acc[key] = decodeURIComponent(value);
+          } catch (_) {
+            acc[key] = value;
+          }
+        } else {
+          acc[key] = value;
+        }
+        return acc;
+      }, {});
+
+    try {
+      const payload = { from, to };
+      const encrypted = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', encrypted);
+      // Include plain payload for servers that accept raw JSON (backward compatibility)
+      formData.append('payload', JSON.stringify(payload));
+
+      const response = await apiClient.post('/mybankCheckDeposit_getList.php', formData);
+      const payloadData = response.data?.data
+        ? CRYPTO.decrypt(response.data.data)
+        : response.data;
+
+      const records = Array.isArray(payloadData?.records)
+        ? payloadData.records.map(decodeRecord)
+        : [];
+
+      return {
+        success: true,
+        data: {
+          ...payloadData,
+          records,
+        },
+      };
+    } catch (error) {
+      console.error('Mybank check deposit list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load Mybank check deposit list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Check automation live status (plain request)
+   * @param {{ phoneNumber: string, bankCode: string }} params
+   */
+  checkAutomationLive: async ({ phoneNumber = '', bankCode = '' } = {}) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', JSON.stringify({ phoneNumber, bankCode }));
+
+      const response = await apiClient.post('/check_automation_live.php', formData);
+      const payload = response.data?.data ? CRYPTO.decrypt(response.data.data) : response.data;
+
+      return {
+        success: true,
+        data: payload,
+      };
+    } catch (error) {
+      console.error('Check automation live API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to check automation status',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Toggle Mybank check deposit crawling
+   * @param {{ agent: string, bank: string, status: number, dateFrom?: string, dateTo?: string }} params
+   */
+  setCheckDepositStatus: async ({
+    agent = '',
+    bank = '',
+    status = 0,
+    dateFrom = '',
+    dateTo = '',
+  } = {}) => {
+    try {
+      const payload = {
+        agent,
+        bank,
+        status,
+        dateForm: dateFrom,
+        dateTo,
+      };
+
+      const formData = new URLSearchParams();
+      formData.append('data', JSON.stringify(payload));
+
+      const response = await apiClient.post('/setCheckDepositOn.php', formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Set check deposit status API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to update check deposit status',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Match deposit queue mutation(s) to a future transaction (encrypted)
+   * @param {{ futuretrxid?: string, ids: Array<string|number> }} params
+   */
+  matchDepositQueue: async ({ futuretrxid = '', ids = [] } = {}) => {
+    try {
+      const payload = {
+        futuretrxid,
+        id: Array.isArray(ids) ? ids : [ids],
+      };
+
+      const encrypted = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', encrypted);
+
+      const response = await apiClient.post('/depositQueue_matchedMutasi.php', formData);
+      const payloadData = response.data?.data
+        ? CRYPTO.decrypt(response.data.data)
+        : response.data;
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Match deposit queue API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to match deposit queue',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
    * Get deposit pending by transaction ID (encrypted)
    * @param {String} transId - Transaction ID
    */
@@ -2041,24 +2193,28 @@ export const smsAPI = {
     }
   },
 
-  /**
-   * Get SMS log list (not encrypted)
-   * @param {Object} params - { datefrom: string (YYYY-MM-DD 00:00:00), dateto: string, type: string, user: string }
-   */
-  getLogList: async ({ datefrom, dateto, type = '2', user = '' } = {}) => {
-    try {
-      const formData = new URLSearchParams();
-      formData.append('data[datefrom]', datefrom);
-      formData.append('data[dateto]', dateto);
-      formData.append('data[type]', type);
-      formData.append('data[user]', user);
+    /**
+     * Get SMS log list (not encrypted)
+     * @param {Object} params - { datefrom: string (YYYY-MM-DD 00:00:00), dateto: string, type: string, user: string }
+     */
+    getLogList: async ({ datefrom, dateto, type = '2', user = '' } = {}) => {
+      try {
+        const payload = {
+          datefrom: datefrom ?? '',
+          dateto: dateto ?? '',
+          type: type ?? '2',
+          user: user ?? '',
+        };
 
-      const response = await apiClient.post('/smsLog_getList.php', formData);
+        // Wrap inside `data` to match backend expectation ($param_POST->data)
+        const response = await apiClient.post('/smsLog_getList.php', { data: payload }, {
+          headers: { 'Content-Type': 'application/json' },
+        });
 
-      if (response.data && response.data.data) {
-        const parsed = typeof response.data.data === 'string'
-          ? JSON.parse(response.data.data)
-          : response.data.data;
+        if (response.data && response.data.data) {
+          const parsed = typeof response.data.data === 'string'
+            ? JSON.parse(response.data.data)
+            : response.data.data;
 
         if (parsed.records && Array.isArray(parsed.records)) {
           parsed.records = parsed.records.map((record) =>
@@ -4305,6 +4461,74 @@ export const merchantAPI = {
    */
   getMerchantList: async () => {
     return await apiCall('/masterMerchant_getList.php', {});
+  },
+
+  /**
+   * Get merchant list with account info (encrypted response)
+   */
+  getMerchantWithAccount: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '');
+
+      const response = await apiClient.post('/getMerchantWithAccount.php', formData);
+
+      let payload = response.data;
+      if (response.data?.data) {
+        payload = CRYPTO.decrypt(response.data.data);
+      }
+
+      const records = Array.isArray(payload?.records)
+        ? payload.records.map((record) => CRYPTO.decodeRawUrl(record))
+        : [];
+
+      return {
+        success: true,
+        data: {
+          ...payload,
+          records,
+        },
+      };
+    } catch (error) {
+      console.error('Get merchant with account error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load merchant list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get merchant transaction per hour (not encrypted)
+   * @param {{ datefrom: string, merchantcode: string }} params
+   */
+  getMerchantTransactionPerHour: async ({ datefrom, merchantcode }) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', JSON.stringify({ datefrom, merchantcode }));
+
+      const response = await apiClient.post('/GetMerchantTransactionPerHour.php', formData);
+      const payload = response.data?.data ? CRYPTO.decrypt(response.data.data) : response.data;
+      const records = Array.isArray(payload?.records)
+        ? payload.records.map((rec) => CRYPTO.decodeRawUrl(rec))
+        : [];
+
+      return {
+        success: true,
+        data: {
+          ...payload,
+          records,
+        },
+      };
+    } catch (error) {
+      console.error('Get merchant transaction per hour error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load merchant transaction per hour',
+        details: error.response?.data || null,
+      };
+    }
   },
 
   /**
