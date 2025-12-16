@@ -39,10 +39,25 @@ const updateOptions = [
   { value: 'withdraw and deposit', label: 'Set withdraw and deposit' },
 ];
 
+const operationOptions = [
+  { value: 'P', label: 'Pending' },
+  { value: '16', label: '16 Hour' },
+  { value: '24CI', label: '24 Hour CI' },
+  { value: '24CO', label: '24 Hour CO' },
+];
+
+const automationOptions = [
+  { value: '0', label: 'No' },
+  { value: '1', label: 'Yes' },
+  { value: '2', label: 'OTP Error' },
+  { value: 'N', label: 'Inactive' },
+];
+
 const defaultFilters = {
   group: '',
   upline: '',
   issue: '',
+  remark: '',
   alias: '',
   bankAccNo: '',
   bankCode: '',
@@ -61,6 +76,12 @@ const UpdateMyBankSelected = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [updateValue, setUpdateValue] = useState(updateOptions[0].value);
+  const [operationValue, setOperationValue] = useState(
+    operationOptions[0].value
+  );
+  const [automationValue, setAutomationValue] = useState(
+    automationOptions[0].value
+  );
   const [submitting, setSubmitting] = useState(false);
 
   const [lastModalOpened, setLastModalOpened] = useState(false);
@@ -88,6 +109,7 @@ const UpdateMyBankSelected = () => {
           includesValue(item.group, columnFilters.group) &&
           includesValue(item.upline, columnFilters.upline) &&
           includesValue(item.issue, columnFilters.issue) &&
+          includesValue(item.remark, columnFilters.remark) &&
           includesValue(item.alias, columnFilters.alias) &&
           includesValue(item.bankAccNo, columnFilters.bankAccNo) &&
           includesValue(item.bankCode, columnFilters.bankCode) &&
@@ -332,6 +354,130 @@ const UpdateMyBankSelected = () => {
     }
   };
 
+  const handleSubmitOperation = async () => {
+    if (selectedRecords.length === 0) {
+      showNotification({
+        title: 'Warning',
+        message: 'Pilih minimal satu akun',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Are you sure you want to set Operation Hour (${operationValue}) selected items?`
+    );
+    if (!confirmed) return;
+
+    setSubmitting(true);
+    try {
+      const items = selectedRecords.map((item) => ({
+        account: item.bankAccNo,
+        bank: item.bankCode,
+      }));
+
+      const response = await myBankAPI.updateStatusSelected({
+        button: 'operation',
+        value: operationValue,
+        items,
+      });
+
+      if (response.success && response.data) {
+        if (response.data.status?.toLowerCase() === 'ok') {
+          showNotification({
+            title: 'Success',
+            message: response.data.message || 'Operation updated',
+            color: 'green',
+          });
+          loadData();
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.data.message || 'Failed to update operation',
+            color: 'red',
+          });
+        }
+      } else {
+        showNotification({
+          title: 'Error',
+          message: response.error || 'Failed to update operation',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Update operation selected error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Failed to update operation',
+        color: 'red',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSubmitAutomation = async () => {
+    if (selectedRecords.length === 0) {
+      showNotification({
+        title: 'Warning',
+        message: 'Pilih minimal satu akun',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Are you sure you want to set Automation Status (${automationValue}) selected items?`
+    );
+    if (!confirmed) return;
+
+    setSubmitting(true);
+    try {
+      const items = selectedRecords.map((item) => ({
+        account: item.bankAccNo,
+        bank: item.bankCode,
+      }));
+
+      const response = await myBankAPI.updateStatusSelected({
+        button: 'automation',
+        value: automationValue,
+        items,
+      });
+
+      if (response.success && response.data) {
+        if (response.data.status?.toLowerCase() === 'ok') {
+          showNotification({
+            title: 'Success',
+            message: response.data.message || 'Automation updated',
+            color: 'green',
+          });
+          loadData();
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.data.message || 'Failed to update automation',
+            color: 'red',
+          });
+        }
+      } else {
+        showNotification({
+          title: 'Error',
+          message: response.error || 'Failed to update automation',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Update automation selected error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Failed to update automation',
+        color: 'red',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleGroupAction = async (type) => {
     if (selectedRecords.length === 0) {
       showNotification({
@@ -343,7 +489,13 @@ const UpdateMyBankSelected = () => {
     }
 
     const label =
-      type === 'group' ? 'Group name' : type === 'upline' ? 'Upline' : 'Issue';
+      type === 'group'
+        ? 'Group name'
+        : type === 'upline'
+          ? 'Upline'
+          : type === 'issue'
+            ? 'Issue'
+            : 'Remark';
     const value = window.prompt(label);
     if (!value) return;
 
@@ -358,8 +510,10 @@ const UpdateMyBankSelected = () => {
         response = await myBankAPI.groupAccounts(value, items);
       } else if (type === 'upline') {
         response = await myBankAPI.setUpline(value, items);
-      } else {
+      } else if (type === 'issue') {
         response = await myBankAPI.setIssue(value, items);
+      } else {
+        response = await myBankAPI.setRemark(value, items);
       }
 
       if (response.success && response.data) {
@@ -447,6 +601,42 @@ const UpdateMyBankSelected = () => {
             >
               Set
             </Button>
+            <Select
+              label="Operation"
+              data={operationOptions}
+              value={operationValue}
+              onChange={(val) =>
+                setOperationValue(val || operationOptions[0].value)
+              }
+              style={{ minWidth: 160 }}
+            />
+            <Button
+              variant="filled"
+              color="blue"
+              size="sm"
+              onClick={handleSubmitOperation}
+              loading={submitting}
+            >
+              Set
+            </Button>
+            <Select
+              label="Automation"
+              data={automationOptions}
+              value={automationValue}
+              onChange={(val) =>
+                setAutomationValue(val || automationOptions[0].value)
+              }
+              style={{ minWidth: 160 }}
+            />
+            <Button
+              variant="filled"
+              color="blue"
+              size="sm"
+              onClick={handleSubmitAutomation}
+              loading={submitting}
+            >
+              Set
+            </Button>
             <Button
               variant="light"
               color="gray"
@@ -491,6 +681,14 @@ const UpdateMyBankSelected = () => {
               onClick={() => handleGroupAction('issue')}
             >
               Issue
+            </Button>
+            <Button
+              variant="light"
+              color="yellow"
+              size="sm"
+              onClick={() => handleGroupAction('remark')}
+            >
+              Remark
             </Button>
           </Group>
 
@@ -550,6 +748,7 @@ const UpdateMyBankSelected = () => {
                     <Table.Th style={{ minWidth: 110 }}>Group</Table.Th>
                     <Table.Th style={{ minWidth: 110 }}>Upline</Table.Th>
                     <Table.Th style={{ minWidth: 110 }}>Issue</Table.Th>
+                    <Table.Th style={{ minWidth: 160 }}>Remark</Table.Th>
                     <Table.Th style={{ minWidth: 160 }}>Alias</Table.Th>
                     <Table.Th style={{ minWidth: 140 }}>Account No</Table.Th>
                     <Table.Th style={{ minWidth: 110 }}>Bank</Table.Th>
@@ -603,6 +802,16 @@ const UpdateMyBankSelected = () => {
                         value={columnFilters.issue}
                         onChange={(e) =>
                           handleFilterChange('issue', e.currentTarget.value)
+                        }
+                      />
+                    </Table.Th>
+                    <Table.Th>
+                      <TextInput
+                        placeholder="Filter remark..."
+                        size="xs"
+                        value={columnFilters.remark}
+                        onChange={(e) =>
+                          handleFilterChange('remark', e.currentTarget.value)
                         }
                       />
                     </Table.Th>
@@ -722,6 +931,9 @@ const UpdateMyBankSelected = () => {
                           </Table.Td>
                           <Table.Td>
                             <Text size="sm">{item.issue || '-'}</Text>
+                          </Table.Td>
+                          <Table.Td>
+                            <Text size="sm">{item.remark || '-'}</Text>
                           </Table.Td>
                           <Table.Td>
                             <Text size="sm">{item.alias || '-'}</Text>
@@ -870,7 +1082,7 @@ const UpdateMyBankSelected = () => {
                     })
                   ) : (
                     <Table.Tr>
-                      <Table.Td colSpan={15}>
+                      <Table.Td colSpan={16}>
                         <Stack
                           align="center"
                           py="xl"

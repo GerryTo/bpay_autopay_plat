@@ -29,7 +29,11 @@ export const useTableControls = (columns = [], options = {}) => {
   };
 
   const handleSort = (key, direction) => {
-    setSortConfig({ key, direction });
+    setSortConfig((prev) => {
+      if (!direction) return null;
+      if (prev?.key === key && prev.direction === direction) return null;
+      return { key, direction };
+    });
   };
 
   const handleResetAll = () => {

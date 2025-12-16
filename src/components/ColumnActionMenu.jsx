@@ -6,7 +6,7 @@ import { IconAdjustments, IconArrowDown, IconArrowUp, IconEyeOff } from '@tabler
  * Props:
  * - columnKey: string
  * - sortConfig: { key: string, direction: 'asc' | 'desc' } | null
- * - onSort: (key, direction) => void
+ * - onSort: (key, direction) => void  // direction can be null to clear sort
  * - onHide: (key) => void
  */
 const ColumnActionMenu = ({ columnKey, sortConfig, onSort, onHide }) => {
@@ -32,12 +32,23 @@ const ColumnActionMenu = ({ columnKey, sortConfig, onSort, onHide }) => {
         </ActionIcon>
       </Menu.Target>
       <Menu.Dropdown>
-        <Menu.Item leftSection={<IconArrowUp size={14} />} onClick={() => onSort(columnKey, 'asc')}>
+        <Menu.Item
+          leftSection={<IconArrowUp size={14} />}
+          onClick={() => onSort(columnKey, isSorted === 'asc' ? null : 'asc')}
+        >
           Sort Asc
         </Menu.Item>
-        <Menu.Item leftSection={<IconArrowDown size={14} />} onClick={() => onSort(columnKey, 'desc')}>
+        <Menu.Item
+          leftSection={<IconArrowDown size={14} />}
+          onClick={() => onSort(columnKey, isSorted === 'desc' ? null : 'desc')}
+        >
           Sort Desc
         </Menu.Item>
+        {isSorted && (
+          <Menu.Item leftSection={<IconAdjustments size={14} />} onClick={() => onSort(columnKey, null)}>
+            Clear Sort
+          </Menu.Item>
+        )}
         <Menu.Item leftSection={<IconEyeOff size={14} />} onClick={() => onHide(columnKey)}>
           Hide Column
         </Menu.Item>

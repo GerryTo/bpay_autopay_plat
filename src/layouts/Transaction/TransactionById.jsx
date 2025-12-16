@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  ActionIcon,
   Badge,
   Box,
   Button,
@@ -7,6 +8,7 @@ import {
   Checkbox,
   Group,
   LoadingOverlay,
+  Menu,
   Pagination,
   ScrollArea,
   Select,
@@ -18,11 +20,18 @@ import {
 import {
   IconArrowDownCircle,
   IconCash,
+  IconCheck,
   IconFilter,
+  IconPencil,
   IconRefresh,
+  IconRepeat,
   IconSearch,
+  IconShieldCheck,
+  IconDotsVertical,
   IconTransfer,
+  IconX,
 } from '@tabler/icons-react';
+import { useSelector } from 'react-redux';
 import ColumnActionMenu from '../../components/ColumnActionMenu';
 import { transactionAPI } from '../../helper/api';
 import { showNotification } from '../../helper/showNotification';
@@ -72,12 +81,20 @@ const formatNumber = (value) => {
 };
 
 const TransactionById = () => {
+  const loginUser = useSelector((state) => state.loginUser);
   const [transId, setTransId] = useState('');
   const [history, setHistory] = useState(false);
   const [similarSearch, setSimilarSearch] = useState(false);
   const [data, setData] = useState([]);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [lastSearch, setLastSearch] = useState({
+    transId: '',
+    history: false,
+    similarSearch: false,
+  });
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [actionLoadingId, setActionLoadingId] = useState('');
   const [columnFilters, setColumnFilters] = useState(defaultFilters);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -92,6 +109,127 @@ const TransactionById = () => {
   const handleClearFilters = useCallback(() => {
     setColumnFilters(defaultFilters);
   }, []);
+
+  const loginUserType = useMemo(() => {
+    const raw =
+      loginUser?.type ??
+      loginUser?.userType ??
+      loginUser?.usertype ??
+      loginUser?.role ??
+      '';
+    return String(raw || '');
+  }, [loginUser]);
+
+  const validateApprove = useCallback(
+    (row) => {
+      const status = row?.status ?? '';
+      const transactiontype = row?.transactiontype ?? '';
+      const disable = String(row?.disable ?? '');
+      return (
+        ['Order need to check', 'Pending', 'Transaction Failed'].includes(
+          status
+        ) &&
+        transactiontype === 'D' &&
+        disable === '1' &&
+        loginUserType === 'S'
+      );
+    },
+    [loginUserType]
+  );
+
+  const runRowAction = useCallback(async (futuretrxid, action) => {
+    setActionLoadingId(futuretrxid);
+    try {
+      await action();
+    } finally {
+      setActionLoadingId('');
+    }
+  }, []);
+
+  const fetchData = useCallback(
+    async ({ silent = false } = {}) => {
+      if (!transId.trim()) {
+        showNotification({
+          title: 'Validation',
+          message: 'Please input Transaction ID first',
+          color: 'yellow',
+        });
+        return;
+      }
+
+      setHasSearched(true);
+      setLastSearch({
+        transId: transId.trim(),
+        history,
+        similarSearch,
+      });
+
+      silent ? setRefreshing(true) : setLoading(true);
+
+      try {
+        const response = await transactionAPI.getByTransactionId({
+          transId: transId.trim(),
+          history,
+          similarSearch,
+        });
+
+        if (response.success && response.data) {
+          if ((response.data.status || '').toLowerCase() === 'ok') {
+            const records = Array.isArray(response.data.records)
+              ? response.data.records
+              : [];
+
+            if (records.length === 0) {
+              showNotification({
+                title: 'Not Found',
+                message: `No transaction found for ID: ${transId.trim()}`,
+                color: 'yellow',
+              });
+            }
+
+            const mapped = records.map((item) => {
+              const amount = Number(item.amount) || 0;
+              const isDeposit = ['D', 'Topup', 'Y', 'I'].includes(
+                item.transactiontype
+              );
+              return {
+                ...item,
+                amount,
+                DB: isDeposit ? amount : 0,
+                CR: isDeposit ? 0 : amount,
+                fee: Number(item.fee) || 0,
+              };
+            });
+            setData(mapped);
+          } else {
+            showNotification({
+              title: 'Error',
+              message: response.data.message || 'Failed to load data',
+              color: 'red',
+            });
+            setData([]);
+          }
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.error || 'Failed to load data',
+            color: 'red',
+          });
+        }
+      } catch (error) {
+        console.error('Transaction by ID fetch error:', error);
+        showNotification({
+          title: 'Error',
+          message: 'Unable to load transaction data',
+          color: 'red',
+        });
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [history, similarSearch, transId]
+  );
 
   const columns = useMemo(
     () => [
@@ -681,17 +819,413 @@ const TransactionById = () => {
         key: 'action',
         label: 'Action',
         minWidth: 180,
-        render: () => (
-          <Badge
-            color="gray"
-            variant="light"
-          >
-            Actions available in legacy view
-          </Badge>
-        ),
+        render: (item) => {
+          const isOrderNeedCheck = item.status === 'Order need to check';
+          const isDisabled = String(item.disable ?? '') === '1';
+          const isDeposit = item.transactiontype === 'D';
+          const isWithdraw = item.transactiontype === 'W';
+          const canApprove = validateApprove(item);
+          const canResendCallback = [
+            'Transaction Success',
+            'Transaction Failed',
+          ].includes(item.status);
+
+          const busy = actionLoadingId === item.futuretrxid;
+
+          const handleResendCallback = async () => {
+            await runRowAction(item.futuretrxid, async () => {
+              const res = await transactionAPI.resendCallbackByFutureTrxId(
+                item.futuretrxid
+              );
+              const status = String(res.data?.status ?? '').toLowerCase();
+              if (!res.success || status !== 'ok') {
+                showNotification({
+                  title: 'Error',
+                  message:
+                    res.data?.message ||
+                    res.error ||
+                    'Failed to resend callback',
+                  color: 'red',
+                });
+                return;
+              }
+
+              showNotification({
+                title: 'Success',
+                message: 'Resend callback success',
+                color: 'green',
+              });
+              await fetchData({ silent: true });
+            });
+          };
+
+          const handleEdit = async () => {
+            const amountInput = window.prompt(
+              `New amount for [${item.futuretrxid}]`,
+              String(item.amount ?? item.DB ?? item.CR ?? '')
+            );
+            if (amountInput === null) return;
+
+            const amount = Number(amountInput);
+            if (!Number.isFinite(amount)) {
+              showNotification({
+                title: 'Validation',
+                message: 'Amount must be a number',
+                color: 'yellow',
+              });
+              return;
+            }
+
+            const note =
+              window.prompt(`Note for [${item.futuretrxid}]`, '') ?? '';
+
+            await runRowAction(item.futuretrxid, async () => {
+              const res = await transactionAPI.editTransactionByFutureTrxId({
+                id: item.futuretrxid,
+                amount,
+                note,
+              });
+              const status = String(res.data?.status ?? '').toLowerCase();
+              if (!res.success || status !== 'ok') {
+                showNotification({
+                  title: 'Error',
+                  message:
+                    res.data?.message ||
+                    res.error ||
+                    'Failed to edit transaction',
+                  color: 'red',
+                });
+                return;
+              }
+
+              showNotification({
+                title: 'Success',
+                message: 'Edit amount success',
+                color: 'green',
+              });
+              await fetchData({ silent: true });
+            });
+          };
+
+          const handleFail = async () => {
+            const ok = window.confirm(
+              `Fail this transaction [${item.futuretrxid}]?`
+            );
+            if (!ok) return;
+
+            const memo = window.prompt('Fail reason (memo)', '') ?? '';
+
+            await runRowAction(item.futuretrxid, async () => {
+              const res = await transactionAPI.updateManualTransaction({
+                id: item.futuretrxid,
+                status: 'C',
+                accountdest: '',
+                memo,
+              });
+              const status = String(res.data?.status ?? '').toLowerCase();
+              if (!res.success || status !== 'ok') {
+                showNotification({
+                  title: 'Error',
+                  message:
+                    res.data?.message ||
+                    res.error ||
+                    'Failed to fail transaction',
+                  color: 'red',
+                });
+                return;
+              }
+
+              showNotification({
+                title: 'Success',
+                message: 'Transaction failed (manual)',
+                color: 'green',
+              });
+              await fetchData({ silent: true });
+            });
+          };
+
+          const handleRematchTrxId = async () => {
+            const notes3 = window.prompt(
+              `Notes3 / Trx ID for [${item.futuretrxid}]`,
+              String(item.notes3 ?? '')
+            );
+            if (notes3 === null) return;
+
+            await runRowAction(item.futuretrxid, async () => {
+              const res = await transactionAPI.updateTransactionNotesById({
+                id: item.futuretrxid,
+                notes: notes3,
+                history,
+              });
+
+              const status = String(res.data?.status ?? '').toLowerCase();
+              if (!res.success || status !== 'ok') {
+                showNotification({
+                  title: 'Error',
+                  message:
+                    res.data?.message || res.error || 'Failed to update Notes3',
+                  color: 'red',
+                });
+                return;
+              }
+
+              showNotification({
+                title: 'Success',
+                message: 'Notes3 updated',
+                color: 'green',
+              });
+              await fetchData({ silent: true });
+            });
+          };
+
+          const handleApprove = async () => {
+            const wasabi = window.confirm(
+              'Approve to Wasabi?\nOK = Yes, Cancel = No'
+            );
+
+            await runRowAction(item.futuretrxid, async () => {
+              const res = await transactionAPI.approveTransactionByFutureTrxId({
+                id: item.futuretrxid,
+                wasabi,
+              });
+              const status = String(res.data?.status ?? '').toLowerCase();
+              if (!res.success || status !== 'ok') {
+                showNotification({
+                  title: 'Error',
+                  message:
+                    res.data?.message ||
+                    res.error ||
+                    'Failed to approve transaction',
+                  color: 'red',
+                });
+                return;
+              }
+
+              showNotification({
+                title: 'Success',
+                message: 'Approve success',
+                color: 'green',
+              });
+              await fetchData({ silent: true });
+            });
+          };
+
+          const handleUpdateMemo2 = async () => {
+            const memo2 = window.prompt(
+              `Update memo2 for [${item.futuretrxid}]`,
+              String(item.memo2 ?? '')
+            );
+            if (memo2 === null) return;
+
+            await runRowAction(item.futuretrxid, async () => {
+              const res = await transactionAPI.updateMemo2ByFutureTrxId({
+                futuretrxid: item.futuretrxid,
+                memo2,
+                ishistory: history,
+              });
+
+              const status = String(res.data?.status ?? '').toLowerCase();
+              if (!res.success || status !== 'ok') {
+                showNotification({
+                  title: 'Error',
+                  message:
+                    res.data?.message || res.error || 'Failed to update memo2',
+                  color: 'red',
+                });
+                return;
+              }
+
+              showNotification({
+                title: 'Success',
+                message: res.data?.message || 'Memo2 updated',
+                color: 'green',
+              });
+              await fetchData({ silent: true });
+            });
+          };
+
+          const handleSuccess = async () => {
+            const ok = window.confirm(`Mark success [${item.futuretrxid}]?`);
+            if (!ok) return;
+
+            const transid = window.prompt(
+              'Trans ID (bank trx id)',
+              String(item.notes3 ?? item.transactionid ?? '')
+            );
+            if (transid === null) return;
+
+            const bankcode =
+              window.prompt('Bank code', String(item.bankcode ?? '')) ?? '';
+            const account =
+              window.prompt(
+                'Account name',
+                String(item.accountdstname ?? '')
+              ) ?? '';
+            const accountNo =
+              window.prompt('Account number', String(item.accountdst ?? '')) ??
+              '';
+            const receipt = isWithdraw
+              ? window.prompt('Receipt (optional)', '') ?? ''
+              : '';
+
+            await runRowAction(item.futuretrxid, async () => {
+              const res =
+                await transactionAPI.setTransactionSuccessByFutureTrxId({
+                  id: item.futuretrxid,
+                  transid,
+                  bankcode,
+                  account,
+                  accountNo,
+                  receipt,
+                });
+
+              const status = String(res.data?.status ?? '').toLowerCase();
+              if (!res.success || status !== 'ok') {
+                showNotification({
+                  title: 'Error',
+                  message:
+                    res.data?.message || res.error || 'Failed to mark success',
+                  color: 'red',
+                });
+                return;
+              }
+
+              showNotification({
+                title: 'Success',
+                message: 'Transaction marked as success',
+                color: 'green',
+              });
+              await fetchData({ silent: true });
+            });
+          };
+
+          const showLegacyOnly = () => {
+            showNotification({
+              title: 'Info',
+              message: 'This action is only available in legacy view',
+              color: 'yellow',
+            });
+          };
+
+          const hasAnyAction =
+            isOrderNeedCheck || canResendCallback || canApprove || true; // memo2 always available
+
+          if (!hasAnyAction) {
+            return (
+              <Badge
+                color="gray"
+                variant="light"
+              >
+                -
+              </Badge>
+            );
+          }
+
+          return (
+            <Menu
+              shadow="sm"
+              withinPortal
+            >
+              <Menu.Target>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  title="Row Actions"
+                >
+                  <IconDotsVertical size={16} />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                {isOrderNeedCheck ? (
+                  <>
+                    <Menu.Item
+                      leftSection={<IconPencil size={14} />}
+                      onClick={handleEdit}
+                      disabled={busy}
+                    >
+                      Edit
+                    </Menu.Item>
+                    <Menu.Item
+                      leftSection={<IconX size={14} />}
+                      color="red"
+                      onClick={handleFail}
+                      disabled={busy}
+                    >
+                      Fail
+                    </Menu.Item>
+                    {isDeposit || isWithdraw ? (
+                      <Menu.Item
+                        leftSection={<IconCheck size={14} />}
+                        color="green"
+                        onClick={handleSuccess}
+                        disabled={busy || isDisabled}
+                      >
+                        Success
+                      </Menu.Item>
+                    ) : null}
+                    {isDeposit ? (
+                      <Menu.Item
+                        leftSection={<IconRepeat size={14} />}
+                        onClick={handleRematchTrxId}
+                        disabled={busy || isDisabled}
+                      >
+                        Rematch Trx ID
+                      </Menu.Item>
+                    ) : null}
+                    {canApprove ? (
+                      <Menu.Item
+                        leftSection={<IconShieldCheck size={14} />}
+                        color="red"
+                        onClick={handleApprove}
+                        disabled={busy}
+                      >
+                        Approve
+                      </Menu.Item>
+                    ) : null}
+                    <Menu.Divider />
+                  </>
+                ) : null}
+
+                {canResendCallback ? (
+                  <Menu.Item
+                    leftSection={<IconRepeat size={14} />}
+                    onClick={handleResendCallback}
+                    disabled={busy}
+                  >
+                    Resend Callback
+                  </Menu.Item>
+                ) : null}
+
+                <Menu.Item
+                  leftSection={<IconPencil size={14} />}
+                  onClick={handleUpdateMemo2}
+                  disabled={busy}
+                >
+                  Update Memo2
+                </Menu.Item>
+
+                <Menu.Item
+                  leftSection={<IconArrowDownCircle size={14} />}
+                  onClick={showLegacyOnly}
+                  disabled={busy}
+                >
+                  Date TRXID
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          );
+        },
       },
     ],
-    [columnFilters, handleFilterChange]
+    [
+      actionLoadingId,
+      columnFilters,
+      fetchData,
+      handleFilterChange,
+      history,
+      runRowAction,
+      validateApprove,
+    ]
   );
 
   const {
@@ -749,72 +1283,6 @@ const TransactionById = () => {
     }
   }, [totalPages, currentPage]);
 
-  const fetchData = async ({ silent = false } = {}) => {
-    if (!transId.trim()) {
-      showNotification({
-        title: 'Validation',
-        message: 'Please input Transaction ID first',
-        color: 'yellow',
-      });
-      return;
-    }
-
-    silent ? setRefreshing(true) : setLoading(true);
-
-    try {
-      const response = await transactionAPI.getByTransactionId({
-        transId: transId.trim(),
-        history,
-        similarSearch,
-      });
-
-      if (response.success && response.data) {
-        if ((response.data.status || '').toLowerCase() === 'ok') {
-          const records = Array.isArray(response.data.records)
-            ? response.data.records
-            : [];
-          const mapped = records.map((item) => {
-            const amount = Number(item.amount) || 0;
-            const isDeposit = ['D', 'Topup', 'Y', 'I'].includes(
-              item.transactiontype
-            );
-            return {
-              ...item,
-              amount,
-              DB: isDeposit ? amount : 0,
-              CR: isDeposit ? 0 : amount,
-              fee: Number(item.fee) || 0,
-            };
-          });
-          setData(mapped);
-        } else {
-          showNotification({
-            title: 'Error',
-            message: response.data.message || 'Failed to load data',
-            color: 'red',
-          });
-          setData([]);
-        }
-      } else {
-        showNotification({
-          title: 'Error',
-          message: response.error || 'Failed to load data',
-          color: 'red',
-        });
-      }
-    } catch (error) {
-      console.error('Transaction by ID fetch error:', error);
-      showNotification({
-        title: 'Error',
-        message: 'Unable to load transaction data',
-        color: 'red',
-      });
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
   const totals = useMemo(
     () =>
       data.reduce(
@@ -834,9 +1302,25 @@ const TransactionById = () => {
     setHistory(false);
     setSimilarSearch(false);
     setData([]);
+    setHasSearched(false);
     handleClearFilters();
     setCurrentPage(1);
   };
+
+  const emptyStateMessage = useMemo(() => {
+    if (!hasSearched) return 'Input Transaction ID then click Search.';
+    if (data.length === 0) return `Not found: ${lastSearch.transId || '-'}`;
+    if (filteredData.length === 0) return 'No results match your filters.';
+    return 'No data available';
+  }, [data.length, filteredData.length, hasSearched, lastSearch.transId]);
+
+  const footerStatus = useMemo(() => {
+    if (!hasSearched) return '';
+    if (data.length === 0) return `Not found: ${lastSearch.transId || '-'}`;
+    if (data.length > 0 && filteredData.length === 0)
+      return 'No results (filtered).';
+    return '';
+  }, [data.length, filteredData.length, hasSearched, lastSearch.transId]);
 
   return (
     <Box p="md">
@@ -1054,12 +1538,59 @@ const TransactionById = () => {
                   ) : (
                     <Table.Tr>
                       <Table.Td colSpan={visibleColumns.length}>
-                        <Text
-                          ta="center"
-                          c="dimmed"
+                        <Stack
+                          align="center"
+                          py="xl"
+                          gap={6}
+                          style={{ width: '100%' }}
                         >
-                          No data available
-                        </Text>
+                          <IconSearch
+                            size={22}
+                            color="#868e96"
+                          />
+                          <Text
+                            ta="left"
+                            fw={600}
+                          >
+                            {hasSearched && data.length === 0
+                              ? 'Not Found'
+                              : hasSearched && filteredData.length === 0
+                              ? 'No Results'
+                              : 'Search'}
+                          </Text>
+                          <Text
+                            ta="left"
+                            c="dimmed"
+                            size="sm"
+                          >
+                            {emptyStateMessage}
+                          </Text>
+                          {hasSearched &&
+                          data.length === 0 &&
+                          lastSearch.transId ? (
+                            <Text
+                              ta="left"
+                              c="dimmed"
+                              size="sm"
+                            >
+                              ID: {lastSearch.transId} (history:{' '}
+                              {lastSearch.history ? 'yes' : 'no'}, similar:{' '}
+                              {lastSearch.similarSearch ? 'yes' : 'no'})
+                            </Text>
+                          ) : null}
+                          {hasSearched &&
+                          data.length > 0 &&
+                          filteredData.length === 0 ? (
+                            <Button
+                              variant="light"
+                              size="xs"
+                              leftSection={<IconFilter size={14} />}
+                              onClick={handleClearFilters}
+                            >
+                              Clear Filters
+                            </Button>
+                          ) : null}
+                        </Stack>
                       </Table.Td>
                     </Table.Tr>
                   )}
@@ -1097,17 +1628,35 @@ const TransactionById = () => {
                 style={{ width: 90 }}
                 size="sm"
               />
+              {hasSearched && data.length > 0 ? (
+                <Text
+                  size="sm"
+                  c="dimmed"
+                >
+                  Total DB: {formatNumber(totals.debit)} | Total CR:{' '}
+                  {formatNumber(totals.credit)} | Total Fee:{' '}
+                  {formatNumber(totals.fee)}
+                </Text>
+              ) : null}
+              {footerStatus ? (
+                <Text
+                  size="sm"
+                  c="dimmed"
+                >
+                  {footerStatus}
+                </Text>
+              ) : null}
             </Group>
 
             <Group gap="xs">
-              <Button
+              {/* <Button
                 variant="light"
                 size="xs"
                 onClick={handleResetAll}
                 leftSection={<IconRefresh size={14} />}
               >
                 Reset Columns/Sort
-              </Button>
+              </Button> */}
               <Pagination
                 total={totalPages}
                 value={currentPage}

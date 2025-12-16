@@ -22,6 +22,7 @@ app.controller("updateMyBankSelectedCtrl", [
         { name: "Group", field: "group", width: 100, aggregationType: uiGridConstants.aggregationTypes.count},
         { name: "Upline", field: "upline", width: 100},
         { name: "Issue", field: "issue", width: 100},
+        { name: "Remark", field: "remark", width: 160 },
         { name: "Alias", field: "alias", width: 160 },
         { name: "Account No", field: "bankAccNo", width: 120 },
         // { name: "Account Name", field: "bankAccName", width: 160 },
@@ -78,20 +79,54 @@ app.controller("updateMyBankSelectedCtrl", [
       data: [],
     };
 
-    $scope.updateList = [
+        $scope.updateList = [
       "active",
       "inactive",
       "deposit only",
       "withdraw only",
-      "withdraw and deposit",
+      "withdraw and deposit"
+    ];
+
+    $scope.operationList = [
+      "Pending",
+      "16 Hour",
+      "24 Hour CI",
+      "24 Hour CO"
+    ];
+
+    $scope.automationList = [
+      "No",
+      "Yes",
+      "OTP Error",
+      "Inactive"
     ];
 
     $scope.filter = {
       update: "active",
+      operation: "Pending",
+      automation: "No"
     };
 
-    $scope.typeUpdate = "active";
+    /* =====================================================
+     * MAP VALUE (SAMA FORM EDIT)
+     * ===================================================== */
+    $scope.operationMap = {
+      "Pending": "P",
+      "16 Hour": "16",
+      "24 Hour CI": "24CI",
+      "24 Hour CO": "24CO"
+    };
 
+    $scope.automationMap = {
+      "No": "0",
+      "Yes": "1",
+      "OTP Error": "2",
+      "Inactive": "N"
+    };
+
+    /* =====================================================
+     * GET DATA (POLA LAMA)
+     * ===================================================== */
     $scope.getListData = function () {
       $scope.gridIsLoading = true;
       $http({
@@ -99,90 +134,251 @@ app.controller("updateMyBankSelectedCtrl", [
         url: webservicesUrl + "/getMasterMyBank.php",
         data: { data: "" },
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-        },
-      }).then(
-        function mySuccess(response) {
-          $scope.gridIsLoading = false;
-          var data = response.data;
-          // data.records = $scope.urlDecode(data.records);
-          console.log(data.records)
-          if (data.status.toLowerCase() == "ok") {
-            $scope.gridOptions.data = data.records;
-          } else {
-            alert(data.message);
-          }
-        },
-        function myError(response) {
-          $scope.gridIsLoading = false;
-          console.log(response);
+          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
         }
-      );
+      }).then(function (res) {
+        $scope.gridIsLoading = false;
+        if (res.data.status.toLowerCase() === "ok") {
+          $scope.gridOptions.data = res.data.records;
+        } else {
+          alert(res.data.message);
+        }
+      }, function () {
+        $scope.gridIsLoading = false;
+      });
     };
 
     $scope.refresh = function () {
       $scope.getListData();
     };
 
-    $scope.handleChange = function () {
-      console.log($scope.filter.update);
+    /* =====================================================
+     * UPDATE ACTIVE / TYPE (ASLI)
+     * ===================================================== */
+    $scope.typeUpdate = "active";
 
-      if ($scope.filter.update === "active") {
-        $scope.typeUpdate = "active";
-      } else if ($scope.filter.update === "inactive") {
-        $scope.typeUpdate = "inactive";
-      } else if ($scope.filter.update === "deposit only") {
-        $scope.typeUpdate = "deposit";
-      } else if ($scope.filter.update === "withdraw only") {
-        $scope.typeUpdate = "withdraw";
-      } else if ($scope.filter.update === "withdraw and deposit") {
-        $scope.typeUpdate = "withdraw and deposit";
-      }
+    $scope.handleChange = function () {
+      if ($scope.filter.update === "deposit only") $scope.typeUpdate = "deposit";
+      else if ($scope.filter.update === "withdraw only") $scope.typeUpdate = "withdraw";
+      else if ($scope.filter.update === "withdraw and deposit") $scope.typeUpdate = "withdraw and deposit";
+      else $scope.typeUpdate = $scope.filter.update;
     };
 
     $scope.submit = function () {
       var arr = $scope.gridApi.selection.getSelectedRows();
-      if (arr.length > 0) {
-        if (
-          confirm(
-            `Are you sure you want to set ${$scope.typeUpdate} selected items?`
-          )
-        ) {
-          var selectedAcc = [];
-          for (var i = 0; i < arr.length; i++) {
-            var temp = {
-              account: arr[i].bankAccNo,
-              bank: arr[i].bankCode,
-            };
-            selectedAcc.push(temp);
-          }
-          var obj = {
-            button: $scope.typeUpdate,
-            items: selectedAcc,
-          };
-          $http({
-            method: "POST",
-            url: webservicesUrl + "/updateStatusMyBankSelected.php",
-            data: { data: obj },
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-            },
-          }).then(
-            function mySuccess(response) {
-              var data = response.data;
-              if (data.status.toLowerCase() === "ok") {
-                $scope.getListData();
-              } else {
-                alert(data.message);
-              }
-            },
-            function myError(response) {
-              console.log(response.data.message);
-            }
-          );
-        }
+      if (arr.length === 0) return alert("Select row first");
+
+      if (!confirm("Are you sure want to set " + $scope.typeUpdate + " ?")) return;
+
+      var selectedAcc = [];
+      for (var i = 0; i < arr.length; i++) {
+        selectedAcc.push({
+          account: arr[i].bankAccNo,
+          accName: arr[i].alias,
+          bank: arr[i].bankCode
+        });
       }
+
+      var obj = {
+        button: $scope.typeUpdate,
+        items: selectedAcc
+      };
+
+      $http({
+        method: "POST",
+        url: webservicesUrl + "/updateStatusMyBankSelected.php",
+        data: { data: obj },
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+        }
+      }).then(function (res) {
+        if (res.data.status.toLowerCase() === "ok") {
+          $scope.getListData();
+        }
+      });
     };
+
+    /* =====================================================
+     * UPDATE OPERATION (POLA LAMA)
+     * ===================================================== */
+    $scope.submitOperation = function () {
+      var arr = $scope.gridApi.selection.getSelectedRows();
+      if (arr.length === 0) return alert("Select row first");
+
+      if (!confirm("Are you sure want to set Operation Hour ?")) return;
+
+      var selectedAcc = [];
+      for (var i = 0; i < arr.length; i++) {
+        selectedAcc.push({
+          account: arr[i].bankAccNo,
+          accName: arr[i].alias,
+          bank: arr[i].bankCode
+        });
+      }
+
+      var obj = {
+        button: "operation",
+        value: $scope.operationMap[$scope.filter.operation],
+        items: selectedAcc
+      };
+
+      $http({
+        method: "POST",
+        url: webservicesUrl + "/updateStatusMyBankSelected.php",
+        data: { data: obj },
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+        }
+      }).then(function (res) {
+        if (res.data.status.toLowerCase() === "ok") {
+          $scope.getListData();
+        }
+      });
+    };
+
+    /* =====================================================
+     * UPDATE AUTOMATION (POLA LAMA)
+     * ===================================================== */
+    $scope.submitAutomation = function () {
+      var arr = $scope.gridApi.selection.getSelectedRows();
+      if (arr.length === 0) return alert("Select row first");
+
+      if (!confirm("Are you sure want to set Automation Status ?")) return;
+
+      var selectedAcc = [];
+      for (var i = 0; i < arr.length; i++) {
+        selectedAcc.push({
+          account: arr[i].bankAccNo,
+          accName: arr[i].alias,
+          bank: arr[i].bankCode
+        });
+      }
+
+      var obj = {
+        button: "automation",
+        value: $scope.automationMap[$scope.filter.automation],
+        items: selectedAcc
+      };
+
+      $http({
+        method: "POST",
+        url: webservicesUrl + "/updateStatusMyBankSelected.php",
+        data: { data: obj },
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+        }
+      }).then(function (res) {
+        if (res.data.status.toLowerCase() === "ok") {
+          $scope.getListData();
+        }
+      });
+    };
+
+    // $scope.updateList = [
+    //   "active",
+    //   "inactive",
+    //   "deposit only",
+    //   "withdraw only",
+    //   "withdraw and deposit",
+    // ];
+
+    // $scope.filter = {
+    //   update: "active",
+    // };
+
+    // $scope.typeUpdate = "active";
+
+    // $scope.getListData = function () {
+    //   $scope.gridIsLoading = true;
+    //   $http({
+    //     method: "POST",
+    //     url: webservicesUrl + "/getMasterMyBank.php",
+    //     data: { data: "" },
+    //     headers: {
+    //       "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+    //     },
+    //   }).then(
+    //     function mySuccess(response) {
+    //       $scope.gridIsLoading = false;
+    //       var data = response.data;
+    //       // data.records = $scope.urlDecode(data.records);
+    //       console.log(data.records)
+    //       if (data.status.toLowerCase() == "ok") {
+    //         $scope.gridOptions.data = data.records;
+    //       } else {
+    //         alert(data.message);
+    //       }
+    //     },
+    //     function myError(response) {
+    //       $scope.gridIsLoading = false;
+    //       console.log(response);
+    //     }
+    //   );
+    // };
+
+    // $scope.refresh = function () {
+    //   $scope.getListData();
+    // };
+
+    // $scope.handleChange = function () {
+    //   console.log($scope.filter.update);
+
+    //   if ($scope.filter.update === "active") {
+    //     $scope.typeUpdate = "active";
+    //   } else if ($scope.filter.update === "inactive") {
+    //     $scope.typeUpdate = "inactive";
+    //   } else if ($scope.filter.update === "deposit only") {
+    //     $scope.typeUpdate = "deposit";
+    //   } else if ($scope.filter.update === "withdraw only") {
+    //     $scope.typeUpdate = "withdraw";
+    //   } else if ($scope.filter.update === "withdraw and deposit") {
+    //     $scope.typeUpdate = "withdraw and deposit";
+    //   }
+    // };
+
+    // $scope.submit = function () {
+    //   var arr = $scope.gridApi.selection.getSelectedRows();
+    //   if (arr.length > 0) {
+    //     if (
+    //       confirm(
+    //         `Are you sure you want to set ${$scope.typeUpdate} selected items?`
+    //       )
+    //     ) {
+    //       var selectedAcc = [];
+    //       for (var i = 0; i < arr.length; i++) {
+    //         var temp = {
+    //           account: arr[i].bankAccNo,
+    //           bank: arr[i].bankCode,
+    //         };
+    //         selectedAcc.push(temp);
+    //       }
+    //       var obj = {
+    //         button: $scope.typeUpdate,
+    //         items: selectedAcc,
+    //       };
+    //       $http({
+    //         method: "POST",
+    //         url: webservicesUrl + "/updateStatusMyBankSelected.php",
+    //         data: { data: obj },
+    //         headers: {
+    //           "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+    //         },
+    //       }).then(
+    //         function mySuccess(response) {
+    //           var data = response.data;
+    //           if (data.status.toLowerCase() === "ok") {
+    //             $scope.getListData();
+    //           } else {
+    //             alert(data.message);
+    //           }
+    //         },
+    //         function myError(response) {
+    //           console.log(response.data.message);
+    //         }
+    //       );
+    //     }
+    //   }
+    // };
 
     $scope.edit = function (data) {
       $state.go('master-mybank-form-selected', { data: 
@@ -310,6 +506,50 @@ app.controller("updateMyBankSelectedCtrl", [
             $http({
               method: "POST",
               url: webservicesUrl + "/groupMyBank3.php",
+              data: { 'data': jsonData },
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
+            }).then(function mySuccess(response) {
+              var data = CRYPTO.decrypt(response.data.data);
+              if (data.status.toLowerCase() == 'ok') {
+                $scope.getListData();
+              } else {
+                alert(data.message);
+              }
+            }, function myError(response) {
+              //console.log(response);
+            });
+          }, function () {
+            console.log('Modal dismissed at: ' + new Date());
+          });
+        }
+      }
+    }
+    $scope.remark = function () {
+      var arr = $scope.gridApi.selection.getSelectedRows();
+      if (arr.length > 0) {
+        if (confirm('Are your sure want to remark selected items ?')) {
+          var modalInstance = $uibModal.open({
+            animation: true,
+            templateUrl: 'templates/remark.html',
+            controller: 'remarkModalCtrl2',
+            size: 'sm',
+            scope: $scope
+          });
+
+          modalInstance.result.then(function (returnValue) {
+            var selectedAcc = [];
+            for (var i = 1; i <= arr.length; i++) {
+              var temp = { account: arr[i - 1].bankAccNo, bank: arr[i - 1].bankCode };
+              selectedAcc.push(temp);
+            }
+            var obj = {
+              groupname: returnValue,
+              items: selectedAcc
+            };
+            var jsonData = CRYPTO.encrypt(obj);
+            $http({
+              method: "POST",
+              url: webservicesUrl + "/groupMyBank4.php",
               data: { 'data': jsonData },
               headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
             }).then(function mySuccess(response) {
@@ -509,6 +749,21 @@ app.controller("UplineModalCtrl2", [
 ]);
 
 app.controller("IssueModalCtrl2", [
+  "$scope",
+  "$uibModalInstance",
+  "$uibModal",
+  function ($scope, $uibModalInstance, $uibModal) {
+    $scope.groupname = "";
+    $scope.save = function () {
+      $uibModalInstance.close($scope.groupname);
+    };
+    $scope.cancel = function () {
+      $uibModalInstance.dismiss("cancel");
+    };
+  },
+]);
+
+app.controller("remarkModalCtrl2", [
   "$scope",
   "$uibModalInstance",
   "$uibModal",

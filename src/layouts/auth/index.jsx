@@ -11,12 +11,21 @@ import {
   Title,
   Flex,
 } from '@mantine/core';
+import { useState } from 'react';
 import classes from '../../styles/login.module.css';
 import LoginData from './data/login-data';
 
 const Login = () => {
-  let { handleLogin, setPassword, setUsername, password, username, loading } =
-    LoginData();
+  const [keepLoggedIn, setKeepLoggedIn] = useState(true);
+
+  let {
+    handleLogin,
+    setPassword,
+    setUsername,
+    password,
+    username,
+    loading,
+  } = LoginData({ keepLoggedIn });
 
   return (
     <div className={classes.wrapper}>
@@ -66,11 +75,13 @@ const Login = () => {
             justify="space-between"
             mt="md"
           >
-            <Checkbox
-              label="Keep me logged in"
-              size="sm"
-              color="cyan"
-            />
+          <Checkbox
+            label="Keep me logged in"
+            size="sm"
+            color="cyan"
+            checked={keepLoggedIn}
+            onChange={(e) => setKeepLoggedIn(e.currentTarget.checked)}
+          />
             <Anchor
               component="button"
               size="sm"

@@ -1032,13 +1032,13 @@ const SmsLog = () => {
                           </Table.Th>
                         );
                       }
-                      if (index === 0) {
-                        return (
-                          <Table.Th key={`${col.key}-footer`}>
-                            Totals (Rows: {totals.rows})
-                          </Table.Th>
-                        );
-                      }
+                      // if (index === 0) {
+                      //   return (
+                      //     <Table.Th key={`${col.key}-footer`}>
+                      //       Totals (Rows: {totals.rows})
+                      //     </Table.Th>
+                      //   );
+                      // }
                       return <Table.Th key={`${col.key}-footer`} />;
                     })}
                   </Table.Tr>

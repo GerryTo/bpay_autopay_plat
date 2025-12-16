@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  ActionIcon,
   Badge,
   Box,
   Button,
@@ -7,6 +8,7 @@ import {
   Popover,
   Group,
   LoadingOverlay,
+  Menu,
   Pagination,
   ScrollArea,
   Select,
@@ -17,7 +19,19 @@ import {
 } from '@mantine/core';
 import { DateRangePicker } from 'react-date-range';
 import { format } from 'date-fns';
-import { IconCalendar, IconFilter, IconRefresh, IconSearch, IconTransfer } from '@tabler/icons-react';
+import {
+  IconCalendar,
+  IconCheck,
+  IconDotsVertical,
+  IconFilter,
+  IconPencil,
+  IconRefresh,
+  IconSearch,
+  IconShieldCheck,
+  IconTransfer,
+  IconX,
+} from '@tabler/icons-react';
+import { useSelector } from 'react-redux';
 import ColumnActionMenu from '../../components/ColumnActionMenu';
 import { transactionAPI } from '../../helper/api';
 import { showNotification } from '../../helper/showNotification';
@@ -61,6 +75,7 @@ const formatNumber = (value) => {
 };
 
 const TransactionNotMatchSameday = () => {
+  const loginUser = useSelector((state) => state.loginUser);
   const [dateRange, setDateRange] = useState([
     {
       startDate: new Date(),
@@ -72,6 +87,7 @@ const TransactionNotMatchSameday = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [actionLoadingId, setActionLoadingId] = useState('');
   const [columnFilters, setColumnFilters] = useState(defaultFilters);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -86,6 +102,113 @@ const TransactionNotMatchSameday = () => {
   const handleClearFilters = useCallback(() => {
     setColumnFilters(defaultFilters);
   }, []);
+
+  const loginUserType = useMemo(() => {
+    const raw =
+      loginUser?.type ??
+      loginUser?.userType ??
+      loginUser?.usertype ??
+      loginUser?.role ??
+      '';
+    return String(raw || '');
+  }, [loginUser]);
+
+  const validateApprove = useCallback(
+    (row) => {
+      const status = row?.status ?? '';
+      const transactiontype = row?.transactiontype ?? '';
+      const disable = String(row?.disable ?? '');
+      return (
+        ['Order need to check', 'Pending', 'Transaction Failed'].includes(
+          status
+        ) &&
+        transactiontype === 'D' &&
+        disable === '1' &&
+        loginUserType === 'S'
+      );
+    },
+    [loginUserType]
+  );
+
+  const runRowAction = useCallback(async (futuretrxid, action) => {
+    setActionLoadingId(futuretrxid);
+    try {
+      await action();
+    } finally {
+      setActionLoadingId('');
+    }
+  }, []);
+
+  const fetchData = useCallback(
+    async ({ silent = false } = {}) => {
+      const start = dateRange?.[0]?.startDate;
+      const end = dateRange?.[0]?.endDate;
+
+      if (!start || !end) {
+        showNotification({
+          title: 'Validation',
+          message: 'Please pick From and To date',
+          Color: 'yellow',
+        });
+        return;
+      }
+
+      silent ? setRefreshing(true) : setLoading(true);
+
+      try {
+        const response = await transactionAPI.getTransactionNotMatchSameday({
+          datefrom: `${format(start, 'yyyy-MM-dd')} 00:00:00`,
+          dateto: `${format(end, 'yyyy-MM-dd')} 23:59:59`,
+        });
+
+        if (response.success && response.data) {
+          if ((response.data.status || '').toLowerCase() === 'ok') {
+            const records = Array.isArray(response.data.records)
+              ? response.data.records
+              : [];
+            const mapped = records.map((item) => {
+              const amount = Number(item.amount) || 0;
+              const isDeposit = ['D', 'Topup', 'Y', 'I'].includes(
+                item.transactiontype
+              );
+              return {
+                ...item,
+                amount,
+                DB: isDeposit ? amount : 0,
+                CR: isDeposit ? 0 : amount,
+                fee: Number(item.fee) || 0,
+              };
+            });
+            setData(mapped);
+          } else {
+            showNotification({
+              title: 'Error',
+              message: response.data.message || 'Failed to load data',
+              Color: 'red',
+            });
+            setData([]);
+          }
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.error || 'Failed to load data',
+            Color: 'red',
+          });
+        }
+      } catch (error) {
+        console.error('Transaction Not Match Sameday fetch error:', error);
+        showNotification({
+          title: 'Error',
+          message: 'Unable to load transactions',
+          Color: 'red',
+        });
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [dateRange]
+  );
 
   const columns = useMemo(
     () => [
@@ -509,14 +632,306 @@ const TransactionNotMatchSameday = () => {
         key: 'action',
         label: 'Action',
         minWidth: 180,
-        render: () => (
-          <Badge color="gray" variant="light">
-            Actions available in legacy view
-          </Badge>
-        ),
+        render: (item) => {
+          const isOrderNeedCheck = item.status === 'Order need to check';
+          const isDisabled = String(item.disable ?? '') === '1';
+          const isDeposit = item.transactiontype === 'D';
+          const isWithdraw = item.transactiontype === 'W';
+          const canApprove = validateApprove(item);
+          const busy = actionLoadingId === item.futuretrxid;
+
+          const handleEdit = async () => {
+            const amountInput = window.prompt(
+              `New amount for [${item.futuretrxid}]`,
+              String(item.amount ?? item.DB ?? item.CR ?? '')
+            );
+            if (amountInput === null) return;
+
+            const amount = Number(amountInput);
+            if (!Number.isFinite(amount)) {
+              showNotification({
+                title: 'Validation',
+                message: 'Amount must be a number',
+                Color: 'yellow',
+              });
+              return;
+            }
+
+            const note =
+              window.prompt(`Note for [${item.futuretrxid}]`, '') ?? '';
+
+            await runRowAction(item.futuretrxid, async () => {
+              const res = await transactionAPI.editTransactionByFutureTrxId({
+                id: item.futuretrxid,
+                amount,
+                note,
+              });
+              const status = String(res.data?.status ?? '').toLowerCase();
+              if (!res.success || status !== 'ok') {
+                showNotification({
+                  title: 'Error',
+                  message:
+                    res.data?.message || res.error || 'Failed to edit transaction',
+                  Color: 'red',
+                });
+                return;
+              }
+
+              showNotification({
+                title: 'Success',
+                message: 'Edit amount success',
+                Color: 'green',
+              });
+              await fetchData({ silent: true });
+            });
+          };
+
+          const handleFail = async () => {
+            const ok = window.confirm(
+              `Fail this transaction [${item.futuretrxid}]?`
+            );
+            if (!ok) return;
+
+            await runRowAction(item.futuretrxid, async () => {
+              const res = await transactionAPI.updateManualTransaction({
+                id: item.futuretrxid,
+                status: 'C',
+                accountdest: '',
+              });
+              const status = String(res.data?.status ?? '').toLowerCase();
+              if (!res.success || status !== 'ok') {
+                showNotification({
+                  title: 'Error',
+                  message:
+                    res.data?.message || res.error || 'Failed to fail transaction',
+                  Color: 'red',
+                });
+                return;
+              }
+
+              showNotification({
+                title: 'Success',
+                message: 'Data Saved',
+                Color: 'green',
+              });
+              await fetchData({ silent: true });
+            });
+          };
+
+          const handleSuccessDeposit = async () => {
+            const ok = window.confirm(
+              `Mark success deposit [${item.futuretrxid}]?`
+            );
+            if (!ok) return;
+
+            const transid =
+              window.prompt('Trans ID (bank trx id)', '') ?? '';
+            if (!transid.trim()) {
+              showNotification({
+                title: 'Validation',
+                message: 'Trans ID is required',
+                Color: 'yellow',
+              });
+              return;
+            }
+
+            await runRowAction(item.futuretrxid, async () => {
+              const res = await transactionAPI.setTransactionSuccessByFutureTrxId({
+                id: item.futuretrxid,
+                transid,
+              });
+              const status = String(res.data?.status ?? '').toLowerCase();
+              if (!res.success || status !== 'ok') {
+                showNotification({
+                  title: 'Error',
+                  message:
+                    res.data?.message || res.error || 'Failed to mark success',
+                  Color: 'red',
+                });
+                return;
+              }
+
+              showNotification({
+                title: 'Success',
+                message: 'Success!',
+                Color: 'green',
+              });
+              await fetchData({ silent: true });
+            });
+          };
+
+          const handleSuccessWithdraw = async () => {
+            const ok = window.confirm(
+              `Mark success withdraw [${item.futuretrxid}]?`
+            );
+            if (!ok) return;
+
+            const account =
+              window.prompt('Account destination', '') ?? '';
+            const bankcode =
+              window.prompt('Bank code', String(item.bankcode ?? '')) ?? '';
+            const receipt =
+              window.prompt('Receipt (optional)', '') ?? '';
+
+            if (!account.trim() || !bankcode.trim()) {
+              showNotification({
+                title: 'Validation',
+                message: 'Account destination and bank code are required',
+                Color: 'yellow',
+              });
+              return;
+            }
+
+            await runRowAction(item.futuretrxid, async () => {
+              const res = await transactionAPI.setTransactionSuccessByFutureTrxId({
+                id: item.futuretrxid,
+                account,
+                accountNo: account,
+                bankcode,
+                receipt,
+              });
+              const status = String(res.data?.status ?? '').toLowerCase();
+              if (!res.success || status !== 'ok') {
+                showNotification({
+                  title: 'Error',
+                  message:
+                    res.data?.message || res.error || 'Failed to mark success',
+                  Color: 'red',
+                });
+                return;
+              }
+
+              showNotification({
+                title: 'Success',
+                message: 'Success!',
+                Color: 'green',
+              });
+              await fetchData({ silent: true });
+            });
+          };
+
+          const handleApprove = async () => {
+            const wasabi = window.confirm(
+              'Approve to Wasabi?\nOK = Yes, Cancel = No'
+            );
+
+            await runRowAction(item.futuretrxid, async () => {
+              const res = await transactionAPI.approveTransactionByFutureTrxId({
+                id: item.futuretrxid,
+                wasabi,
+              });
+              const status = String(res.data?.status ?? '').toLowerCase();
+              if (!res.success || status !== 'ok') {
+                showNotification({
+                  title: 'Error',
+                  message:
+                    res.data?.message ||
+                    res.error ||
+                    'Failed to approve transaction',
+                  Color: 'red',
+                });
+                return;
+              }
+
+              showNotification({
+                title: 'Success',
+                message: 'Approve success',
+                Color: 'green',
+              });
+              await fetchData({ silent: true });
+            });
+          };
+
+          const hasAnyAction = isOrderNeedCheck || canApprove;
+
+          if (!hasAnyAction) {
+            return (
+              <Badge
+                color="gray"
+                variant="light"
+              >
+                -
+              </Badge>
+            );
+          }
+
+          return (
+            <Menu shadow="sm" withinPortal>
+              <Menu.Target>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  title="Row Actions"
+                >
+                  <IconDotsVertical size={16} />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                {isOrderNeedCheck ? (
+                  <>
+                    <Menu.Item
+                      leftSection={<IconPencil size={14} />}
+                      onClick={handleEdit}
+                      disabled={busy}
+                    >
+                      Edit
+                    </Menu.Item>
+                    <Menu.Item
+                      leftSection={<IconX size={14} />}
+                      color="red"
+                      onClick={handleFail}
+                      disabled={busy}
+                    >
+                      Fail
+                    </Menu.Item>
+                    {isDeposit ? (
+                      <Menu.Item
+                        leftSection={<IconCheck size={14} />}
+                        color="green"
+                        onClick={handleSuccessDeposit}
+                        disabled={busy || isDisabled}
+                      >
+                        Success (Deposit)
+                      </Menu.Item>
+                    ) : null}
+                    {isWithdraw ? (
+                      <Menu.Item
+                        leftSection={<IconCheck size={14} />}
+                        color="green"
+                        onClick={handleSuccessWithdraw}
+                        disabled={busy || isDisabled}
+                      >
+                        Success (Withdraw)
+                      </Menu.Item>
+                    ) : null}
+                    {canApprove ? <Menu.Divider /> : null}
+                  </>
+                ) : null}
+
+                {canApprove ? (
+                  <Menu.Item
+                    leftSection={<IconShieldCheck size={14} />}
+                    color="red"
+                    onClick={handleApprove}
+                    disabled={busy}
+                  >
+                    Approve
+                  </Menu.Item>
+                ) : null}
+              </Menu.Dropdown>
+            </Menu>
+          );
+        },
       },
     ],
-    [columnFilters, handleFilterChange]
+    [
+      actionLoadingId,
+      columnFilters,
+      fetchData,
+      handleFilterChange,
+      runRowAction,
+      validateApprove,
+    ]
   );
 
   const { visibleColumns, sortConfig, handleHideColumn, handleSort, handleResetAll } =
@@ -568,73 +983,9 @@ const TransactionNotMatchSameday = () => {
     }
   }, [totalPages, currentPage]);
 
-  const fetchData = async ({ silent = false } = {}) => {
-    const start = dateRange?.[0]?.startDate;
-    const end = dateRange?.[0]?.endDate;
-
-    if (!start || !end) {
-      showNotification({
-        title: 'Validation',
-        message: 'Please pick From and To date',
-        Color: 'yellow',
-      });
-      return;
-    }
-
-    silent ? setRefreshing(true) : setLoading(true);
-
-    try {
-      const response = await transactionAPI.getTransactionNotMatchSameday({
-        datefrom: `${format(start, 'yyyy-MM-dd')} 00:00:00`,
-        dateto: `${format(end, 'yyyy-MM-dd')} 23:59:59`,
-      });
-
-      if (response.success && response.data) {
-        if ((response.data.status || '').toLowerCase() === 'ok') {
-          const records = Array.isArray(response.data.records) ? response.data.records : [];
-          const mapped = records.map((item) => {
-            const amount = Number(item.amount) || 0;
-            const isDeposit = ['D', 'Topup', 'Y', 'I'].includes(item.transactiontype);
-            return {
-              ...item,
-              amount,
-              DB: isDeposit ? amount : 0,
-              CR: isDeposit ? 0 : amount,
-              fee: Number(item.fee) || 0,
-            };
-          });
-          setData(mapped);
-        } else {
-          showNotification({
-            title: 'Error',
-            message: response.data.message || 'Failed to load data',
-            Color: 'red',
-          });
-          setData([]);
-        }
-      } else {
-        showNotification({
-          title: 'Error',
-          message: response.error || 'Failed to load data',
-          Color: 'red',
-        });
-      }
-    } catch (error) {
-      console.error('Transaction Not Match Sameday fetch error:', error);
-      showNotification({
-        title: 'Error',
-        message: 'Unable to load transactions',
-        Color: 'red',
-      });
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
   useEffect(() => {
     fetchData({ silent: true });
-  }, []);
+  }, [fetchData]);
 
   const handleReset = () => {
     setDateRange([

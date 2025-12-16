@@ -1,33 +1,70 @@
 <div>
   <div class="page-header-container box">Update MyBank Selected</div>
+
   <div class="page-body box">
-    <div class="row">
-      <div class="col-xs-12 col-sm-4 col-md-2 col-lg-2">
-        <p class="input-group">
-          <select class="form-control" id="update" ng-model="filter.update" ng-change="handleChange()"
-            ng-init="filter.update = updateList[0]">
-            <option ng-repeat="item in updateList" value="{{item}}">
-              Set {{item}}
-            </option>
-          </select>
-        </p>
-      </div>
-      <button type="button" class="btn btn-default btn-sm" ng-click="submit()">
-        Set
-      </button>
-      <button type="button" class="btn btn-default btn-sm" ng-click="refresh()">
-        {{globallang.refresh}}
-      </button>
-      <button type="button" class="btn btn-default btn-sm" ng-click="group()">{{globallang.group}}</button>
-      <button type="button" class="btn btn-default btn-sm" ng-click="upline()">Upline</button>
-      <button type="button" class="btn btn-default btn-sm" ng-click="issue()">Issue</button>
+    <div class="form-inline" style="margin-bottom:10px;">
+      <!-- ACTIVE -->
+      <select class="form-control input-sm"
+              style="width:180px; display:inline-block;"
+              ng-model="filter.update"
+              ng-change="handleChange()"
+              ng-init="filter.update = updateList[0]">
+        <option ng-repeat="item in updateList" value="{{item}}">
+          Set {{item}}
+        </option>
+      </select>
+
+      <button class="btn btn-default btn-sm" ng-click="submit()">Set</button>
+
+      <!-- OPERATION -->
+      <select class="form-control input-sm"
+              style="width:90px; display:inline-block; margin-left:10px;"
+              ng-model="filter.operation"
+              ng-init="filter.operation = operationList[0]">
+        <option ng-repeat="item in operationList" value="{{item}}">
+          {{item}}
+        </option>
+      </select>
+
+      <button class="btn btn-default btn-sm" ng-click="submitOperation()">Set</button>
+
+      <!-- AUTOMATION -->
+      <select class="form-control input-sm"
+              style="width:80px; display:inline-block; margin-left:10px;"
+              ng-model="filter.automation"
+              ng-init="filter.automation = automationList[0]">
+        <option ng-repeat="item in automationList" value="{{item}}">
+          {{item}}
+        </option>
+      </select>
+
+      <button class="btn btn-default btn-sm" ng-click="submitAutomation()">Set</button>
+
+      <!-- ACTION -->
+      <button class="btn btn-default btn-sm" style="margin-left:10px" ng-click="refresh()">Refresh</button>
+      <button class="btn btn-default btn-sm" ng-click="group()">Group</button>
+      <button class="btn btn-default btn-sm" ng-click="upline()">Upline</button>
+      <button class="btn btn-default btn-sm" ng-click="issue()">Issue</button>
+      <button class="btn btn-default btn-sm" ng-click="remark()">Remark</button>
+
     </div>
-    <div id="grid1" ui-grid="gridOptions" class="grid" ui-grid-resize-columns ui-grid-auto-resize ui-grid-selection
-      ui-grid-exporter ng-style="{'height': getHeight()+'px'}">
-      <div class="grid-nodata-container" ng-show="gridOptions.data.length == 0 && !gridIsLoading">
+    <!-- GRID -->
+    <div id="grid1"
+         ui-grid="gridOptions"
+         class="grid"
+         ui-grid-resize-columns
+         ui-grid-auto-resize
+         ui-grid-selection
+         ui-grid-exporter
+         ng-style="{'height': getHeight()+'px'}">
+
+      <div class="grid-nodata-container"
+           ng-show="gridOptions.data.length == 0 && !gridIsLoading">
         No Data Available
       </div>
-      <div class="grid-loading-container" ng-show="gridIsLoading">
+
+      <div class="grid-loading-container"
+           ng-show="gridIsLoading">
         <img src="images/loading.gif" />
       </div>
     </div>

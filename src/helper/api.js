@@ -1,5 +1,6 @@
 import axios from 'axios';
 import CRYPTO from './crypto';
+import Cookies from 'js-cookie';
 
 // Base API URL
 // In development, use Vite proxy (/api) to avoid CORS issues
@@ -15,7 +16,9 @@ const apiClient = axios.create({
     'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
   },
   timeout: 30000, // 30 seconds timeout
-  withCredentials: true, // Enable sending cookies with requests
+  // Disable credentials to avoid cross-site cookie/CORS failures on Vercel
+  // (we rely on the Bearer token instead of cookies)
+  withCredentials: false,
 });
 
 // Request interceptor for logging and token handling
@@ -40,6 +43,9 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       // Handle unauthorized access
       localStorage.removeItem('token');
+      localStorage.removeItem('loginUser');
+      Cookies.remove('loginUser', { path: '/' });
+      Cookies.remove('loginUser', { path: '/auth' });
       window.location.href = '/auth/login';
     }
     return Promise.reject(error);
@@ -133,14 +139,9 @@ export function apiLogin(params) {
  */
 export function checkSession() {
   try {
-    const response = axios({
-      method: 'post',
-      url: API_BASE_URL + '/checkSession.php',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-      },
-    });
-    return response;
+    // Use apiClient so Authorization header is included (token-based auth)
+    const formData = new URLSearchParams();
+    return apiClient.post('/checkSession.php', formData);
   } catch (error) {
     console.log(error);
     throw error;
@@ -759,6 +760,40 @@ export const myBankAPI = {
       return {
         success: false,
         error: error.message || 'Failed to set issue',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Set remark for selected accounts
+   */
+  setRemark: async (groupname, items) => {
+    try {
+      const payload = { groupname, items };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/groupMyBank4.php', formData);
+
+      if (response.data && response.data.data) {
+        const decryptedData = CRYPTO.decrypt(response.data.data);
+        return {
+          success: true,
+          data: decryptedData,
+        };
+      }
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Set remark error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to set remark',
         details: error.response?.data || null,
       };
     }
@@ -3160,6 +3195,275 @@ export const transactionAPI = {
       return {
         success: false,
         error: error.message || 'Failed to load transaction data',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Resend callback for a futuretrxid (encrypted)
+   * @param {String} futuretrxid
+   */
+  resendCallbackByFutureTrxId: async (futuretrxid = '') => {
+    try {
+      const payload = { futuretrxid };
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/transactionById_resendCallback.php', formData);
+
+      const payloadData = response.data?.data
+        ? CRYPTO.decrypt(response.data.data)
+        : response.data;
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Transaction by ID resend callback API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to resend callback',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Edit transaction amount/note by futuretrxid (encrypted)
+   * @param {{ id: string, amount: number|string, note?: string }} params
+   */
+  editTransactionByFutureTrxId: async ({ id = '', amount = '', note = '' } = {}) => {
+    try {
+      const payload = { id, amount, note };
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/transactionByAccount_edit.php', formData);
+
+      const payloadData = response.data?.data
+        ? CRYPTO.decrypt(response.data.data)
+        : response.data;
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Transaction edit API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to edit transaction',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Update manual transaction status by futuretrxid (encrypted)
+   * @param {{ id: string, status: string, accountdest?: string, memo?: string }} params
+   */
+  updateManualTransaction: async ({ id = '', status = '', accountdest = '', memo = '' } = {}) => {
+    try {
+      const payload = { id, status, accountdest, memo };
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/updateManualTransaction.php', formData);
+
+      const payloadData = response.data?.data
+        ? CRYPTO.decrypt(response.data.data)
+        : response.data;
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Update manual transaction API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to update transaction',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Approve transaction by futuretrxid (encrypted)
+   * @param {{ id: string, wasabi?: boolean }} params
+   */
+  approveTransactionByFutureTrxId: async ({ id = '', wasabi = true } = {}) => {
+    try {
+      const payload = { id, account: '' };
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const url = wasabi
+        ? '/changeStatusSuccessTransactionAccountByCompany.php'
+        : '/changeStatusSuccessTransactionAccountByCompanyNotWasabi.php';
+
+      const response = await apiClient.post(url, formData);
+
+      const payloadData = response.data?.data
+        ? CRYPTO.decrypt(response.data.data)
+        : response.data;
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Approve transaction API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to approve transaction',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Mark transaction success (deposit/withdraw) by futuretrxid (encrypted)
+   * @param {{ id: string, transid?: string, bankcode?: string, account?: string, accountNo?: string, receipt?: string }} params
+   */
+  setTransactionSuccessByFutureTrxId: async ({
+    id = '',
+    transid = '',
+    bankcode = '',
+    account = '',
+    accountNo = '',
+    receipt = '',
+  } = {}) => {
+    try {
+      const payload = { id, transid, bankcode, account, accountNo, receipt };
+      const jsonData = CRYPTO.encrypt(payload);
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post(
+        '/changeStatusSuccessTransactionAccountByCompany.php',
+        formData
+      );
+
+      const payloadData = response.data?.data
+        ? CRYPTO.decrypt(response.data.data)
+        : response.data;
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Set transaction success API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to update transaction success',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Update Memo2 by futuretrxid (not encrypted)
+   * @param {{ futuretrxid: string, memo2: string, ishistory?: boolean }} params
+   */
+  updateMemo2ByFutureTrxId: async ({ futuretrxid = '', memo2 = '', ishistory = false } = {}) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data[futuretrxid]', futuretrxid);
+      formData.append('data[memo2]', memo2);
+      formData.append('data[ishistory]', ishistory ? '1' : '0');
+
+      const response = await apiClient.post('/updateMemo2.php', formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Update memo2 API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to update memo2',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Match deposit queue SMS rows to a future transaction (encrypted)
+   * @param {{ futuretrxid: string, ids: Array<string|number> }} params
+   */
+  matchDepositQueueSms: async ({ futuretrxid = '', ids = [] } = {}) => {
+    try {
+      const payload = {
+        futuretrxid,
+        id: Array.isArray(ids) ? ids : [ids],
+      };
+
+      const encrypted = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', encrypted);
+
+      const response = await apiClient.post('/depositQueue_matchedSms.php', formData);
+      const payloadData = response.data?.data
+        ? CRYPTO.decrypt(response.data.data)
+        : response.data;
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Match deposit queue SMS API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to match deposit queue SMS',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Match deposit queue mutation rows to a future transaction (encrypted)
+   * @param {{ futuretrxid: string, ids: Array<string|number> }} params
+   */
+  matchDepositQueueMutasi: async ({ futuretrxid = '', ids = [] } = {}) => {
+    try {
+      const payload = {
+        futuretrxid,
+        id: Array.isArray(ids) ? ids : [ids],
+      };
+
+      const encrypted = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', encrypted);
+
+      const response = await apiClient.post('/depositQueue_matchedMutasi.php', formData);
+      const payloadData = response.data?.data
+        ? CRYPTO.decrypt(response.data.data)
+        : response.data;
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Match deposit queue mutasi API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to match deposit queue mutasi',
         details: error.response?.data || null,
       };
     }

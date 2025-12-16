@@ -5,7 +5,10 @@ import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { showNotification } from "../../../helper/showNotification";
 
-const LoginData = () => {
+const COOKIE_PATH_ROOT = "/";
+const COOKIE_PATH_AUTH = "/auth";
+
+const LoginData = ({ keepLoggedIn = true } = {}) => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
@@ -22,9 +25,22 @@ const LoginData = () => {
             };
             const { data } = await apiLogin(params);
             if (data.status === "success") {
-                localStorage.setItem("token", data.data.token);
+                const loginUser = data.data || null;
+                const loginUserString = JSON.stringify(loginUser);
+
+                localStorage.setItem("token", loginUser?.token || "");
+                localStorage.setItem("loginUser", loginUserString);
                 dispatch({ type: "LOGIN", payload: data.data });
-                Cookies.set("loginUser", JSON.stringify(data.data));
+
+                // Replace any existing cookies on different paths so refresh works everywhere
+                Cookies.remove("loginUser", { path: COOKIE_PATH_AUTH });
+                Cookies.remove("loginUser", { path: COOKIE_PATH_ROOT });
+                Cookies.set("loginUser", loginUserString, {
+                    path: COOKIE_PATH_ROOT,
+                    expires: keepLoggedIn ? 7 : undefined,
+                    sameSite: "lax",
+                    secure: window.location.protocol === "https:",
+                });
                 setLoading(false);
                 showNotification({
                     title: "Success Login",

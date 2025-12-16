@@ -35,9 +35,12 @@ const NavigationSection = ({ opened, toggle }) => {
 
   function handleLogout() {
     try {
-      Cookies.remove('loginUser');
-      Cookies.remove('ADD_BREADCRUMBS');
+      Cookies.remove('loginUser', { path: '/' });
+      Cookies.remove('loginUser', { path: '/auth' });
+      Cookies.remove('ADD_BREADCRUMBS', { path: '/' });
+      Cookies.remove('ADD_BREADCRUMBS', { path: '/auth' });
       localStorage.removeItem('token');
+      localStorage.removeItem('loginUser');
 
       dispatch({
         type: 'LOGOUT',
@@ -55,6 +58,7 @@ const NavigationSection = ({ opened, toggle }) => {
 
       navigate('/auth/login');
     } catch (e) {
+      console.error(e);
       showNotification({
         title: 'Logout Failed',
         message: 'Something went wrong',

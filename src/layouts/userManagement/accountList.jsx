@@ -31,6 +31,18 @@ import { userAPI } from '../../helper/api';
 import ColumnActionMenu from '../../components/ColumnActionMenu';
 import { useTableControls } from '../../hooks/useTableControls';
 
+const DEFAULT_COLUMN_FILTERS = {
+  login: '',
+  status: '',
+  type: '',
+  merchantcode: '',
+  phoneNumber: '',
+  agentName: '',
+  alias: '',
+  isdm: '',
+  issetmerchant: '',
+};
+
 const AccountList = () => {
   const navigate = useNavigate();
   const [data, setData] = useState([]);
@@ -39,17 +51,7 @@ const AccountList = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Column-specific filters
-  const [columnFilters, setColumnFilters] = useState({
-    login: '',
-    status: '',
-    type: '',
-    merchantcode: '',
-    phoneNumber: '',
-    agentName: '',
-    alias: '',
-    isdm: '',
-    issetmerchant: '',
-  });
+  const [columnFilters, setColumnFilters] = useState(DEFAULT_COLUMN_FILTERS);
 
   const columns = useMemo(
     () => [
@@ -294,18 +296,7 @@ const AccountList = () => {
     handleSort,
     handleResetAll,
   } = useTableControls(columns, {
-    onResetFilters: () =>
-      setColumnFilters({
-        login: '',
-        status: '',
-        type: '',
-        merchantcode: '',
-        phoneNumber: '',
-        agentName: '',
-        alias: '',
-        isdm: '',
-        issetmerchant: '',
-      }),
+    onResetFilters: () => setColumnFilters(DEFAULT_COLUMN_FILTERS),
   });
 
   const includesValue = (field, value) => {
@@ -365,19 +356,9 @@ const AccountList = () => {
     }));
   };
 
-  // Clear all filters
+  // Clear filters + reset sort/hidden columns
   const handleClearFilters = () => {
-    setColumnFilters({
-      login: '',
-      status: '',
-      type: '',
-      merchantcode: '',
-      phoneNumber: '',
-      agentName: '',
-      alias: '',
-      isdm: '',
-      issetmerchant: '',
-    });
+    handleResetAll();
   };
 
   const getListData = async () => {
@@ -485,93 +466,6 @@ const AccountList = () => {
   useEffect(() => {
     getListData();
   }, []);
-
-  const rows = paginatedData.map((item, index) => (
-    <Table.Tr key={index}>
-      <Table.Td>
-        <Text
-          fw={600}
-          size="sm"
-          c="blue"
-        >
-          {item.login}
-        </Text>
-      </Table.Td>
-      <Table.Td>
-        <Badge
-          color={item.active === 'Y' ? 'green' : 'red'}
-          variant="light"
-        >
-          {item.active === 'Y' ? 'Active' : 'Inactive'}
-        </Badge>
-      </Table.Td>
-      <Table.Td>
-        <Badge
-          color="blue"
-          variant="outline"
-        >
-          {item.type}
-        </Badge>
-      </Table.Td>
-      <Table.Td>
-        <Text size="sm">{item.merchantcode}</Text>
-      </Table.Td>
-      <Table.Td>
-        <Text size="sm">{item.phoneNumber}</Text>
-      </Table.Td>
-      <Table.Td>
-        <Text size="sm">{item.agentName}</Text>
-      </Table.Td>
-      <Table.Td>
-        <Text size="sm">{item.alias}</Text>
-      </Table.Td>
-      <Table.Td>
-        <Badge
-          color={item.isdm === 'Y' ? 'teal' : 'gray'}
-          size="sm"
-          variant="dot"
-        >
-          {item.isdm === 'Y' ? 'Yes' : 'No'}
-        </Badge>
-      </Table.Td>
-      <Table.Td>
-        <Badge
-          color={item.issetmerchant === 'Y' ? 'teal' : 'gray'}
-          size="sm"
-          variant="dot"
-        >
-          {item.issetmerchant === 'Y' ? 'Yes' : 'No'}
-        </Badge>
-      </Table.Td>
-      <Table.Td>
-        <Group
-          gap="xs"
-          wrap="nowrap"
-        >
-          <Tooltip label="Edit User">
-            <ActionIcon
-              variant="light"
-              color="blue"
-              size="md"
-              onClick={() => handleEdit(item)}
-            >
-              <IconEdit size={18} />
-            </ActionIcon>
-          </Tooltip>
-          <Tooltip label="Delete User">
-            <ActionIcon
-              variant="light"
-              color="red"
-              size="md"
-              onClick={() => handleDelete(item)}
-            >
-              <IconTrash size={18} />
-            </ActionIcon>
-          </Tooltip>
-        </Group>
-      </Table.Td>
-    </Table.Tr>
-  ));
 
   return (
     <Box p="md">

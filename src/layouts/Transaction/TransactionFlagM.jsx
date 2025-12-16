@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  ActionIcon,
   Badge,
   Box,
   Button,
   Card,
   Group,
   LoadingOverlay,
+  Menu,
   Pagination,
   ScrollArea,
   Select,
@@ -15,10 +17,14 @@ import {
   TextInput,
 } from '@mantine/core';
 import {
+  IconCheck,
+  IconDotsVertical,
   IconFilter,
+  IconPencil,
   IconRefresh,
   IconSearch,
   IconTransfer,
+  IconX,
 } from '@tabler/icons-react';
 import ColumnActionMenu from '../../components/ColumnActionMenu';
 import { transactionAPI } from '../../helper/api';
@@ -65,6 +71,7 @@ const TransactionFlagM = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [actionLoadingId, setActionLoadingId] = useState('');
   const [columnFilters, setColumnFilters] = useState(defaultFilters);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -79,6 +86,76 @@ const TransactionFlagM = () => {
   const handleClearFilters = useCallback(() => {
     setColumnFilters(defaultFilters);
   }, []);
+
+  const runRowAction = useCallback(async (futuretrxid, action) => {
+    setActionLoadingId(futuretrxid);
+    try {
+      await action();
+    } finally {
+      setActionLoadingId('');
+    }
+  }, []);
+
+  const fetchAccounts = useCallback(async () => {
+    try {
+      const response = await transactionAPI.getMyBankList();
+      if (response.success && response.data) {
+        if ((response.data.status || '').toLowerCase() === 'ok') {
+          setAccounts(response.data.records || []);
+        }
+      }
+    } catch (error) {
+      console.error('Account list fetch error:', error);
+    }
+  }, []);
+
+  const fetchData = useCallback(
+    async ({ silent = false } = {}) => {
+      silent ? setRefreshing(true) : setLoading(true);
+
+      try {
+        const [accountno = '0', bank = ''] = accountValue.split('||');
+
+        const response = await transactionAPI.getTransactionFlagM({
+          accountno,
+          bank,
+        });
+
+        if (response.success && response.data) {
+          if ((response.data.status || '').toLowerCase() === 'ok') {
+            const records = Array.isArray(response.data.records)
+              ? response.data.records
+              : [];
+            setData(records);
+          } else {
+            showNotification({
+              title: 'Error',
+              message: response.data.message || 'Failed to load data',
+              Color: 'red',
+            });
+            setData([]);
+          }
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.error || 'Failed to load data',
+            Color: 'red',
+          });
+        }
+      } catch (error) {
+        console.error('Transaction Flag M fetch error:', error);
+        showNotification({
+          title: 'Error',
+          message: 'Unable to load Transaction Flag M',
+          Color: 'red',
+        });
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [accountValue]
+  );
 
   const columns = useMemo(
     () => [
@@ -495,17 +572,314 @@ const TransactionFlagM = () => {
         key: 'action',
         label: 'Action',
         minWidth: 180,
-        render: () => (
-          <Badge
-            color="gray"
-            variant="light"
-          >
-            Actions available in legacy view
-          </Badge>
-        ),
+        render: (item) => {
+          const isOrderNeedCheck = item.status === 'Order need to check';
+          const busy = actionLoadingId === item.futuretrxid;
+
+          const parseIds = (raw) =>
+            String(raw || '')
+              .split(',')
+              .map((v) => v.trim())
+              .filter(Boolean);
+
+          const handleEdit = async () => {
+            const amountInput = window.prompt(
+              `New amount for [${item.futuretrxid}]`,
+              String(item.amount ?? item.DB ?? '')
+            );
+            if (amountInput === null) return;
+
+            const amount = Number(amountInput);
+            if (!Number.isFinite(amount)) {
+              showNotification({
+                title: 'Validation',
+                message: 'Amount must be a number',
+                Color: 'yellow',
+              });
+              return;
+            }
+
+            const note =
+              window.prompt(`Note for [${item.futuretrxid}]`, '') ?? '';
+
+            await runRowAction(item.futuretrxid, async () => {
+              const res = await transactionAPI.editTransactionByFutureTrxId({
+                id: item.futuretrxid,
+                amount,
+                note,
+              });
+              const status = String(res.data?.status ?? '').toLowerCase();
+              if (!res.success || status !== 'ok') {
+                showNotification({
+                  title: 'Error',
+                  message:
+                    res.data?.message ||
+                    res.error ||
+                    'Failed to edit transaction',
+                  Color: 'red',
+                });
+                return;
+              }
+
+              showNotification({
+                title: 'Success',
+                message: 'Edit amount success',
+                Color: 'green',
+              });
+              await fetchData({ silent: true });
+            });
+          };
+
+          const handleCheck = async () => {
+            const choice = window.prompt(
+              [
+                'Check (legacy modal replacement)',
+                '1 = Match SMS (depositQueue_matchedSms)',
+                '2 = Match Mutasi (depositQueue_matchedMutasi)',
+                '3 = Fail (updateManualTransaction)',
+                '4 = Success Deposit (changeStatusSuccessTransactionAccountByCompany)',
+                '',
+                'Input number:',
+              ].join('\n'),
+              '1'
+            );
+            if (choice === null) return;
+
+            const pick = String(choice).trim();
+
+            if (pick === '1') {
+              const idsRaw = window.prompt(
+                'Input deposit queue SMS id(s), comma separated',
+                ''
+              );
+              if (idsRaw === null) return;
+              const ids = parseIds(idsRaw);
+              if (ids.length === 0) return;
+
+              await runRowAction(item.futuretrxid, async () => {
+                const res = await transactionAPI.matchDepositQueueSms({
+                  futuretrxid: item.futuretrxid,
+                  ids,
+                });
+                const status = String(res.data?.status ?? '').toLowerCase();
+                if (!res.success || status !== 'ok') {
+                  showNotification({
+                    title: 'Error',
+                    message:
+                      res.data?.message || res.error || 'Failed to match SMS',
+                    Color: 'red',
+                  });
+                  return;
+                }
+
+                showNotification({
+                  title: 'Success',
+                  message: 'SMS Matching Success!',
+                  Color: 'green',
+                });
+                await fetchData({ silent: true });
+              });
+              return;
+            }
+
+            if (pick === '2') {
+              const idsRaw = window.prompt(
+                'Input deposit queue mutasi id(s), comma separated',
+                ''
+              );
+              if (idsRaw === null) return;
+              const ids = parseIds(idsRaw);
+              if (ids.length === 0) return;
+
+              await runRowAction(item.futuretrxid, async () => {
+                const res = await transactionAPI.matchDepositQueueMutasi({
+                  futuretrxid: item.futuretrxid,
+                  ids,
+                });
+                const status = String(res.data?.status ?? '').toLowerCase();
+                if (!res.success || status !== 'ok') {
+                  showNotification({
+                    title: 'Error',
+                    message:
+                      res.data?.message ||
+                      res.error ||
+                      'Failed to match mutasi',
+                    Color: 'red',
+                  });
+                  return;
+                }
+
+                showNotification({
+                  title: 'Success',
+                  message: 'Mutasi Matching Success!',
+                  Color: 'green',
+                });
+                await fetchData({ silent: true });
+              });
+              return;
+            }
+
+            if (pick === '3') {
+              const ok = window.confirm(
+                `Fail this transaction [${item.futuretrxid}]?`
+              );
+              if (!ok) return;
+              await runRowAction(item.futuretrxid, async () => {
+                const res = await transactionAPI.updateManualTransaction({
+                  id: item.futuretrxid,
+                  status: 'C',
+                  accountdest: '',
+                });
+                const status = String(res.data?.status ?? '').toLowerCase();
+                if (!res.success || status !== 'ok') {
+                  showNotification({
+                    title: 'Error',
+                    message:
+                      res.data?.message ||
+                      res.error ||
+                      'Failed to fail transaction',
+                    Color: 'red',
+                  });
+                  return;
+                }
+                showNotification({
+                  title: 'Success',
+                  message: 'Data Saved',
+                  Color: 'green',
+                });
+                await fetchData({ silent: true });
+              });
+              return;
+            }
+
+            if (pick === '4') {
+              const transid = window.prompt('Trans ID (bank trx id)', '') ?? '';
+              if (!transid.trim()) return;
+
+              await runRowAction(item.futuretrxid, async () => {
+                const res =
+                  await transactionAPI.setTransactionSuccessByFutureTrxId({
+                    id: item.futuretrxid,
+                    transid,
+                  });
+                const status = String(res.data?.status ?? '').toLowerCase();
+                if (!res.success || status !== 'ok') {
+                  showNotification({
+                    title: 'Error',
+                    message:
+                      res.data?.message ||
+                      res.error ||
+                      'Failed to mark success',
+                    Color: 'red',
+                  });
+                  return;
+                }
+                showNotification({
+                  title: 'Success',
+                  message: 'Success!',
+                  Color: 'green',
+                });
+                await fetchData({ silent: true });
+              });
+              return;
+            }
+
+            showNotification({
+              title: 'Info',
+              message: 'No action selected',
+              Color: 'yellow',
+            });
+          };
+
+          if (!isOrderNeedCheck) {
+            return (
+              <Badge
+                color="gray"
+                variant="light"
+              >
+                -
+              </Badge>
+            );
+          }
+
+          return (
+            <Menu
+              shadow="sm"
+              withinPortal
+            >
+              <Menu.Target>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  title="Row Actions"
+                >
+                  <IconDotsVertical size={16} />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item
+                  leftSection={<IconCheck size={14} />}
+                  onClick={handleCheck}
+                  disabled={busy}
+                >
+                  Check
+                </Menu.Item>
+                <Menu.Item
+                  leftSection={<IconPencil size={14} />}
+                  onClick={handleEdit}
+                  disabled={busy}
+                >
+                  Edit
+                </Menu.Item>
+                <Menu.Item
+                  leftSection={<IconX size={14} />}
+                  color="red"
+                  onClick={() => {
+                    runRowAction(item.futuretrxid, async () => {
+                      const res = await transactionAPI.updateManualTransaction({
+                        id: item.futuretrxid,
+                        status: 'C',
+                        accountdest: '',
+                      });
+                      const status = String(
+                        res.data?.status ?? ''
+                      ).toLowerCase();
+                      if (!res.success || status !== 'ok') {
+                        showNotification({
+                          title: 'Error',
+                          message:
+                            res.data?.message ||
+                            res.error ||
+                            'Failed to fail transaction',
+                          Color: 'red',
+                        });
+                        return;
+                      }
+                      showNotification({
+                        title: 'Success',
+                        message: 'Data Saved',
+                        Color: 'green',
+                      });
+                      await fetchData({ silent: true });
+                    });
+                  }}
+                  disabled={busy}
+                >
+                  Fail
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          );
+        },
       },
     ],
-    [columnFilters, handleFilterChange]
+    [
+      actionLoadingId,
+      columnFilters,
+      fetchData,
+      handleFilterChange,
+      runRowAction,
+    ]
   );
 
   const {
@@ -563,68 +937,10 @@ const TransactionFlagM = () => {
     }
   }, [totalPages, currentPage]);
 
-  const fetchAccounts = async () => {
-    try {
-      const response = await transactionAPI.getMyBankList();
-      if (response.success && response.data) {
-        if ((response.data.status || '').toLowerCase() === 'ok') {
-          setAccounts(response.data.records || []);
-        }
-      }
-    } catch (error) {
-      console.error('Account list fetch error:', error);
-    }
-  };
-
-  const fetchData = async ({ silent = false } = {}) => {
-    silent ? setRefreshing(true) : setLoading(true);
-
-    try {
-      const [accountno = '0', bank = ''] = accountValue.split('||');
-
-      const response = await transactionAPI.getTransactionFlagM({
-        accountno,
-        bank,
-      });
-
-      if (response.success && response.data) {
-        if ((response.data.status || '').toLowerCase() === 'ok') {
-          const records = Array.isArray(response.data.records)
-            ? response.data.records
-            : [];
-          setData(records);
-        } else {
-          showNotification({
-            title: 'Error',
-            message: response.data.message || 'Failed to load data',
-            Color: 'red',
-          });
-          setData([]);
-        }
-      } else {
-        showNotification({
-          title: 'Error',
-          message: response.error || 'Failed to load data',
-          Color: 'red',
-        });
-      }
-    } catch (error) {
-      console.error('Transaction Flag M fetch error:', error);
-      showNotification({
-        title: 'Error',
-        message: 'Unable to load Transaction Flag M',
-        Color: 'red',
-      });
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
   useEffect(() => {
     fetchAccounts();
     fetchData({ silent: true });
-  }, []);
+  }, [fetchAccounts, fetchData]);
 
   const handleReset = () => {
     setAccountValue('0');
@@ -879,14 +1195,14 @@ const TransactionFlagM = () => {
             </Group>
 
             <Group gap="xs">
-              <Button
+              {/* <Button
                 variant="light"
                 size="xs"
                 onClick={handleResetAll}
                 leftSection={<IconRefresh size={14} />}
               >
                 Reset Columns/Sort
-              </Button>
+              </Button> */}
               <Pagination
                 total={totalPages}
                 value={currentPage}

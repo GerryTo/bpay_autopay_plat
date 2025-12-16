@@ -1,9 +1,27 @@
 import Cookies from "js-cookie";
 
+const readStoredLoginUser = () => {
+    try {
+        const cookieUser = Cookies.get("loginUser");
+        if (cookieUser) return JSON.parse(cookieUser);
+    } catch {
+        // ignore invalid cookie JSON
+    }
+
+    try {
+        if (typeof window !== "undefined") {
+            const localUser = window.localStorage.getItem("loginUser");
+            if (localUser) return JSON.parse(localUser);
+        }
+    } catch {
+        // ignore invalid localStorage JSON
+    }
+
+    return null;
+};
+
 export function userReducer(
-    state = Cookies.get("loginUser")
-        ? JSON.parse(Cookies.get("loginUser"))
-        : null,
+    state = readStoredLoginUser(),
     action
 ) {
     switch (action.type) {

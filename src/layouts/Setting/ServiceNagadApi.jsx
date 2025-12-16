@@ -60,6 +60,16 @@ const ServiceNagadApi = () => {
     [data, columnFilters]
   );
 
+  const sortAccessors = useMemo(
+    () => ({
+      user: (item) => item.v_user ?? '',
+      counter: (item) => item.v_atc ?? '',
+      sessionId: (item) => item.v_mpaid ?? '',
+      operator: (item) => item.v_operator ?? '',
+    }),
+    []
+  );
+
   const columns = useMemo(
     () => [
       {
@@ -181,14 +191,28 @@ const ServiceNagadApi = () => {
   const sortedData = useMemo(() => {
     if (!sortConfig) return filteredData;
     const { key, direction } = sortConfig;
+    const accessor = sortAccessors[key];
+    if (!accessor) return filteredData;
+
     const dir = direction === 'desc' ? -1 : 1;
     return [...filteredData].sort((a, b) => {
-      const av = a[key] ?? '';
-      const bv = b[key] ?? '';
+      const avRaw = accessor(a);
+      const bvRaw = accessor(b);
+
+      const avNum = Number(avRaw);
+      const bvNum = Number(bvRaw);
+      const bothNumeric = Number.isFinite(avNum) && Number.isFinite(bvNum);
+      if (bothNumeric) {
+        if (avNum === bvNum) return 0;
+        return avNum > bvNum ? dir : -dir;
+      }
+
+      const av = (avRaw ?? '').toString().toLowerCase();
+      const bv = (bvRaw ?? '').toString().toLowerCase();
       if (av === bv) return 0;
       return av > bv ? dir : -dir;
     });
-  }, [filteredData, sortConfig]);
+  }, [filteredData, sortConfig, sortAccessors]);
 
   const totalPages = Math.ceil(sortedData.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -197,7 +221,7 @@ const ServiceNagadApi = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [columnFilters]);
+  }, [columnFilters, sortConfig]);
 
   useEffect(() => {
     if (currentPage > totalPages) {
