@@ -57,6 +57,7 @@ import DownloadReport from './layouts/Report/DownloadReport';
 import MCO from './layouts/Report/MCO';
 import BlacklistList from './layouts/Report/BlacklistList';
 import SummaryBkashm from './layouts/Report/SummaryBkashm';
+import SpammerTransaction from './layouts/Report/SpammerTransaction';
 import MasterMyBankList from './layouts/MyBank/masterMyBankList';
 import MyBankInactiveList from './layouts/MyBank/myBankInactiveList';
 import ListOnboardAgent from './layouts/MyBank/listOnboardAgent';
@@ -82,6 +83,10 @@ import WithdrawList from './layouts/Withdrawal/WithdrawList';
 import AutomationWithdrawList from './layouts/Withdrawal/AutomationWithdrawList';
 import AppiumWithdrawList from './layouts/Withdrawal/AppiumWithdrawList';
 import AppiumList from './layouts/Crawler/AppiumList';
+import AppiumListHistory from './layouts/Crawler/AppiumListHistory';
+import AppiumListWD from './layouts/Crawler/AppiumListWD';
+import AppiumListAdmin from './layouts/Crawler/AppiumListAdmin';
+import CreateTransactionB2B from './layouts/Crawler/CreateTransactionB2B';
 import AppiumListNotMatch from './layouts/Crawler/AppiumListNotMatch';
 import AppiumWithdrawQueue from './layouts/Crawler/AppiumWithdrawQueue';
 import AccountStatusNew from './layouts/Crawler/AccountStatusNew';
@@ -164,6 +169,34 @@ import CompanyAdjustment from './layouts/Transaction/CompanyAdjustment';
 import CompanyAdjustmentMerchant from './layouts/Transaction/CompanyAdjustmentMerchant';
 import TransactionResubmit from './layouts/Transaction/TransactionResubmit';
 
+export const filterRoutesByRole = (routes, userType) => {
+  if (!userType) return routes;
+
+  const filterLinks = (links) =>
+    links
+      .map((item) => {
+        if (item.roles && !item.roles.includes(userType)) return null;
+
+        if (item.links) {
+          const childLinks = filterLinks(item.links);
+          if (childLinks.length === 0) return null;
+          return { ...item, links: childLinks };
+        }
+
+        return item;
+      })
+      .filter(Boolean);
+
+  return routes
+    .map((section) => {
+      if (section.roles && !section.roles.includes(userType)) return null;
+      const links = filterLinks(section.links || []);
+      if (links.length === 0) return null;
+      return { ...section, links };
+    })
+    .filter(Boolean);
+};
+
 export const mockdataRoutes = [
   {
     title: 'Dashboard',
@@ -174,10 +207,17 @@ export const mockdataRoutes = [
         link: '/dashboard-merchant',
         element: <DashboardMerchant />,
       },
+      {
+        label: 'Agent Status',
+        icon: <IconUsers />,
+        link: '/agent-tracker-dashboard',
+        element: <AgentTrackerDashboard />,
+      },
     ],
   },
   {
     title: 'NEW Quick Menu',
+    roles: ['S'],
     links: [
       {
         label: 'Mybank Inactive Log',
@@ -215,16 +255,11 @@ export const mockdataRoutes = [
         link: '/status-account-crawler-new',
         element: <AccountStatusNew />,
       },
-      {
-        label: 'Agent Tracker Dashboard',
-        icon: <IconUsers />,
-        link: '/agent-tracker-dashboard',
-        element: <AgentTrackerDashboard />,
-      },
     ],
   },
   {
     title: 'Quick Menu',
+    roles: ['A', 'S'],
     links: [
       {
         label: 'Deposit',
@@ -433,6 +468,12 @@ export const mockdataRoutes = [
             icon: <IconTransfer />,
             link: '/find-transaction-member',
             element: '',
+          },
+          {
+            label: 'Spammer Transaction',
+            icon: <IconAlertTriangle />,
+            link: '/costumer-code-flag',
+            element: <SpammerTransaction />,
           },
           {
             label: 'Blacklist List',
@@ -687,6 +728,7 @@ export const mockdataRoutes = [
         label: 'Merchant Master',
         icon: <IconShoppingCart />,
         link: '/master-merchant-superadmin',
+        roles: ['S'],
         element: <MerchantMaster />,
       },
       {
@@ -748,30 +790,30 @@ export const mockdataRoutes = [
         link: '/deposit-pending',
         element: <DepositPending />,
       },
-      {
-        label: 'Deposit Queue Today',
-        icon: <IconArrowDownCircle />,
-        link: '/deposit-queue-today',
-        element: <DepositQueueToday />,
-      },
-      {
-        label: 'Deposit Queue Today BDT',
-        icon: <IconArrowDownCircle />,
-        link: '/deposit-queue-today-bdt',
-        element: <DepositQueueTodayBDT />,
-      },
-      {
-        label: 'Deposit Queue Unmatched by Date',
-        icon: <IconArrowDownCircle />,
-        link: '/deposit-queue',
-        element: <DepositQueue />,
-      },
-      {
-        label: 'Deposit Queue Alert',
-        icon: <IconAlertTriangle />,
-        link: '/deposit-queue-alert',
-        element: <DepositQueueAlert />,
-      },
+      // {
+      //   label: 'Deposit Queue Today',
+      //   icon: <IconArrowDownCircle />,
+      //   link: '/deposit-queue-today',
+      //   element: <DepositQueueToday />,
+      // },
+      // {
+      //   label: 'Deposit Queue Today BDT',
+      //   icon: <IconArrowDownCircle />,
+      //   link: '/deposit-queue-today-bdt',
+      //   element: <DepositQueueTodayBDT />,
+      // },
+      // {
+      //   label: 'Deposit Queue Unmatched by Date',
+      //   icon: <IconArrowDownCircle />,
+      //   link: '/deposit-queue',
+      //   element: <DepositQueue />,
+      // },
+      // {
+      //   label: 'Deposit Queue Alert',
+      //   icon: <IconAlertTriangle />,
+      //   link: '/deposit-queue-alert',
+      //   element: <DepositQueueAlert />,
+      // },
     ],
   },
   {
@@ -825,18 +867,18 @@ export const mockdataRoutes = [
         link: '/withdraw-ntc-filter-selected',
         element: <WithdrawCheckFilterSelected />,
       },
-      {
-        label: 'Setting',
-        icon: <IconSettings />,
-        link: '/withdraw-bank',
-        element: <WithdrawAllowedBank />,
-      },
-      {
-        label: 'Merchant Transaction Withdrawal',
-        icon: <IconShoppingCart />,
-        link: '/transaction-merchant-withdraw',
-        element: <MerchantTransactionWithdraw />,
-      },
+      // {
+      //   label: 'Setting',
+      //   icon: <IconSettings />,
+      //   link: '/withdraw-bank',
+      //   element: <WithdrawAllowedBank />,
+      // },
+      // {
+      //   label: 'Merchant Transaction Withdrawal',
+      //   icon: <IconShoppingCart />,
+      //   link: '/transaction-merchant-withdraw',
+      //   element: <MerchantTransactionWithdraw />,
+      // },
       {
         label: 'Assignment',
         icon: <IconUserShield />,
@@ -849,18 +891,18 @@ export const mockdataRoutes = [
         link: '/withdraw-ntc-assign-selected',
         element: <WithdrawAssignmentBulk />,
       },
-      {
-        label: 'Assignment Pending',
-        icon: <IconUserShield />,
-        link: '/assignment-pending',
-        element: <WithdrawAssignmentPending />,
-      },
-      {
-        label: 'Withdraw Queue',
-        icon: <IconArrowUpCircle />,
-        link: '/withdraw-queue',
-        element: <WithdrawQueue />,
-      },
+      // {
+      //   label: 'Assignment Pending',
+      //   icon: <IconUserShield />,
+      //   link: '/assignment-pending',
+      //   element: <WithdrawAssignmentPending />,
+      // },
+      // {
+      //   label: 'Withdraw Queue',
+      //   icon: <IconArrowUpCircle />,
+      //   link: '/withdraw-queue',
+      //   element: <WithdrawQueue />,
+      // },
     ],
   },
   {
@@ -1026,6 +1068,7 @@ export const mockdataRoutes = [
   },
   {
     title: 'SMS',
+    roles: ['A', 'S'],
     links: [
       {
         label: 'SMS Log by Id',
@@ -1033,12 +1076,12 @@ export const mockdataRoutes = [
         link: '/smslog-by-id',
         element: <SmsLogById />,
       },
-      {
-        label: 'SMS Criteria not Matching by Id',
-        icon: <IconMessage />,
-        link: '/sms-criteria-not-matching-by-id',
-        element: <SmsCriteriaNotMatchingById />,
-      },
+      // {
+      //   label: 'SMS Criteria not Matching by Id',
+      //   icon: <IconMessage />,
+      //   link: '/sms-criteria-not-matching-by-id',
+      //   element: <SmsCriteriaNotMatchingById />,
+      // },
       {
         label: 'SMS Log',
         icon: <IconMessage />,
@@ -1051,48 +1094,50 @@ export const mockdataRoutes = [
         link: '/sms-log-backup',
         element: <SmsLogBackup />,
       },
-      {
-        label: 'SMS Log by Balance Diff',
-        icon: <IconMessage />,
-        link: '/sms-log-by-balance-diff',
-        element: <SmsLogByBalanceDiff />,
-      },
-      {
-        label: 'SMS Log by Customer Phone',
-        icon: <IconMessage />,
-        link: '/sms-log-by-customer-phone',
-        element: <SmsLogByCustomerPhone />,
-      },
-      {
-        label: 'Suspected SMS',
-        icon: <IconAlertTriangle />,
-        link: '/suspected-sms',
-        element: <SuspectedSms />,
-      },
-      {
-        label: 'Suspected Customer',
-        icon: <IconAlertTriangle />,
-        link: '/suspected-customer',
-        element: <SuspectedCustomer />,
-      },
+      // {
+      //   label: 'SMS Log by Balance Diff',
+      //   icon: <IconMessage />,
+      //   link: '/sms-log-by-balance-diff',
+      //   element: <SmsLogByBalanceDiff />,
+      // },
+      // {
+      //   label: 'SMS Log by Customer Phone',
+      //   icon: <IconMessage />,
+      //   link: '/sms-log-by-customer-phone',
+      //   element: <SmsLogByCustomerPhone />,
+      // },
+      // {
+      //   label: 'Suspected SMS',
+      //   icon: <IconAlertTriangle />,
+      //   link: '/suspected-sms',
+      //   element: <SuspectedSms />,
+      // },
+      // {
+      //   label: 'Suspected Customer',
+      //   icon: <IconAlertTriangle />,
+      //   link: '/suspected-customer',
+      //   element: <SuspectedCustomer />,
+      // },
       {
         label: 'SMS Failed Match',
         icon: <IconMessage />,
         link: '/sms-failed-match',
+        roles: ['S'],
         element: <SmsFailedMatch />,
       },
       {
         label: 'SMS Failed Match by Not Match Sameday',
         icon: <IconMessage />,
         link: '/sms-failed-match-by-notmatchsameday',
+        roles: ['S'],
         element: <SmsFailedMatchByNotMatchSameday />,
       },
-      {
-        label: 'Duplicate SMS',
-        icon: <IconMessage />,
-        link: '/duplicate-sms',
-        element: <DuplicateSms />,
-      },
+      // {
+      //   label: 'Duplicate SMS',
+      //   icon: <IconMessage />,
+      //   link: '/duplicate-sms',
+      //   element: <DuplicateSms />,
+      // },
       {
         label: 'SMS Log History',
         icon: <IconFileText />,
@@ -1117,12 +1162,12 @@ export const mockdataRoutes = [
         link: '/report-sms',
         element: <ReportSms />,
       },
-      {
-        label: 'Phone Whitelist',
-        icon: <IconUserShield />,
-        link: '/phone-whitelist',
-        element: <PhoneWhitelist />,
-      },
+      // {
+      //   label: 'Phone Whitelist',
+      //   icon: <IconUserShield />,
+      //   link: '/phone-whitelist',
+      //   element: <PhoneWhitelist />,
+      // },
       {
         label: 'Service Center Whitelist',
         icon: <IconUserShield />,
@@ -1133,6 +1178,7 @@ export const mockdataRoutes = [
   },
   {
     title: 'Crawler',
+    roles: ['A', 'S'],
     links: [
       {
         label: 'Crawler List',
@@ -1141,39 +1187,69 @@ export const mockdataRoutes = [
         element: <AppiumList />,
       },
       {
+        label: 'Crawler History List',
+        icon: <IconRobot />,
+        link: '/automation-list-h',
+        element: <AppiumListHistory />,
+      },
+      {
+        label: 'Crawler List WD',
+        icon: <IconRobot />,
+        link: '/appium-list-wd-new',
+        element: <AppiumListWD />,
+      },
+      {
+        label: 'Crawler List WD Admin',
+        icon: <IconRobot />,
+        link: '/crawler-list-admin',
+        element: <AppiumListAdmin />,
+      },
+      {
+        label: 'Create Transaction B2B',
+        icon: <IconRobot />,
+        link: '/create-transaction-b2b',
+        element: <CreateTransactionB2B />,
+      },
+      {
         label: 'Crawler List Not Match',
         icon: <IconRobot />,
         link: '/appium-list-not-match',
+        roles: ['S'],
         element: <AppiumListNotMatch />,
       },
       {
         label: 'Withdraw Queue',
         icon: <IconArrowUpCircle />,
         link: '/crawler-wd-queue',
+        roles: ['S'],
         element: <AppiumWithdrawQueue />,
       },
       {
         label: 'Account Status New',
         icon: <IconSettings />,
         link: '/status-account-crawler-new',
+        roles: ['S'],
         element: '',
       },
       {
         label: 'Automation Error',
         icon: <IconAlertTriangle />,
         link: '/automation-error-list',
+        roles: ['S'],
         element: <AutomationError />,
       },
       {
         label: 'Error Log',
         icon: <IconAlertTriangle />,
         link: '/crawler-errorlog',
+        roles: ['S'],
         element: <AppiumErrorLog />,
       },
       {
         label: 'List Agent Failed Summary',
         icon: <IconFileText />,
         link: '/list-agent-failed-summary',
+        roles: ['S'],
         element: <ListAgentFailedSummary />,
       },
       {
@@ -1186,6 +1262,7 @@ export const mockdataRoutes = [
         label: 'Agent Summary',
         icon: <IconReportMoney />,
         link: '/agent-summary',
+        roles: ['S'],
         element: <AgentSummary />,
       },
       {
@@ -1198,6 +1275,7 @@ export const mockdataRoutes = [
         label: 'Report Difference',
         icon: <IconReportMoney />,
         link: '/report-difference',
+        roles: ['S'],
         element: <ReportDifference />,
       },
       {
@@ -1210,6 +1288,7 @@ export const mockdataRoutes = [
   },
   {
     title: 'Settlement',
+    roles: ['A', 'S'],
     links: [
       {
         label: 'Settlement & Topup',
@@ -1233,6 +1312,7 @@ export const mockdataRoutes = [
   },
   {
     title: 'Settings',
+    roles: ['A', 'S'],
     links: [
       {
         label: 'Update Group',
@@ -1292,30 +1372,35 @@ export const mockdataRoutes = [
         label: 'Emergency Deposit Page',
         icon: <IconAlertTriangle />,
         link: '/emergency-deposit-page',
+        roles: ['S'],
         element: <EmergencyDeposit />,
       },
       {
         label: 'Service Selenium List',
         icon: <IconRobot />,
         link: '/service-selenium-list',
+        roles: ['S'],
         element: <ServiceSeleniumList />,
       },
       {
         label: 'Service NAGAD API',
         icon: <IconSettings />,
         link: '/service-nagad-api',
+        roles: ['S'],
         element: <ServiceNagadApi />,
       },
       {
         label: 'Service BKASH API',
         icon: <IconSettings />,
         link: '/service-bkash-api',
+        roles: ['S'],
         element: <ServiceBkashApi />,
       },
       {
         label: 'Service Resend Callback',
         icon: <IconBrandTelegram />,
         link: '/service-resend-callback',
+        roles: ['S'],
         element: <ServiceResendCallback />,
       },
     ],

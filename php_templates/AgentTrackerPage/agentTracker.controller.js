@@ -22,6 +22,9 @@ app.controller("agentTrackerCtrl", [
         // Bank summary data
         $scope.bankStats = [];
 
+        // Offline reason options
+        $scope.offlineReasonOptions = ['PIN LOCK', 'MAX OTP', 'OTP OFFLINE'];
+
         // Auto refresh interval (10 seconds)
         var refreshInterval = null;
         var REFRESH_INTERVAL_MS = 10000;
@@ -36,61 +39,94 @@ app.controller("agentTrackerCtrl", [
             exporterExcelFilename: "AgentTracker.xlsx",
             exporterExcelSheetName: "Agents",
             enableFiltering: true,
+            enableRowSelection: true,
+            enableSelectAll: true,
+            selectionRowHeaderWidth: 35,
             rowTemplate: '<div ng-class="{\'offline-row\': !row.entity.isOnline}" ng-repeat="(colRenderIndex, col) in colContainer.renderedColumns track by col.uid" ui-grid-one-bind-id-grid="rowRenderIndex + \'-\' + col.uid + \'-cell\'" class="ui-grid-cell" ng-class="{ \'ui-grid-row-header-cell\': col.isRowHeader }" role="gridcell" ui-grid-cell></div>',
             columnDefs: [
                 {
                     name: "Status",
                     field: "isOnline",
-                    width: 100,
-                    cellTemplate: '<div class="ui-grid-cell-contents" ng-style="{\'backgroundColor\': row.entity.isOnline ? \'#10b981\' : \'#ef4444\', \'color\': \'white\', \'textAlign\': \'center\'}">{{row.entity.isOnline ? "ONLINE" : "OFFLINE"}}</div>'
+                    width: 90,
+                    cellTemplate: '<div class="ui-grid-cell-contents" ng-style="{\'backgroundColor\': row.entity.isOnline ? \'#10b981\' : \'#ef4444\', \'color\': \'white\', \'textAlign\': \'center\', \'fontWeight\': \'bold\', \'fontSize\': \'11px\'}">{{row.entity.isOnline ? "ONLINE" : "OFFLINE"}}</div>'
+                },
+                {
+                    name: "Offline Duration",
+                    field: "offlineDuration.text",
+                    width: 120,
+                    cellTemplate: '<div class="ui-grid-cell-contents" ng-style="{\'color\': !row.entity.isOnline ? \'#ef4444\' : \'#9ca3af\', \'fontWeight\': !row.entity.isOnline ? \'bold\' : \'normal\'}">{{row.entity.isOnline ? "-" : row.entity.offlineDuration.text}}</div>',
+                    sortingAlgorithm: function(a, b, rowA, rowB) {
+                        var secA = rowA.entity.offlineDuration ? rowA.entity.offlineDuration.seconds : 0;
+                        var secB = rowB.entity.offlineDuration ? rowB.entity.offlineDuration.seconds : 0;
+                        return secA - secB;
+                    }
+                },
+                {
+                    name: "Disconnect Today",
+                    field: "disconnectCountToday",
+                    width: 120,
+                    cellTemplate: '<div class="ui-grid-cell-contents" style="text-align: center;"><span class="badge" ng-class="{\'badge-danger\': row.entity.disconnectCountToday > 3, \'badge-warning\': row.entity.disconnectCountToday > 1 && row.entity.disconnectCountToday <= 3, \'badge-success\': row.entity.disconnectCountToday <= 1}">{{row.entity.disconnectCountToday || 0}}</span></div>'
+                },
+                {
+                    name: "Offline Reason",
+                    field: "offlineReason",
+                    width: 120,
+                    cellTemplate: '<div class="ui-grid-cell-contents"><span ng-if="row.entity.offlineReason" class="badge" ng-class="grid.appScope.getReasonBadgeClass(row.entity.offlineReason)">{{row.entity.offlineReason}}</span><span ng-if="!row.entity.offlineReason && !row.entity.isOnline" style="color: #9ca3af;">-</span></div>'
                 },
                 {
                     name: "Bank Code",
                     field: "bankcode",
-                    width: 120
+                    width: 100
                 },
                 {
                     name: "Username",
                     field: "username",
-                    width: 150
+                    width: 140
                 },
                 {
                     name: "Account No",
                     field: "accountNo",
-                    width: 150
+                    width: 140
                 },
                 {
                     name: "State",
                     field: "state",
-                    width: 120,
+                    width: 100,
                     cellTemplate: '<div class="ui-grid-cell-contents"><span class="badge" ng-class="grid.appScope.getStateBadgeClass(row.entity.state)">{{row.entity.state || "IDLE"}}</span></div>'
                 },
                 {
                     name: "Last Heartbeat",
                     field: "lastHeartbeat",
-                    width: 180
+                    width: 150
                 },
                 {
-                    name: "Last Trx Success",
+                    name: "Last Trx",
                     field: "lastTransactionSuccess",
-                    width: 180,
-                    cellTemplate: '<div class="ui-grid-cell-contents">{{row.entity.lastTransactionSuccess || "-"}}</div>'
-                },
-                {
-                    name: "Last Trx ID",
-                    field: "lastTransactionId",
                     width: 150,
-                    cellTemplate: '<div class="ui-grid-cell-contents">{{row.entity.lastTransactionId || "-"}}</div>'
+                    cellTemplate: '<div class="ui-grid-cell-contents">{{row.entity.lastTransactionSuccess || "-"}}</div>'
                 },
                 {
                     name: "Action",
                     field: "action",
-                    width: 100,
+                    width: 120,
                     enableFiltering: false,
-                    cellTemplate: '<button type="button" class="btn btn-info btn-sm" ng-click="grid.appScope.viewDetail(row.entity)"><i class="fa fa-eye"></i> Detail</button>'
+                    cellTemplate: '<div class="ui-grid-cell-contents"><button type="button" class="btn btn-info btn-xs" ng-click="grid.appScope.viewDetail(row.entity)" style="margin-right:3px;" title="View Detail"><i class="fa fa-eye"></i></button><button type="button" class="btn btn-warning btn-xs" ng-click="grid.appScope.openReasonModal(row.entity)" ng-show="!row.entity.isOnline" title="Mark Reason"><i class="fa fa-tag"></i></button></div>'
                 }
             ],
-            data: []
+            data: [],
+            onRegisterApi: function(gridApi) {
+                $scope.gridApi = gridApi;
+            }
+        };
+
+        // Get reason badge class
+        $scope.getReasonBadgeClass = function(reason) {
+            var reasonMap = {
+                'PIN LOCK': 'badge-danger',
+                'MAX OTP': 'badge-warning',
+                'OTP OFFLINE': 'badge-info'
+            };
+            return reasonMap[reason] || 'badge-secondary';
         };
 
         // Get state badge class
@@ -147,13 +183,12 @@ app.controller("agentTrackerCtrl", [
                     $scope.gridIsLoading = false;
                     var data = response.data;
                     if (data.status === 'success') {
-                        // Convert object to array
                         var agents = [];
                         angular.forEach(data.data.agents, function(agent, key) {
+                            agent.agentKey = key;
                             agents.push(agent);
                         });
 
-                        // Apply filter
                         $scope.allAgents = agents;
                         $scope.applyFilter();
                         $scope.lastUpdate = data.data.lastUpdate;
@@ -175,21 +210,20 @@ app.controller("agentTrackerCtrl", [
         $scope.applyFilter = function() {
             var filtered = $scope.allAgents;
 
-            // Filter by status
             if ($scope.selectedFilter === 'online') {
                 filtered = filtered.filter(function(a) { return a.isOnline; });
             } else if ($scope.selectedFilter === 'offline') {
                 filtered = filtered.filter(function(a) { return !a.isOnline; });
             }
 
-            // Filter by search term
             if ($scope.searchTerm) {
                 var search = $scope.searchTerm.toLowerCase();
                 filtered = filtered.filter(function(a) {
                     return (a.username && a.username.toLowerCase().indexOf(search) !== -1) ||
                            (a.accountNo && a.accountNo.toLowerCase().indexOf(search) !== -1) ||
                            (a.bankcode && a.bankcode.toLowerCase().indexOf(search) !== -1) ||
-                           (a.state && a.state.toLowerCase().indexOf(search) !== -1);
+                           (a.state && a.state.toLowerCase().indexOf(search) !== -1) ||
+                           (a.offlineReason && a.offlineReason.toLowerCase().indexOf(search) !== -1);
                 });
             }
 
@@ -247,6 +281,154 @@ app.controller("agentTrackerCtrl", [
             $scope.selectedAgent = null;
         };
 
+        // Open reason modal for single agent
+        $scope.openReasonModal = function(agent) {
+            $scope.reasonModalAgent = agent;
+            $scope.reasonModalMode = 'single';
+            $scope.selectedReason = agent.offlineReason || '';
+            $scope.showReasonModal = true;
+        };
+
+        // Open bulk reason modal
+        $scope.openBulkReasonModal = function() {
+            var selected = $scope.gridApi.selection.getSelectedRows();
+            var offlineSelected = selected.filter(function(a) { return !a.isOnline; });
+            
+            if (offlineSelected.length === 0) {
+                alert('Please select at least one offline agent');
+                return;
+            }
+            
+            $scope.bulkSelectedAgents = offlineSelected;
+            $scope.reasonModalMode = 'bulk';
+            $scope.selectedReason = '';
+            $scope.showReasonModal = true;
+        };
+
+        // Close reason modal
+        $scope.closeReasonModal = function() {
+            $scope.showReasonModal = false;
+            $scope.reasonModalAgent = null;
+            $scope.bulkSelectedAgents = [];
+            $scope.selectedReason = '';
+        };
+
+        // Set offline reason
+        $scope.setOfflineReason = function(reason) {
+            $scope.selectedReason = reason;
+        };
+
+        // Save offline reason
+        $scope.saveOfflineReason = function() {
+            if ($scope.reasonModalMode === 'single') {
+                $http({
+                    method: "POST",
+                    url: webservicesUrl + "/AgentTrackerAPI.php",
+                    data: {
+                        action: 'setOfflineReason',
+                        bankcode: $scope.reasonModalAgent.bankcode,
+                        accountNo: $scope.reasonModalAgent.accountNo,
+                        reason: $scope.selectedReason
+                    }
+                }).then(
+                    function mySuccess(response) {
+                        if (response.data.status === 'success') {
+                            $scope.reasonModalAgent.offlineReason = $scope.selectedReason;
+                            $scope.closeReasonModal();
+                            $scope.refresh();
+                        } else {
+                            alert("Error: " + response.data.message);
+                        }
+                    },
+                    function myError(response) {
+                        alert("Failed to update offline reason");
+                    }
+                );
+            } else {
+                var agentKeys = $scope.bulkSelectedAgents.map(function(a) {
+                    return a.bankcode + '-' + a.accountNo;
+                });
+                
+                $http({
+                    method: "POST",
+                    url: webservicesUrl + "/AgentTrackerAPI.php",
+                    data: {
+                        action: 'bulkSetOfflineReason',
+                        agentKeys: agentKeys,
+                        reason: $scope.selectedReason
+                    }
+                }).then(
+                    function mySuccess(response) {
+                        if (response.data.status === 'success') {
+                            $scope.closeReasonModal();
+                            $scope.refresh();
+                        } else {
+                            alert("Error: " + response.data.message);
+                        }
+                    },
+                    function myError(response) {
+                        alert("Failed to update offline reasons");
+                    }
+                );
+            }
+        };
+
+        // Clear offline reason (single)
+        $scope.clearOfflineReason = function() {
+            $http({
+                method: "POST",
+                url: webservicesUrl + "/AgentTrackerAPI.php",
+                data: {
+                    action: 'setOfflineReason',
+                    bankcode: $scope.reasonModalAgent.bankcode,
+                    accountNo: $scope.reasonModalAgent.accountNo,
+                    reason: ''
+                }
+            }).then(
+                function mySuccess(response) {
+                    if (response.data.status === 'success') {
+                        $scope.reasonModalAgent.offlineReason = '';
+                        $scope.closeReasonModal();
+                        $scope.refresh();
+                    } else {
+                        alert("Error: " + response.data.message);
+                    }
+                },
+                function myError(response) {
+                    alert("Failed to clear offline reason");
+                }
+            );
+        };
+
+        // Bulk clear offline reason
+        $scope.bulkClearOfflineReason = function() {
+            var agentKeys = $scope.bulkSelectedAgents.map(function(a) {
+                return a.bankcode + '-' + a.accountNo;
+            });
+            
+            $http({
+                method: "POST",
+                url: webservicesUrl + "/AgentTrackerAPI.php",
+                data: {
+                    action: 'bulkSetOfflineReason',
+                    agentKeys: agentKeys,
+                    reason: ''
+                }
+            }).then(
+                function mySuccess(response) {
+                    if (response.data.status === 'success') {
+                        $scope.closeReasonModal();
+                        $scope.refresh();
+                    } else {
+                        alert("Error: " + response.data.message);
+                    }
+                },
+                function myError(response) {
+                    alert("Failed to clear offline reasons");
+                }
+            );
+        };
+
         // Refresh data
         $scope.refresh = function() {
             $scope.getDashboardStats();
@@ -284,11 +466,24 @@ app.controller("agentTrackerCtrl", [
             return 0;
         };
 
+        // Get offline agents without reason count
+        $scope.getUnmarkedOfflineCount = function() {
+            if (!$scope.allAgents) return 0;
+            return $scope.allAgents.filter(function(a) { 
+                return !a.isOnline && !a.offlineReason; 
+            }).length;
+        };
+
         // Initialize
         $scope.init = function() {
             $scope.selectedBank = null;
             $scope.showDetailModal = false;
+            $scope.showReasonModal = false;
             $scope.selectedAgent = null;
+            $scope.reasonModalAgent = null;
+            $scope.reasonModalMode = 'single';
+            $scope.bulkSelectedAgents = [];
+            $scope.selectedReason = '';
 
             $scope.getDashboardStats();
             $scope.getAgentsData();

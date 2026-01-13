@@ -14,9 +14,9 @@ import {
   Tooltip,
 } from '@mantine/core';
 import { IconLogout, IconChevronDown } from '@tabler/icons-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { mockdataRoutes } from '../../routes';
+import { filterRoutesByRole, mockdataRoutes } from '../../routes';
 import logo from '../../assets/C_logo.png';
 import { useDispatch, useSelector } from 'react-redux';
 import { addBreadcrumbs } from '../../reducers/userReducer';
@@ -32,6 +32,15 @@ const NavigationSection = ({ opened, toggle }) => {
   const activeLink = breadcrumbState.activeLink || location.pathname;
   const [openedLinks, setOpenedLinks] = useState({});
   const [openedSections, setOpenedSections] = useState({});
+  const loginUserType =
+    loginUser?.type ??
+    loginUser?.userType ??
+    loginUser?.usertype ??
+    loginUser?.role;
+  const filteredRoutes = useMemo(
+    () => filterRoutesByRole(mockdataRoutes, loginUserType),
+    [loginUserType]
+  );
 
   function handleLogout() {
     try {
@@ -92,7 +101,7 @@ const NavigationSection = ({ opened, toggle }) => {
   };
 
   useEffect(() => {
-    const navInfo = findNavigationItem(mockdataRoutes, location.pathname);
+    const navInfo = findNavigationItem(filteredRoutes, location.pathname);
     if (navInfo) {
       const breadcrumbs = buildBreadcrumbs(navInfo);
       dispatch(
@@ -104,7 +113,7 @@ const NavigationSection = ({ opened, toggle }) => {
         })
       );
     }
-  }, [location.pathname, dispatch]);
+  }, [location.pathname, dispatch, filteredRoutes]);
 
   const buildBreadcrumbs = (navInfo) => {
     const breadcrumbs = [];
@@ -138,7 +147,7 @@ const NavigationSection = ({ opened, toggle }) => {
   };
 
   const handleNavClick = (link, label) => {
-    const navInfo = findNavigationItem(mockdataRoutes, link);
+    const navInfo = findNavigationItem(filteredRoutes, link);
     if (navInfo) {
       const breadcrumbs = buildBreadcrumbs(navInfo);
       dispatch(
@@ -427,90 +436,92 @@ const NavigationSection = ({ opened, toggle }) => {
                         </>
                     )} */}
 
-          {mockdataRoutes
+          {filteredRoutes
             .filter((dt) => !dt.hidden) // Filter out hidden sections
             .map((dt, i) => {
-            const isSectionOpen = openedSections[dt.title] === true;
-            const menuCount = dt.links.length;
-            return (
-              <Box key={dt.title}>
-                <Tooltip
-                  label={
-                    isSectionOpen ? 'Click to collapse' : 'Click to expand'
-                  }
-                  position="right"
-                  withArrow
-                >
-                  <Group
-                    gap="xs"
-                    px="md"
-                    mb="xs"
-                    justify="space-between"
-                    style={{
-                      cursor: 'pointer',
-                      padding: '6px 12px',
-                      borderRadius: '8px',
-                      transition: 'all 200ms ease',
-                    }}
-                    onClick={() => toggleSection(dt.title)}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor =
-                        'var(--mantine-color-gray-1)';
-                      e.currentTarget.style.transform = 'translateX(2px)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                      e.currentTarget.style.transform = 'translateX(0)';
-                    }}
+              const isSectionOpen = openedSections[dt.title] === true;
+              const menuCount = dt.links.length;
+              return (
+                <Box key={dt.title}>
+                  <Tooltip
+                    label={
+                      isSectionOpen ? 'Click to collapse' : 'Click to expand'
+                    }
+                    position="right"
+                    withArrow
                   >
-                    <Group gap="sm">
-                      <Text
-                        size="11px"
-                        tt="uppercase"
-                        fw={600}
-                        style={{
-                          letterSpacing: '0.5px',
-                          color: '#495057',
-                        }}
-                      >
-                        {dt.title}
-                      </Text>
-                      <Badge
-                        size="sm"
-                        variant="light"
-                        color={isSectionOpen ? 'blue' : 'gray'}
-                        style={{
-                          fontWeight: 500,
-                          minWidth: '28px',
-                          height: '20px',
-                          paddingLeft: '8px',
-                          paddingRight: '8px',
-                          fontSize: '11px',
-                        }}
-                      >
-                        {menuCount}
-                      </Badge>
-                    </Group>
-                    <IconChevronDown
-                      size="1rem"
+                    <Group
+                      gap="xs"
+                      px="md"
+                      mb="xs"
+                      justify="space-between"
                       style={{
-                        transform: isSectionOpen
-                          ? 'rotate(0deg)'
-                          : 'rotate(-90deg)',
-                        transition: 'transform 200ms ease',
-                        color: '#868e96',
+                        cursor: 'pointer',
+                        padding: '6px 12px',
+                        borderRadius: '8px',
+                        transition: 'all 200ms ease',
                       }}
-                    />
-                  </Group>
-                </Tooltip>
-                <Collapse in={isSectionOpen}>
-                  <Stack gap={2}>
-                    {dt.links.map((dt) => renderNavLink(dt))}
-                  </Stack>
-                </Collapse>
-                {i < mockdataRoutes.filter((dt) => !dt.hidden).length - 1 && <Divider mt="sm" />}
-              </Box>
-            );
+                      onClick={() => toggleSection(dt.title)}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor =
+                          'var(--mantine-color-gray-1)';
+                        e.currentTarget.style.transform = 'translateX(2px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.transform = 'translateX(0)';
+                      }}
+                    >
+                      <Group gap="sm">
+                        <Text
+                          size="11px"
+                          tt="uppercase"
+                          fw={600}
+                          style={{
+                            letterSpacing: '0.5px',
+                            color: '#495057',
+                          }}
+                        >
+                          {dt.title}
+                        </Text>
+                        <Badge
+                          size="sm"
+                          variant="light"
+                          color={isSectionOpen ? 'blue' : 'gray'}
+                          style={{
+                            fontWeight: 500,
+                            minWidth: '28px',
+                            height: '20px',
+                            paddingLeft: '8px',
+                            paddingRight: '8px',
+                            fontSize: '11px',
+                          }}
+                        >
+                          {menuCount}
+                        </Badge>
+                      </Group>
+                      <IconChevronDown
+                        size="1rem"
+                        style={{
+                          transform: isSectionOpen
+                            ? 'rotate(0deg)'
+                            : 'rotate(-90deg)',
+                          transition: 'transform 200ms ease',
+                          color: '#868e96',
+                        }}
+                      />
+                    </Group>
+                  </Tooltip>
+                  <Collapse in={isSectionOpen}>
+                    <Stack gap={2}>
+                      {dt.links.map((dt) => renderNavLink(dt))}
+                    </Stack>
+                  </Collapse>
+                  {i < filteredRoutes.filter((dt) => !dt.hidden).length - 1 && (
+                    <Divider mt="sm" />
+                  )}
+                </Box>
+              );
           })}
 
           {/* Log Out */}

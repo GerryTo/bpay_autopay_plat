@@ -12,19 +12,32 @@ import {
   Table,
   Text,
   TextInput,
+  Popover,
 } from '@mantine/core';
-import { DatePickerInput } from '@mantine/dates';
 import {
   IconFilter,
   IconMessage,
   IconRefresh,
   IconSearch,
+  IconCalendar,
 } from '@tabler/icons-react';
 import dayjs from 'dayjs';
+import { DateRangePicker } from 'react-date-range';
+import { format } from 'date-fns';
+import 'react-date-range/dist/styles.css';
+import 'react-date-range/dist/theme/default.css';
 import ColumnActionMenu from '../../components/ColumnActionMenu';
 import { smsAPI } from '../../helper/api';
 import { showNotification } from '../../helper/showNotification';
 import { useTableControls } from '../../hooks/useTableControls';
+
+const buildDefaultRange = () => [
+  {
+    startDate: new Date(),
+    endDate: new Date(),
+    key: 'selection',
+  },
+];
 
 const typeOptions = [
   { value: '0', label: 'All' },
@@ -66,8 +79,8 @@ const formatNumber = (value) => {
 };
 
 const SmsLog = () => {
-  const [fromDate, setFromDate] = useState(new Date());
-  const [toDate, setToDate] = useState(new Date());
+  const [dateRange, setDateRange] = useState(buildDefaultRange());
+  const [datePickerOpened, setDatePickerOpened] = useState(false);
   const [type, setType] = useState('2');
   const [user, setUser] = useState('');
   const [phoneUsers, setPhoneUsers] = useState([]);
@@ -91,8 +104,7 @@ const SmsLog = () => {
 
   const handleResetAllFilters = () => {
     handleClearFilters();
-    setFromDate(new Date());
-    setToDate(new Date());
+    setDateRange(buildDefaultRange());
     setType('2');
     setUser('');
     setData([]);
@@ -619,17 +631,29 @@ const SmsLog = () => {
   }, []);
 
   const fetchData = async ({ silent = false } = {}) => {
-    if (!fromDate || !toDate) {
+    const start = dateRange?.[0]?.startDate;
+    const end = dateRange?.[0]?.endDate;
+
+    if (!start || !end) {
       showNotification({
         title: 'Validation',
-        message: 'Please select From and To dates',
+        message: 'Please select a date range',
         color: 'yellow',
       });
       return;
     }
 
-    const from = `${dayjs(fromDate).format('YYYY-MM-DD')} 00:00:00`;
-    const to = `${dayjs(toDate).format('YYYY-MM-DD')} 23:59:59`;
+    if (dayjs(end).isBefore(dayjs(start), 'day')) {
+      showNotification({
+        title: 'Validation',
+        message: 'End date cannot be before start date',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const from = `${dayjs(start).format('YYYY-MM-DD')} 00:00:00`;
+    const to = `${dayjs(end).format('YYYY-MM-DD')} 23:59:59`;
 
     silent ? setRefreshing(true) : setLoading(true);
 
@@ -853,26 +877,41 @@ const SmsLog = () => {
             shadow="xs"
           >
             <Group
-              align="flex-end"
-              gap="md"
-              wrap="wrap"
-            >
-              <DatePickerInput
-                label="From Date"
-                placeholder="Select from date"
-                value={fromDate}
-                onChange={setFromDate}
-                valueFormat="YYYY-MM-DD"
-                style={{ minWidth: 200 }}
-              />
-              <DatePickerInput
-                label="To Date"
-                placeholder="Select to date"
-                value={toDate}
-                onChange={setToDate}
-                valueFormat="YYYY-MM-DD"
-                style={{ minWidth: 200 }}
-              />
+            align="flex-end"
+            gap="md"
+            wrap="wrap"
+          >
+              <Popover
+                position="bottom-start"
+                opened={datePickerOpened}
+                onChange={setDatePickerOpened}
+                width="auto"
+                withArrow
+                shadow="md"
+              >
+                <Popover.Target>
+                  <Button
+                    variant="light"
+                    color="blue"
+                    leftSection={<IconCalendar size={18} />}
+                    onClick={() => setDatePickerOpened((o) => !o)}
+                  >
+                    {format(dateRange[0].startDate, 'dd MMM yyyy')} -{' '}
+                    {format(dateRange[0].endDate, 'dd MMM yyyy')}
+                  </Button>
+                </Popover.Target>
+                <Popover.Dropdown p="sm">
+                  <DateRangePicker
+                    onChange={(ranges) => {
+                      const selection = ranges.selection;
+                      setDateRange([selection]);
+                    }}
+                    moveRangeOnFirstSelection={false}
+                    ranges={dateRange}
+                    maxDate={new Date()}
+                  />
+                </Popover.Dropdown>
+              </Popover>
               <Select
                 label="Type"
                 data={typeOptions}

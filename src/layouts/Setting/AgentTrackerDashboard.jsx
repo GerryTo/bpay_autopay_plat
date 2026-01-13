@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   Card,
+  Checkbox,
   Divider,
   Group,
   LoadingOverlay,
@@ -33,6 +34,7 @@ import ColumnActionMenu from '../../components/ColumnActionMenu';
 
 const defaultFilters = {
   isOnline: '',
+  offlineReason: '',
   bankcode: '',
   username: '',
   accountNo: '',
@@ -46,6 +48,12 @@ const statusFilterOptions = [
   { value: 'all', label: 'All' },
   { value: 'online', label: 'Online' },
   { value: 'offline', label: 'Offline' },
+];
+
+const offlineReasonOptions = [
+  { value: 'PIN LOCK', label: 'PIN LOCK' },
+  { value: 'MAX OTP', label: 'MAX OTP' },
+  { value: 'OTP OFFLINE', label: 'OTP OFFLINE' },
 ];
 
 const stateColors = {
@@ -77,6 +85,12 @@ const AgentTrackerDashboard = () => {
   const [detailData, setDetailData] = useState(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const intervalRef = useRef(null);
+  const [selectedKeys, setSelectedKeys] = useState([]);
+  const [reasonModalOpen, setReasonModalOpen] = useState(false);
+  const [reasonMode, setReasonMode] = useState('single');
+  const [reasonTarget, setReasonTarget] = useState(null);
+  const [selectedReason, setSelectedReason] = useState('');
+  const [savingReason, setSavingReason] = useState(false);
 
   const bankOverview = useMemo(() => {
     return (bankStats || []).map((item, idx) => {
@@ -93,6 +107,36 @@ const AgentTrackerDashboard = () => {
       };
     });
   }, [bankStats]);
+
+  const makeKey = useCallback(
+    (item) => `${item.bankcode || ''}-${item.accountNo || ''}`,
+    []
+  );
+
+  const selectedRecords = useMemo(
+    () => data.filter((item) => selectedKeys.includes(makeKey(item))),
+    [data, selectedKeys, makeKey]
+  );
+
+  const offlineSelectedRecords = useMemo(
+    () => selectedRecords.filter((item) => !item.isOnline),
+    [selectedRecords]
+  );
+
+  const onlineCount = useMemo(
+    () => data.filter((item) => item.isOnline).length,
+    [data]
+  );
+
+  const offlineCount = useMemo(
+    () => data.filter((item) => !item.isOnline).length,
+    [data]
+  );
+
+  const unmarkedOfflineCount = useMemo(
+    () => data.filter((item) => !item.isOnline && !item.offlineReason).length,
+    [data]
+  );
 
   const handleFilterChange = useCallback((key, value) => {
     setColumnFilters((prev) => ({
@@ -114,6 +158,12 @@ const AgentTrackerDashboard = () => {
       list = list.filter((item) => !item.isOnline);
     }
 
+    if (columnFilters.isOnline === 'true') {
+      list = list.filter((item) => item.isOnline);
+    } else if (columnFilters.isOnline === 'false') {
+      list = list.filter((item) => !item.isOnline);
+    }
+
     if (search) {
       const term = search.toLowerCase();
       list = list.filter((item) =>
@@ -123,6 +173,7 @@ const AgentTrackerDashboard = () => {
           item.bankcode,
           item.state,
           item.lastTransactionId,
+          item.offlineReason,
         ]
           .filter(Boolean)
           .some((val) => val.toString().toLowerCase().includes(term))
@@ -131,6 +182,7 @@ const AgentTrackerDashboard = () => {
 
     return list.filter((item) => {
       return (
+        includesValue(item.offlineReason, columnFilters.offlineReason) &&
         includesValue(item.bankcode, columnFilters.bankcode) &&
         includesValue(item.username, columnFilters.username) &&
         includesValue(item.accountNo, columnFilters.accountNo) &&
@@ -144,6 +196,27 @@ const AgentTrackerDashboard = () => {
       );
     });
   }, [data, statusFilter, search, columnFilters]);
+
+  useEffect(() => {
+    setSelectedKeys((prev) =>
+      prev.filter((key) => data.some((item) => makeKey(item) === key))
+    );
+  }, [data, makeKey]);
+
+  const getReasonColor = (reason) => {
+    const reasonMap = {
+      'PIN LOCK': 'red',
+      'MAX OTP': 'yellow',
+      'OTP OFFLINE': 'blue',
+    };
+    return reasonMap[reason] || 'gray';
+  };
+
+  const getDisconnectColor = (count) => {
+    if (count > 3) return 'red';
+    if (count > 1) return 'yellow';
+    return 'green';
+  };
 
   const columns = useMemo(
     () => [
@@ -169,6 +242,84 @@ const AgentTrackerDashboard = () => {
             size="xs"
             value={columnFilters.isOnline}
             onChange={(val) => handleFilterChange('isOnline', val || '')}
+          />
+        ),
+      },
+      {
+        key: 'offlineDuration',
+        label: 'Offline Duration',
+        minWidth: 140,
+        render: (item) => {
+          const durationText =
+            typeof item.offlineDuration === 'string'
+              ? item.offlineDuration
+              : item.offlineDuration?.text;
+          return (
+            <Text
+              size="sm"
+              c={item.isOnline ? 'dimmed' : 'red'}
+              fw={item.isOnline ? 400 : 600}
+            >
+              {item.isOnline ? '-' : durationText || '-'}
+            </Text>
+          );
+        },
+      },
+      {
+        key: 'disconnectCountToday',
+        label: 'Disconnect Today',
+        minWidth: 150,
+        render: (item) => (
+          <Badge
+            color={getDisconnectColor(item.disconnectCountToday || 0)}
+            variant="light"
+          >
+            {item.disconnectCountToday || 0}
+          </Badge>
+        ),
+      },
+      {
+        key: 'offlineReason',
+        label: 'Offline Reason',
+        minWidth: 150,
+        render: (item) => {
+          if (item.isOnline) {
+            return (
+              <Text
+                size="sm"
+                c="dimmed"
+              >
+                -
+              </Text>
+            );
+          }
+          if (!item.offlineReason) {
+            return (
+              <Text
+                size="sm"
+                c="dimmed"
+              >
+                -
+              </Text>
+            );
+          }
+          return (
+            <Badge
+              color={getReasonColor(item.offlineReason)}
+              variant="light"
+            >
+              {item.offlineReason}
+            </Badge>
+          );
+        },
+        filter: (
+          <TextInput
+            placeholder="Filter reason..."
+            size="xs"
+            value={columnFilters.offlineReason}
+            onChange={(e) =>
+              handleFilterChange('offlineReason', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -301,14 +452,26 @@ const AgentTrackerDashboard = () => {
         label: 'Action',
         minWidth: 120,
         render: (item) => (
-          <Button
-            size="xs"
-            variant="light"
-            color="blue"
-            onClick={() => openDetail(item)}
-          >
-            Detail
-          </Button>
+          <Group gap="xs">
+            <Button
+              size="xs"
+              variant="light"
+              color="blue"
+              onClick={() => openDetail(item)}
+            >
+              Detail
+            </Button>
+            {!item.isOnline && (
+              <Button
+                size="xs"
+                variant="light"
+                color="orange"
+                onClick={() => openReasonModal(item)}
+              >
+                Reason
+              </Button>
+            )}
+          </Group>
         ),
       },
     ],
@@ -323,6 +486,7 @@ const AgentTrackerDashboard = () => {
     handleResetAll,
   } = useTableControls(columns, {
     onResetFilters: () => setColumnFilters(defaultFilters),
+    onResetSelection: () => setSelectedKeys([]),
   });
 
   const sortedData = useMemo(() => {
@@ -330,8 +494,14 @@ const AgentTrackerDashboard = () => {
     const { key, direction } = sortConfig;
     const dir = direction === 'desc' ? -1 : 1;
     return [...filteredData].sort((a, b) => {
-      const av = a[key] ?? '';
-      const bv = b[key] ?? '';
+      const av =
+        key === 'offlineDuration'
+          ? a.offlineDuration?.seconds || 0
+          : a[key] ?? '';
+      const bv =
+        key === 'offlineDuration'
+          ? b.offlineDuration?.seconds || 0
+          : b[key] ?? '';
       if (av === bv) return 0;
       return av > bv ? dir : -dir;
     });
@@ -341,6 +511,11 @@ const AgentTrackerDashboard = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedData = sortedData.slice(startIndex, endIndex);
+  const pageKeys = paginatedData.map((item) => makeKey(item));
+  const pageFullySelected =
+    pageKeys.length > 0 && pageKeys.every((key) => selectedKeys.includes(key));
+  const pagePartiallySelected =
+    pageKeys.some((key) => selectedKeys.includes(key)) && !pageFullySelected;
 
   useEffect(() => {
     setCurrentPage(1);
@@ -351,6 +526,28 @@ const AgentTrackerDashboard = () => {
       setCurrentPage(totalPages || 1);
     }
   }, [totalPages, currentPage]);
+
+  const toggleRow = (item) => {
+    const key = makeKey(item);
+    setSelectedKeys((current) =>
+      current.includes(key)
+        ? current.filter((k) => k !== key)
+        : [...current, key]
+    );
+  };
+
+  const toggleAllOnPage = () => {
+    if (pageFullySelected) {
+      setSelectedKeys((current) =>
+        current.filter((key) => !pageKeys.includes(key))
+      );
+    } else {
+      setSelectedKeys((current) => [
+        ...current,
+        ...pageKeys.filter((key) => !current.includes(key)),
+      ]);
+    }
+  };
 
   const fetchDashboard = useCallback(async () => {
     try {
@@ -445,8 +642,212 @@ const AgentTrackerDashboard = () => {
     setStatusFilter('all');
     setSearch('');
     setSelectedBank('');
+    setSelectedKeys([]);
     handleResetAll();
   };
+
+  const openReasonModal = (item) => {
+    setReasonMode('single');
+    setReasonTarget(item);
+    setSelectedReason(item?.offlineReason || '');
+    setReasonModalOpen(true);
+  };
+
+  const openBulkReasonModal = () => {
+    if (offlineSelectedRecords.length === 0) {
+      showNotification({
+        title: 'Warning',
+        message: 'Select at least one offline agent',
+        color: 'yellow',
+      });
+      return;
+    }
+    setReasonMode('bulk');
+    setReasonTarget(null);
+    setSelectedReason('');
+    setReasonModalOpen(true);
+  };
+
+  const closeReasonModal = () => {
+    setReasonModalOpen(false);
+    setReasonTarget(null);
+    setSelectedReason('');
+  };
+
+  const isSuccessStatus = (payload) => {
+    const status = (
+      payload?.status ||
+      payload?.data?.status ||
+      ''
+    ).toLowerCase();
+    return status === 'success' || status === 'ok';
+  };
+
+  const submitReason = async ({ clear = false } = {}) => {
+    if (!clear && !selectedReason) {
+      showNotification({
+        title: 'Warning',
+        message: 'Please select an offline reason',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    setSavingReason(true);
+    try {
+      if (reasonMode === 'single') {
+        const response = await agentTrackerAPI.setOfflineReason({
+          bankcode: reasonTarget?.bankcode,
+          accountNo: reasonTarget?.accountNo,
+          reason: clear ? '' : selectedReason,
+        });
+        if (response.success && isSuccessStatus(response.data)) {
+          showNotification({
+            title: 'Success',
+            message: 'Offline reason updated',
+            color: 'green',
+          });
+          closeReasonModal();
+          fetchDashboard();
+          fetchAgents({ silent: true });
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.data?.message || 'Failed to update reason',
+            color: 'red',
+          });
+        }
+      } else {
+        const agentKeys = offlineSelectedRecords
+          .map((agent) =>
+            `${agent.bankcode || ''}-${agent.accountNo || ''}`.trim()
+          )
+          .filter((key) => key && key !== '-');
+        if (agentKeys.length === 0) {
+          showNotification({
+            title: 'Warning',
+            message: 'No valid offline agents selected',
+            color: 'yellow',
+          });
+          return;
+        }
+        const response = await agentTrackerAPI.bulkSetOfflineReason({
+          agentKeys,
+          reason: clear ? '' : selectedReason,
+        });
+        if (response.success && isSuccessStatus(response.data)) {
+          showNotification({
+            title: 'Success',
+            message: 'Offline reasons updated',
+            color: 'green',
+          });
+          closeReasonModal();
+          fetchDashboard();
+          fetchAgents({ silent: true });
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.data?.message || 'Failed to update reasons',
+            color: 'red',
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Offline reason update error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to update offline reason',
+        color: 'red',
+      });
+    } finally {
+      setSavingReason(false);
+    }
+  };
+
+  const formatDetailValue = (value) => {
+    if (value === null || value === undefined || value === '') return '-';
+    if (typeof value === 'object') {
+      if (value?.text) return value.text;
+      try {
+        return JSON.stringify(value);
+      } catch {
+        return String(value);
+      }
+    }
+    return value;
+  };
+
+  const detailFields = useMemo(() => {
+    if (!detailData) return [];
+
+    const lastAmount =
+      detailData.lastTransactionAmount ??
+      detailData.lastTrxAmount ??
+      detailData.lastAmount ??
+      detailData.lastTrx ??
+      detailData.lastTransactionValue;
+    const todayTransactions =
+      detailData.todayTransactions ??
+      detailData.todaysTransactions ??
+      detailData.todayTransactionCount ??
+      detailData.todayTrxCount;
+
+    const baseFields = [
+      { key: 'username', label: 'Username', value: detailData.username },
+      { key: 'accountNo', label: 'Account No', value: detailData.accountNo },
+      { key: 'bankcode', label: 'Bank Code', value: detailData.bankcode },
+      { key: 'isOnline', label: 'Status', value: detailData.isOnline },
+      {
+        key: 'disconnectCountToday',
+        label: 'Disconnect Count Today',
+        value: detailData.disconnectCountToday ?? 0,
+      },
+      { key: 'state', label: 'Current State', value: detailData.state },
+      {
+        key: 'lastHeartbeat',
+        label: 'Last Heartbeat',
+        value: detailData.lastHeartbeat,
+      },
+      {
+        key: 'lastTransactionSuccess',
+        label: 'Last Trx Success',
+        value: detailData.lastTransactionSuccess,
+      },
+      {
+        key: 'lastTransactionId',
+        label: 'Last Trx Id',
+        value: detailData.lastTransactionId,
+      },
+      {
+        key: 'lastTransactionAmount',
+        label: 'Last Trx Amount',
+        value: lastAmount,
+      },
+      {
+        key: 'todayTransactions',
+        label: "Today's Transactions",
+        value: todayTransactions,
+      },
+    ];
+
+    const extraFields = [];
+    if (!detailData.isOnline) {
+      extraFields.push({
+        key: 'offlineDuration',
+        label: 'Offline Duration',
+        value: detailData.offlineDuration,
+      });
+      if (detailData.offlineReason) {
+        extraFields.push({
+          key: 'offlineReason',
+          label: 'Offline Reason',
+          value: detailData.offlineReason,
+        });
+      }
+    }
+
+    return [...baseFields, ...extraFields];
+  }, [detailData]);
 
   const openDetail = async (item) => {
     try {
@@ -454,13 +855,15 @@ const AgentTrackerDashboard = () => {
         bankcode: item.bankcode,
         accountNo: item.accountNo,
       });
-      if (response.success && response.data?.status === 'success') {
-        setDetailData(response.data.agent || {});
+      const payload = response.data || {};
+      const agent = payload.agent || payload.data?.agent || {};
+      if (response.success && isSuccessStatus(payload)) {
+        setDetailData(agent);
         setDetailModalOpen(true);
       } else {
         showNotification({
           title: 'Error',
-          message: response.data?.message || 'Failed to load agent detail',
+          message: payload.message || 'Failed to load agent detail',
           color: 'red',
         });
       }
@@ -528,6 +931,17 @@ const AgentTrackerDashboard = () => {
                 }}
               >
                 Refresh
+              </Button>
+              <Button
+                variant="light"
+                color="orange"
+                radius="md"
+                size="sm"
+                leftSection={<IconAlertTriangle size={18} />}
+                onClick={openBulkReasonModal}
+                disabled={offlineSelectedRecords.length === 0}
+              >
+                Bulk Reason ({offlineSelectedRecords.length})
               </Button>
               <Button
                 variant="light"
@@ -714,7 +1128,7 @@ const AgentTrackerDashboard = () => {
                 />
                 {/* <TextInput
                   label="Search"
-                  placeholder="Search username, account, bank, state..."
+                  placeholder="Search username, account, bank, state, reason..."
                   value={search}
                   onChange={(e) => setSearch(e.currentTarget.value)}
                   style={{ minWidth: 280 }}
@@ -725,6 +1139,37 @@ const AgentTrackerDashboard = () => {
                 >
                   Last update: {lastUpdate || '-'}
                 </Badge>
+              </Group>
+              <Group
+                gap="xs"
+                wrap="wrap"
+              >
+                <Badge
+                  variant="light"
+                  color="gray"
+                >
+                  All: {data.length}
+                </Badge>
+                <Badge
+                  variant="light"
+                  color="green"
+                >
+                  Online: {onlineCount}
+                </Badge>
+                <Badge
+                  variant="light"
+                  color="red"
+                >
+                  Offline: {offlineCount}
+                </Badge>
+                {unmarkedOfflineCount > 0 && (
+                  <Badge
+                    variant="light"
+                    color="orange"
+                  >
+                    Unmarked Offline: {unmarkedOfflineCount}
+                  </Badge>
+                )}
               </Group>
             </Stack>
           </Card>
@@ -823,6 +1268,14 @@ const AgentTrackerDashboard = () => {
               >
                 <Table.Thead>
                   <Table.Tr>
+                    <Table.Th style={{ width: 48 }}>
+                      <Checkbox
+                        checked={pageFullySelected}
+                        indeterminate={pagePartiallySelected}
+                        onChange={toggleAllOnPage}
+                        aria-label="Select all rows"
+                      />
+                    </Table.Th>
                     {visibleColumns.map((col) => (
                       <Table.Th
                         key={col.key}
@@ -849,6 +1302,14 @@ const AgentTrackerDashboard = () => {
                     ))}
                   </Table.Tr>
                   <Table.Tr style={{ backgroundColor: '#e7f5ff' }}>
+                    <Table.Th>
+                      <Checkbox
+                        checked={pageFullySelected}
+                        indeterminate={pagePartiallySelected}
+                        onChange={toggleAllOnPage}
+                        aria-label="Select all rows"
+                      />
+                    </Table.Th>
                     {visibleColumns.map((col) => (
                       <Table.Th
                         key={`${col.key}-filter`}
@@ -865,7 +1326,23 @@ const AgentTrackerDashboard = () => {
                 <Table.Tbody>
                   {paginatedData.length > 0 ? (
                     paginatedData.map((item, idx) => (
-                      <Table.Tr key={item._rowKey || `${idx}-row`}>
+                      <Table.Tr
+                        key={item._rowKey || `${idx}-row`}
+                        bg={
+                          selectedKeys.includes(makeKey(item))
+                            ? 'rgba(34, 139, 230, 0.08)'
+                            : !item.isOnline
+                            ? 'rgba(239, 68, 68, 0.06)'
+                            : undefined
+                        }
+                      >
+                        <Table.Td>
+                          <Checkbox
+                            checked={selectedKeys.includes(makeKey(item))}
+                            onChange={() => toggleRow(item)}
+                            aria-label="Select row"
+                          />
+                        </Table.Td>
                         {visibleColumns.map((col) => (
                           <Table.Td key={col.key}>{col.render(item)}</Table.Td>
                         ))}
@@ -873,7 +1350,7 @@ const AgentTrackerDashboard = () => {
                     ))
                   ) : (
                     <Table.Tr>
-                      <Table.Td colSpan={visibleColumns.length}>
+                      <Table.Td colSpan={visibleColumns.length + 1}>
                         <Text
                           ta="center"
                           c="dimmed"
@@ -937,6 +1414,12 @@ const AgentTrackerDashboard = () => {
               >
                 Rows: {paginatedData.length}
               </Text>
+              <Text
+                size="sm"
+                c="dimmed"
+              >
+                Selected: {selectedKeys.length}
+              </Text>
             </Group>
 
             <Pagination
@@ -954,34 +1437,185 @@ const AgentTrackerDashboard = () => {
       <Modal
         opened={detailModalOpen}
         onClose={() => setDetailModalOpen(false)}
-        title="Agent Detail"
+        title="Agent Details"
         centered
+        size="lg"
       >
         {detailData ? (
-          <Stack gap="xs">
-            {Object.entries(detailData).map(([key, value]) => (
-              <Group
-                key={key}
-                justify="space-between"
+          <Stack gap="md">
+            <SimpleGrid
+              cols={2}
+              spacing="md"
+              breakpoints={[{ maxWidth: 'sm', cols: 1 }]}
+            >
+              {detailFields.map(({ key, label, value }) => {
+                const lowerKey = key.toLowerCase();
+                if (lowerKey === 'isonline') {
+                  return (
+                    <Box key={key}>
+                      <Text
+                        size="xs"
+                        c="dimmed"
+                        fw={600}
+                      >
+                        {label.toUpperCase()}
+                      </Text>
+                      <Badge
+                        color={detailData.isOnline ? 'green' : 'red'}
+                        variant="filled"
+                      >
+                        {detailData.isOnline ? 'ONLINE' : 'OFFLINE'}
+                      </Badge>
+                    </Box>
+                  );
+                }
+
+                if (lowerKey === 'state') {
+                  return (
+                    <Box key={key}>
+                      <Text
+                        size="xs"
+                        c="dimmed"
+                        fw={600}
+                      >
+                        {label.toUpperCase()}
+                      </Text>
+                      <Badge
+                        color={stateColors[detailData.state] || 'gray'}
+                        variant="light"
+                      >
+                        {detailData.state || 'IDLE'}
+                      </Badge>
+                    </Box>
+                  );
+                }
+
+                if (lowerKey === 'disconnectcounttoday') {
+                  return (
+                    <Box key={key}>
+                      <Text
+                        size="xs"
+                        c="dimmed"
+                        fw={600}
+                      >
+                        {label.toUpperCase()}
+                      </Text>
+                      <Badge
+                        color={getDisconnectColor(value || 0)}
+                        variant="light"
+                      >
+                        {value || 0}
+                      </Badge>
+                    </Box>
+                  );
+                }
+
+                return (
+                  <Box key={key}>
+                    <Text
+                      size="xs"
+                      c="dimmed"
+                      fw={600}
+                    >
+                      {label.toUpperCase()}
+                    </Text>
+                    <Text
+                      size="sm"
+                      fw={600}
+                    >
+                      {formatDetailValue(value)}
+                    </Text>
+                  </Box>
+                );
+              })}
+            </SimpleGrid>
+
+            <Divider />
+
+            <Group justify="flex-end">
+              <Button
+                variant="default"
+                onClick={() => setDetailModalOpen(false)}
               >
-                <Text
-                  size="sm"
-                  c="dimmed"
-                >
-                  {key}
-                </Text>
-                <Text
-                  size="sm"
-                  fw={600}
-                >
-                  {value ?? '-'}
-                </Text>
-              </Group>
-            ))}
+                Close
+              </Button>
+            </Group>
           </Stack>
         ) : (
           <Text size="sm">No detail available</Text>
         )}
+      </Modal>
+
+      <Modal
+        opened={reasonModalOpen}
+        onClose={closeReasonModal}
+        title={
+          reasonMode === 'single'
+            ? 'Mark Offline Reason'
+            : 'Bulk Offline Reason'
+        }
+        centered
+      >
+        <Stack gap="md">
+          <Text
+            size="sm"
+            c="dimmed"
+          >
+            {reasonMode === 'single'
+              ? `Agent: ${
+                  reasonTarget?.username || reasonTarget?.accountNo || '-'
+                }`
+              : `Apply to ${offlineSelectedRecords.length} offline agents`}
+          </Text>
+
+          <Select
+            label="Offline Reason"
+            placeholder="Select reason"
+            data={offlineReasonOptions}
+            value={selectedReason}
+            onChange={(val) => setSelectedReason(val || '')}
+            searchable
+          />
+
+          <Group gap="xs">
+            {offlineReasonOptions.map((option) => (
+              <Button
+                key={option.value}
+                size="xs"
+                variant={selectedReason === option.value ? 'filled' : 'light'}
+                onClick={() => setSelectedReason(option.value)}
+              >
+                {option.label}
+              </Button>
+            ))}
+          </Group>
+
+          <Group
+            justify="flex-end"
+            gap="sm"
+          >
+            <Button
+              variant="default"
+              onClick={() => submitReason({ clear: true })}
+              disabled={savingReason}
+            >
+              {reasonMode === 'single' ? 'Clear Reason' : 'Clear Selected'}
+            </Button>
+            <Button
+              variant="default"
+              onClick={closeReasonModal}
+            >
+              Cancel
+            </Button>
+            <Button
+              loading={savingReason}
+              onClick={() => submitReason()}
+              color="blue"
+            >
+              Save
+            </Button>
+          </Group>
+        </Stack>
       </Modal>
     </Box>
   );

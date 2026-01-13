@@ -5798,6 +5798,87 @@ export const merchantAPI = {
     }
   },
 
+  // Spammer Transaction
+  getSpammerTransactionList: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '');
+
+      const response = await apiClient.post(
+        '/getCustomercodeByTransaction.php',
+        formData
+      );
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Spammer transaction list error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load spammer transaction list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  getSpammerTransactionDetail: async ({
+    customercode,
+    merchantcode,
+    type = 'flag',
+  }) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data[customercode]', customercode || '');
+      formData.append('data[merchantcode]', merchantcode || '');
+
+      const endpoint =
+        type === 'failed'
+          ? '/getCustomercodeByTransactionFailed.php'
+          : '/getCustomercodeByTransactionDetail.php';
+
+      const response = await apiClient.post(endpoint, formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Spammer transaction detail error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load spammer transaction detail',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  addSpammerCustomerCode: async (customerCode, merchantCode) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data[customercode]', customerCode || '');
+      formData.append('data[merchantcode]', merchantCode || '');
+
+      const response = await apiClient.post(
+        '/addCustomerCodeToTable.php',
+        formData
+      );
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Add spammer customer code error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to add customer code',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
   // Summary Bkashm
   getSummaryBkashm: async (datefrom, dateto) => {
     try {
@@ -6120,12 +6201,19 @@ export const withdrawAPI = {
     history = false,
   }) => {
     try {
+      const merchantPayload =
+        merchant === 'all'
+          ? 'all'
+          : (Array.isArray(merchant) ? merchant : [merchant]).map((m) =>
+              typeof m === 'string' ? { id: m } : m
+            );
+
       const payload = {
         datefrom: `${datefrom} 00:00:00`,
         dateto: `${dateto} 23:59:59`,
         hourfrom,
         hourto,
-        merchant: Array.isArray(merchant) ? merchant.join(',') : merchant,
+        merchant: merchantPayload,
         history,
       };
 
@@ -6169,6 +6257,148 @@ export const withdrawAPI = {
       return {
         success: false,
         error: error.message || 'Failed to load automation withdraw need-to-check list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Check withdraw list item (encrypted)
+   * @param {String|Number} id
+   */
+  checkWithdrawList: async (id) => {
+    try {
+      const jsonData = CRYPTO.encrypt({ id });
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/withdrawList_check.php', formData);
+
+      const payloadData = response.data?.data
+        ? CRYPTO.decrypt(response.data.data)
+        : response.data;
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Withdraw list check API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to check withdraw list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Assign / Re-assign automation withdraw (encrypted)
+   * @param {{ id: string|number, accountNo: string, bankCode: string, accountName?: string, username?: string }} params
+   */
+  assignAutomationWithdraw: async ({
+    id,
+    accountNo,
+    bankCode,
+    accountName = '',
+    username = '',
+  } = {}) => {
+    try {
+      const jsonData = CRYPTO.encrypt({
+        id,
+        accountNo,
+        bankCode,
+        accountName,
+        username,
+      });
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/automationwithdrawAssignment_assign.php', formData);
+
+      const payloadData = response.data?.data
+        ? CRYPTO.decrypt(response.data.data)
+        : response.data;
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Automation withdraw assign API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to assign automation withdraw',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Update automation withdraw manual transaction status (encrypted)
+   * @param {{ id: string|number, status: string, accountdest?: string, memo?: string }} params
+   */
+  updateAutomationWithdrawTransaction: async ({
+    id,
+    status,
+    accountdest = '',
+    memo = '',
+  } = {}) => {
+    try {
+      const jsonData = CRYPTO.encrypt({ id, status, accountdest, memo });
+
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/automation_updateManualTransaction.php', formData);
+
+      const payloadData = response.data?.data
+        ? CRYPTO.decrypt(response.data.data)
+        : response.data;
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Automation withdraw update transaction API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to update automation withdraw transaction',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Mark automation withdraw as success with receipt (encrypted)
+   * @param {{ id: string|number, account: string, bankcode: string, receipt?: string }} params
+   */
+  setAutomationWithdrawSuccess: async ({ id, account, bankcode, receipt = '' } = {}) => {
+    try {
+      const jsonData = CRYPTO.encrypt({ id, account, bankcode, receipt });
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post(
+        '/AutomationchangeStatusSuccessTransactionAccountByCompany.php',
+        formData
+      );
+
+      const payloadData = response.data?.data
+        ? CRYPTO.decrypt(response.data.data)
+        : response.data;
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Automation withdraw success API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to mark automation withdraw success',
         details: error.response?.data || null,
       };
     }
@@ -6875,6 +7105,164 @@ export const crawlerAPI = {
   },
 
   /**
+   * Get crawler (appium) history list
+   * @param {Object} params
+   * @param {String} params.datefrom - YYYY-MM-DD
+   * @param {String} params.dateto - YYYY-MM-DD
+   * @param {Boolean} params.history - include history
+   */
+  getAppiumListHistory: async ({ datefrom, dateto, history = false }) => {
+    try {
+      const payload = {
+        data: {
+          datefrom: `${datefrom} 00:00:00`,
+          dateto: `${dateto} 23:59:59`,
+          history,
+        },
+      };
+
+      const response = await apiClient.post(
+        '/appiumListHistory_getList.php',
+        payload,
+        {
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+      const rawData = response.data?.data ?? response.data;
+      let payloadData = rawData;
+      if (typeof rawData === 'string') {
+        try {
+          payloadData = JSON.parse(rawData);
+        } catch {
+          payloadData = {};
+        }
+      }
+
+      if (payloadData?.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Appium history list API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load appium history list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get crawler (appium) withdraw list
+   * @param {Object} params
+   * @param {String} params.datefrom - YYYY-MM-DD
+   * @param {String} params.dateto - YYYY-MM-DD
+   */
+  getAppiumListWD: async ({ datefrom, dateto, history = false }) => {
+    try {
+      const payload = {
+        datefrom: `${datefrom} 00:00:00`,
+        dateto: `${dateto} 23:59:59`,
+        history,
+      };
+      const response = await apiClient.post(
+        '/appiumList_getListWD.php',
+        { data: payload },
+        {
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+      const payloadData = response.data;
+
+      if (payloadData?.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Appium list WD API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load appium list WD',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get agent list for B2B
+   */
+  getAgentListB2b: async () => {
+    return await apiCall('/getAgentListB2b.php', {});
+  },
+
+  /**
+   * Create B2B transaction
+   * @param {Object} payload
+   * @param {String} payload.bankCode
+   * @param {Number|String} payload.amount
+   * @param {String} payload.agent
+   */
+  createB2bTransaction: async ({ bankCode, amount, agent }) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('bankCode', bankCode);
+      formData.append('amount', amount);
+      formData.append('agent', agent);
+
+      const response = await apiClient.post(
+        '/createB2bTransaction.php',
+        formData
+      );
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Create B2B transaction API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to create B2B transaction',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
    * Get appium error log list
    * @param {Object} params
    * @param {String} params.datefrom - YYYY-MM-DD
@@ -7347,7 +7735,9 @@ export const crawlerAPI = {
   getRequestList: async () => {
     try {
       const formData = new URLSearchParams();
-      formData.append('data', '');
+      // Backend treats empty POST data as missing and falls back to JSON body (null in our case),
+      // so send a minimal payload to keep it in the POST branch.
+      formData.append('data', '{}');
 
       const response = await apiClient.post('/getRequestList.php', formData);
 
@@ -7398,10 +7788,16 @@ export const crawlerAPI = {
    */
   getB2bSendList: async ({ datefrom, dateto, accountno = '0' }) => {
     try {
-      const payload = { datefrom: `${datefrom} 00:00:00`, dateto: `${dateto} 23:59:59`, accountno };
-      const response = await apiClient.post('/getAgent.php', { data: payload }, {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const payload = {
+        datefrom: `${datefrom} 00:00:00`,
+        dateto: `${dateto} 23:59:59`,
+        accountno,
+      };
+      // Backend expects urlencoded form with `data` field, not raw JSON body
+      const formData = new URLSearchParams();
+      formData.append('data', JSON.stringify(payload));
+
+      const response = await apiClient.post('/getAgent.php', formData);
       const payloadData = response.data?.data ?? response.data;
 
       if (payloadData?.records && Array.isArray(payloadData.records)) {
@@ -7487,7 +7883,8 @@ export const availableAccountAPI = {
   getList: async () => {
     try {
       const formData = new URLSearchParams();
-      formData.append('data', '');
+      // Avoid PHP null handling by sending minimal payload
+      formData.append('data', '{}');
 
       const response = await apiClient.post('/AvailableAccountList.php', formData);
       const payload = response.data ?? {};
@@ -7828,10 +8225,11 @@ export const availableAccountMybankAPI = {
    */
   getList: async (group = 'A') => {
     try {
-      const payload = { data: { group } };
-      const response = await apiClient.post('/getAvailableAccount.php', payload, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-      });
+      // Backend expects urlencoded form with `data` key; send minimal JSON string to avoid null warnings
+      const formData = new URLSearchParams();
+      formData.append('data', JSON.stringify({ group }));
+
+      const response = await apiClient.post('/getAvailableAccount.php', formData);
       const payloadData = response.data ?? {};
       const records = Array.isArray(payloadData.records) ? payloadData.records : [];
       const normalized = records.map((record) =>
@@ -8167,6 +8565,54 @@ export const serviceNagadAPI = {
       };
     }
   },
+
+  /**
+   * Add counter for Nagad service
+   * @param {String} username
+   */
+  addCounter: async (username) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', JSON.stringify({ username }));
+
+      const response = await apiClient.post('/addCounterNagadAPI.php', formData);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Add counter Nagad error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to add counter',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Delete Nagad session by MPAID
+   * @param {String} mpaid
+   */
+  deleteSession: async (mpaid) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('v_mpaid', mpaid);
+
+      const response = await apiClient.post('/deleteNagadAPI.php', formData);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Delete Nagad session error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to delete session',
+        details: error.response?.data || null,
+      };
+    }
+  },
 };
 
 // Service Bkash API list / execution
@@ -8438,6 +8884,59 @@ export const agentTrackerAPI = {
       };
     }
   },
+
+  /**
+   * Set offline reason for single agent
+   */
+  setOfflineReason: async ({ bankcode, accountNo, reason }) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('action', 'setOfflineReason');
+      formData.append('bankcode', bankcode || '');
+      formData.append('accountNo', accountNo || '');
+      formData.append('reason', reason || '');
+
+      const response = await apiClient.post('/AgentTrackerAPI.php', formData);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Agent tracker set reason error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to set offline reason',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Set offline reason for multiple agents
+   */
+  bulkSetOfflineReason: async ({ agentKeys = [], reason = '' }) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('action', 'bulkSetOfflineReason');
+      agentKeys.forEach((key) => {
+        formData.append('agentKeys[]', key);
+      });
+      formData.append('reason', reason || '');
+
+      const response = await apiClient.post('/AgentTrackerAPI.php', formData);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Agent tracker bulk reason error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to set offline reasons',
+        details: error.response?.data || null,
+      };
+    }
+  },
 };
 
 // Merchant Dashboard API calls
@@ -8525,12 +9024,12 @@ export const emergencyDepositAPI = {
    */
   getList: async ({ dateFrom, dateTo }) => {
     try {
-      const formData = new URLSearchParams();
-      formData.append('data', JSON.stringify({ dateFrom, dateTo }));
-
-      const response = await apiClient.post('/emergency_deposit_getList.php', formData);
-      const payload = response.data ?? {};
-      const records = Array.isArray(payload.records) ? payload.records : [];
+      const payload = { data: { dateFrom, dateTo } };
+      const response = await apiClient.post('/emergency_deposit_getList.php', payload, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const payloadData = response.data ?? {};
+      const records = Array.isArray(payloadData.records) ? payloadData.records : [];
       const normalized = records.map((record) =>
         Object.entries(record || {}).reduce((acc, [key, value]) => {
           if (typeof value === 'string') {
@@ -8549,7 +9048,7 @@ export const emergencyDepositAPI = {
       return {
         success: true,
         data: {
-          ...payload,
+          ...payloadData,
           records: normalized,
         },
       };
@@ -8569,10 +9068,10 @@ export const emergencyDepositAPI = {
    */
   runEmergency: async ({ dateFrom, dateTo }) => {
     try {
-      const formData = new URLSearchParams();
-      formData.append('data', JSON.stringify({ dateFrom, dateTo }));
-
-      const response = await apiClient.post('/Emergencydeposit.php', formData);
+      const payload = { data: { dateFrom, dateTo } };
+      const response = await apiClient.post('/Emergencydeposit.php', payload, {
+        headers: { 'Content-Type': 'application/json' },
+      });
       return {
         success: true,
         data: response.data,

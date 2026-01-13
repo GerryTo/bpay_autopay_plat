@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  Badge,
   Box,
   Button,
   Card,
@@ -26,6 +27,19 @@ const defaultFilters = {
   operator: '',
 };
 
+const batchSize = 25;
+const batchDelay = 1000;
+
+const initialBulkProgress = {
+  isRunning: false,
+  total: 0,
+  processed: 0,
+  success: 0,
+  failed: 0,
+  currentBatch: 0,
+  totalBatches: 0,
+};
+
 const ServiceNagadApi = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -34,6 +48,8 @@ const ServiceNagadApi = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [saving, setSaving] = useState(false);
+  const [selectedKeys, setSelectedKeys] = useState([]);
+  const [bulkProgress, setBulkProgress] = useState(initialBulkProgress);
 
   const handleFilterChange = useCallback((key, value) => {
     setColumnFilters((prev) => ({
@@ -144,14 +160,24 @@ const ServiceNagadApi = () => {
       {
         key: 'action',
         label: 'Action',
-        minWidth: 220,
+        minWidth: 360,
         render: (item) => (
           <Group gap="xs">
             <Button
               size="xs"
               variant="light"
+              color="green"
+              onClick={() => handleAddCounter(item)}
+              disabled={saving || bulkProgress.isRunning}
+            >
+              +1
+            </Button>
+            <Button
+              size="xs"
+              variant="light"
               color="orange"
               onClick={() => handleExecute(item, 'restart')}
+              disabled={saving || bulkProgress.isRunning}
             >
               Restart
             </Button>
@@ -160,6 +186,7 @@ const ServiceNagadApi = () => {
               variant="light"
               color="blue"
               onClick={() => handleExecute(item, 'start')}
+              disabled={saving || bulkProgress.isRunning}
             >
               Start
             </Button>
@@ -168,14 +195,24 @@ const ServiceNagadApi = () => {
               variant="light"
               color="red"
               onClick={() => handleExecute(item, 'stop')}
+              disabled={saving || bulkProgress.isRunning}
             >
               Stop
+            </Button>
+            <Button
+              size="xs"
+              variant="light"
+              color="red"
+              onClick={() => handleDeleteSession(item)}
+              disabled={saving || bulkProgress.isRunning}
+            >
+              Delete
             </Button>
           </Group>
         ),
       },
     ],
-    [columnFilters, handleFilterChange]
+    [columnFilters, handleFilterChange, saving, bulkProgress.isRunning]
   );
 
   const {
@@ -240,7 +277,7 @@ const ServiceNagadApi = () => {
           const records = Array.isArray(payload.records) ? payload.records : [];
           const withKeys = records.map((item, idx) => ({
             ...item,
-            _rowKey: `${item.v_user || 'service'}-${idx}`,
+            _rowKey: `${item.v_user || 'service'}-${item.v_mpaid || idx}`,
           }));
           setData(withKeys);
         } else {
@@ -279,10 +316,54 @@ const ServiceNagadApi = () => {
     setColumnFilters(defaultFilters);
     setCurrentPage(1);
     setItemsPerPage(10);
+    setSelectedKeys([]);
+    setBulkProgress(initialBulkProgress);
     handleResetAll();
   };
 
-  const handleExecute = async (item, statement) => {
+  const makeKey = (item) =>
+    item._rowKey || `${item.v_user || 'user'}-${item.v_mpaid || 'session'}`;
+
+  const toggleRow = (item) => {
+    const key = makeKey(item);
+    setSelectedKeys((current) =>
+      current.includes(key)
+        ? current.filter((k) => k !== key)
+        : [...current, key]
+    );
+  };
+
+  const pageKeys = useMemo(
+    () => paginatedData.map((item) => makeKey(item)).filter(Boolean),
+    [paginatedData]
+  );
+  const pageFullySelected =
+    pageKeys.length > 0 && pageKeys.every((key) => selectedKeys.includes(key));
+  const pagePartiallySelected =
+    pageKeys.some((key) => selectedKeys.includes(key)) && !pageFullySelected;
+  const totalSelectedOnPage = paginatedData.filter((item) =>
+    selectedKeys.includes(makeKey(item))
+  ).length;
+
+  const toggleAllOnPage = () => {
+    if (pageFullySelected) {
+      setSelectedKeys((current) =>
+        current.filter((key) => !pageKeys.includes(key))
+      );
+    } else {
+      setSelectedKeys((current) => {
+        const newKeys = pageKeys.filter((key) => !current.includes(key));
+        return [...current, ...newKeys];
+      });
+    }
+  };
+
+  const selectedItems = useMemo(
+    () => data.filter((item) => selectedKeys.includes(makeKey(item))),
+    [data, selectedKeys]
+  );
+
+  async function handleExecute(item, statement) {
     setSaving(true);
     try {
       const payload = {
@@ -315,6 +396,272 @@ const ServiceNagadApi = () => {
     } finally {
       setSaving(false);
     }
+  }
+
+  async function handleAddCounter(item) {
+    setSaving(true);
+    try {
+      const response = await serviceNagadAPI.addCounter(item.v_user);
+      const status = (response.data?.status || '').toLowerCase();
+      if (response.success && (status === 'success' || status === 'ok')) {
+        showNotification({
+          title: 'Success',
+          message: response.data?.message || 'Counter updated',
+          color: 'green',
+        });
+        fetchList({ silent: true });
+      } else {
+        showNotification({
+          title: 'Error',
+          message:
+            response.error || response.data?.message || 'Failed to add counter',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Add counter error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to add counter',
+        color: 'red',
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDeleteSession(item) {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete the MPAID for the user ${item.v_user}?`
+      )
+    ) {
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const response = await serviceNagadAPI.deleteSession(item.v_mpaid);
+      const status = (response.data?.status || '').toLowerCase();
+      if (response.success && (status === 'success' || status === 'ok')) {
+        showNotification({
+          title: 'Success',
+          message: response.data?.message || 'Session deleted',
+          color: 'green',
+        });
+        fetchList({ silent: true });
+      } else {
+        showNotification({
+          title: 'Error',
+          message:
+            response.error ||
+            response.data?.message ||
+            'Failed to delete session',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Delete session error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to delete session',
+        color: 'red',
+      });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  const handleBulkExecute = async (statement) => {
+    if (selectedItems.length === 0) {
+      showNotification({
+        title: 'Info',
+        message: 'Please select at least one service',
+        color: 'blue',
+      });
+      return;
+    }
+
+    const total = selectedItems.length;
+    const totalBatches = Math.ceil(total / batchSize);
+    const actionLabel = statement.toUpperCase();
+
+    if (
+      !window.confirm(
+        `Are you sure want to ${actionLabel} ${total} service(s)?\n\nBatch: ${totalBatches}`
+      )
+    ) {
+      return;
+    }
+
+    setBulkProgress({
+      isRunning: true,
+      total,
+      processed: 0,
+      success: 0,
+      failed: 0,
+      currentBatch: 0,
+      totalBatches,
+    });
+    setSaving(true);
+
+    let localSuccess = 0;
+    let localFailed = 0;
+
+    const batches = [];
+    for (let i = 0; i < total; i += batchSize) {
+      batches.push(selectedItems.slice(i, i + batchSize));
+    }
+
+    for (let index = 0; index < batches.length; index += 1) {
+      setBulkProgress((prev) => ({
+        ...prev,
+        currentBatch: index + 1,
+      }));
+
+      await Promise.all(
+        batches[index].map(async (row) => {
+          try {
+            const response = await serviceNagadAPI.execute({
+              statment: statement,
+              servicename: row.v_user,
+            });
+            const status = (response.data?.status || '').toLowerCase();
+            const success = status === 'success' || status === 'ok';
+            if (success) {
+              localSuccess += 1;
+            } else {
+              localFailed += 1;
+            }
+            setBulkProgress((prev) => ({
+              ...prev,
+              processed: prev.processed + 1,
+              success: prev.success + (success ? 1 : 0),
+              failed: prev.failed + (success ? 0 : 1),
+            }));
+          } catch (error) {
+            localFailed += 1;
+            setBulkProgress((prev) => ({
+              ...prev,
+              processed: prev.processed + 1,
+              failed: prev.failed + 1,
+            }));
+          }
+        })
+      );
+
+      if (index < batches.length - 1) {
+        await sleep(batchDelay);
+      }
+    }
+
+    setBulkProgress((prev) => ({
+      ...prev,
+      isRunning: false,
+    }));
+    setSaving(false);
+    showNotification({
+      title: `Bulk ${actionLabel} completed`,
+      message: `Success: ${localSuccess} | Failed: ${localFailed}`,
+      color: localFailed > 0 ? 'yellow' : 'green',
+    });
+    setSelectedKeys([]);
+    fetchList({ silent: true });
+  };
+
+  const handleBulkAddCounter = async () => {
+    if (selectedItems.length === 0) {
+      showNotification({
+        title: 'Info',
+        message: 'Please select at least one service',
+        color: 'blue',
+      });
+      return;
+    }
+
+    const total = selectedItems.length;
+    const totalBatches = Math.ceil(total / batchSize);
+
+    if (
+      !window.confirm(
+        `Are you sure want to ADD COUNTER for ${total} service(s)?\n\nBatch: ${totalBatches}`
+      )
+    ) {
+      return;
+    }
+
+    setBulkProgress({
+      isRunning: true,
+      total,
+      processed: 0,
+      success: 0,
+      failed: 0,
+      currentBatch: 0,
+      totalBatches,
+    });
+    setSaving(true);
+
+    let localSuccess = 0;
+    let localFailed = 0;
+
+    const batches = [];
+    for (let i = 0; i < total; i += batchSize) {
+      batches.push(selectedItems.slice(i, i + batchSize));
+    }
+
+    for (let index = 0; index < batches.length; index += 1) {
+      setBulkProgress((prev) => ({
+        ...prev,
+        currentBatch: index + 1,
+      }));
+
+      await Promise.all(
+        batches[index].map(async (row) => {
+          try {
+            const response = await serviceNagadAPI.addCounter(row.v_user);
+            const status = (response.data?.status || '').toLowerCase();
+            const success = status === 'success' || status === 'ok';
+            if (success) {
+              localSuccess += 1;
+            } else {
+              localFailed += 1;
+            }
+            setBulkProgress((prev) => ({
+              ...prev,
+              processed: prev.processed + 1,
+              success: prev.success + (success ? 1 : 0),
+              failed: prev.failed + (success ? 0 : 1),
+            }));
+          } catch (error) {
+            localFailed += 1;
+            setBulkProgress((prev) => ({
+              ...prev,
+              processed: prev.processed + 1,
+              failed: prev.failed + 1,
+            }));
+          }
+        })
+      );
+
+      if (index < batches.length - 1) {
+        await sleep(batchDelay);
+      }
+    }
+
+    setBulkProgress((prev) => ({
+      ...prev,
+      isRunning: false,
+    }));
+    setSaving(false);
+    showNotification({
+      title: 'Bulk ADD COUNTER completed',
+      message: `Success: ${localSuccess} | Failed: ${localFailed}`,
+      color: localFailed > 0 ? 'yellow' : 'green',
+    });
+    setSelectedKeys([]);
+    fetchList({ silent: true });
   };
 
   return (
@@ -326,7 +673,7 @@ const ServiceNagadApi = () => {
         withBorder
       >
         <LoadingOverlay
-          visible={loading}
+          visible={loading || bulkProgress.isRunning}
           overlayProps={{ radius: 'md', blur: 2 }}
           loaderProps={{ color: 'blue', type: 'dots' }}
         />
@@ -363,7 +710,7 @@ const ServiceNagadApi = () => {
                 variant="light"
                 color="blue"
                 radius="md"
-                loading={refreshing || saving}
+                loading={refreshing || saving || bulkProgress.isRunning}
                 onClick={() => fetchList({ silent: true })}
               >
                 Refresh
@@ -375,10 +722,71 @@ const ServiceNagadApi = () => {
                 size="sm"
                 leftSection={<IconFilter size={18} />}
                 onClick={resetAll}
+                disabled={bulkProgress.isRunning}
               >
                 Reset
               </Button>
             </Group>
+          </Group>
+
+          <Group
+            justify="space-between"
+            align="center"
+            wrap="wrap"
+          >
+            <Group gap="xs">
+              {selectedKeys.length > 0 && !bulkProgress.isRunning ? (
+                <Text size="sm">
+                  <strong>Selected: {selectedKeys.length}</strong>
+                </Text>
+              ) : null}
+              <Button
+                size="xs"
+                variant="light"
+                color="green"
+                onClick={handleBulkAddCounter}
+                disabled={bulkProgress.isRunning || selectedKeys.length === 0}
+              >
+                Add Counter Selected
+              </Button>
+              <Button
+                size="xs"
+                variant="light"
+                color="orange"
+                onClick={() => handleBulkExecute('restart')}
+                disabled={bulkProgress.isRunning || selectedKeys.length === 0}
+              >
+                Restart Selected
+              </Button>
+              <Button
+                size="xs"
+                variant="light"
+                color="blue"
+                onClick={() => handleBulkExecute('start')}
+                disabled={bulkProgress.isRunning || selectedKeys.length === 0}
+              >
+                Start Selected
+              </Button>
+              <Button
+                size="xs"
+                variant="light"
+                color="red"
+                onClick={() => handleBulkExecute('stop')}
+                disabled={bulkProgress.isRunning || selectedKeys.length === 0}
+              >
+                Stop Selected
+              </Button>
+            </Group>
+
+            {bulkProgress.isRunning ? (
+              <Text
+                size="sm"
+                c="dimmed"
+              >
+                Batch {bulkProgress.currentBatch}/{bulkProgress.totalBatches} -
+                Processed {bulkProgress.processed}/{bulkProgress.total}
+              </Text>
+            ) : null}
           </Group>
 
           <Box pos="relative">
@@ -398,6 +806,27 @@ const ServiceNagadApi = () => {
               >
                 <Table.Thead>
                   <Table.Tr>
+                    <Table.Th
+                      w={60}
+                      style={{ textAlign: 'center' }}
+                    >
+                      <Box
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={pageFullySelected}
+                          ref={(el) => {
+                            if (el) el.indeterminate = pagePartiallySelected;
+                          }}
+                          onChange={toggleAllOnPage}
+                          disabled={bulkProgress.isRunning}
+                        />
+                      </Box>
+                    </Table.Th>
                     {visibleColumns.map((col) => (
                       <Table.Th
                         key={col.key}
@@ -424,6 +853,25 @@ const ServiceNagadApi = () => {
                     ))}
                   </Table.Tr>
                   <Table.Tr style={{ backgroundColor: '#e7f5ff' }}>
+                    <Table.Th
+                      w={60}
+                      style={{ textAlign: 'center' }}
+                    >
+                      <Box
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Badge
+                          variant="light"
+                          color="gray"
+                          style={{ minWidth: 28, justifyContent: 'center' }}
+                        >
+                          {totalSelectedOnPage}
+                        </Badge>
+                      </Box>
+                    </Table.Th>
                     {visibleColumns.map((col) => (
                       <Table.Th
                         key={`${col.key}-filter`}
@@ -439,16 +887,36 @@ const ServiceNagadApi = () => {
                 </Table.Thead>
                 <Table.Tbody>
                   {paginatedData.length > 0 ? (
-                    paginatedData.map((item, idx) => (
-                      <Table.Tr key={item._rowKey || `${idx}-row`}>
-                        {visibleColumns.map((col) => (
-                          <Table.Td key={col.key}>{col.render(item)}</Table.Td>
-                        ))}
-                      </Table.Tr>
-                    ))
+                    paginatedData.map((item, idx) => {
+                      const rowKey = makeKey(item);
+                      return (
+                        <Table.Tr key={rowKey || `${idx}-row`}>
+                          <Table.Td>
+                            <Box
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedKeys.includes(rowKey)}
+                                onChange={() => toggleRow(item)}
+                                disabled={bulkProgress.isRunning}
+                              />
+                            </Box>
+                          </Table.Td>
+                          {visibleColumns.map((col) => (
+                            <Table.Td key={col.key}>
+                              {col.render(item)}
+                            </Table.Td>
+                          ))}
+                        </Table.Tr>
+                      );
+                    })
                   ) : (
                     <Table.Tr>
-                      <Table.Td colSpan={visibleColumns.length}>
+                      <Table.Td colSpan={visibleColumns.length + 1}>
                         <Text
                           ta="center"
                           c="dimmed"
@@ -461,7 +929,7 @@ const ServiceNagadApi = () => {
                 </Table.Tbody>
                 <Table.Tfoot>
                   <Table.Tr>
-                    <Table.Td colSpan={visibleColumns.length}>
+                    <Table.Td colSpan={visibleColumns.length + 1}>
                       <Group
                         justify="space-between"
                         align="center"

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 import {
+  ActionIcon,
   Badge,
   Box,
   Button,
@@ -8,28 +9,31 @@ import {
   Checkbox,
   Group,
   LoadingOverlay,
+  Menu,
   Pagination,
+  Popover,
   ScrollArea,
   Select,
   Stack,
   Table,
   Text,
   TextInput,
-  MultiSelect,
 } from '@mantine/core';
-import { Popover } from '@mantine/core';
 import { DateRangePicker } from 'react-date-range';
 import { format } from 'date-fns';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 import {
-  IconArrowUpCircle,
+  IconCheck,
+  IconDotsVertical,
   IconCalendar,
   IconFilter,
   IconRefresh,
   IconSearch,
+  IconUserPlus,
+  IconX,
 } from '@tabler/icons-react';
-import { withdrawAPI, merchantAPI } from '../../helper/api';
+import { withdrawAPI } from '../../helper/api';
 import { showNotification } from '../../helper/showNotification';
 import { useTableControls } from '../../hooks/useTableControls';
 import ColumnActionMenu from '../../components/ColumnActionMenu';
@@ -59,14 +63,6 @@ const defaultFilters = {
   assignStatusDesc: '',
 };
 
-const hourOptions = [
-  '00:00-23:59',
-  '00:00-05:59',
-  '06:00-11:59',
-  '12:00-17:59',
-  '18:00-23:59',
-];
-
 const formatNumber = (value) => {
   if (value === null || value === undefined || value === '') return '0';
   const num = Number(value);
@@ -74,13 +70,26 @@ const formatNumber = (value) => {
   return num.toLocaleString('en-US', { maximumFractionDigits: 2 });
 };
 
+const formatGenerateAmount = (value) => {
+  const num = Number(value);
+  if (Number.isNaN(num)) return String(value ?? '');
+  return num
+    .toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+    .replace(/\$/, '');
+};
+
 const getTransactionHighlight = (item) => {
   if (!item.insert) return undefined;
-  const now = dayjs();
-  const inserted = dayjs(item.insert);
-  if (!inserted.isValid()) return undefined;
-  const diffMinutes = now.diff(inserted, 'minute', true);
-  return diffMinutes >= 3 ? '#ffe3e3' : undefined;
+
+  const now = new Date();
+  const nowUtcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+  const nowGmt8Ms = nowUtcMs + 8 * 60 * 60 * 1000;
+
+  const insertedMs = new Date(item.insert).getTime();
+  if (!Number.isFinite(insertedMs)) return undefined;
+
+  const diffMs = nowGmt8Ms - insertedMs;
+  return diffMs >= 180000 ? '#ffe3e3' : undefined;
 };
 
 const WithdrawCheckAutomation = () => {
@@ -92,13 +101,11 @@ const WithdrawCheckAutomation = () => {
     },
   ]);
   const [datePickerOpened, setDatePickerOpened] = useState(false);
-  const [hourRange, setHourRange] = useState(hourOptions[0]);
   const [history, setHistory] = useState(false);
-  const [merchantFilter, setMerchantFilter] = useState([]);
-  const [merchantOptions, setMerchantOptions] = useState([]);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [actionLoadingId, setActionLoadingId] = useState('');
   const [columnFilters, setColumnFilters] = useState(defaultFilters);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -110,9 +117,139 @@ const WithdrawCheckAutomation = () => {
     }));
   }, []);
 
-  const handleClearFilters = useCallback(() => {
-    setColumnFilters(defaultFilters);
+  const runRowAction = useCallback(async (id, action) => {
+    setActionLoadingId(String(id || ''));
+    try {
+      await action();
+    } finally {
+      setActionLoadingId('');
+    }
   }, []);
+
+  const copyGenerateText = useCallback(async (row) => {
+    const bankPrefix = {
+      BKASH: 'ƒ~?‹,?ƒ~?‹,?BKASHƒ~?‹,?ƒ~?‹,?',
+      NAGAD: 'ƒ~?‹,?ƒ~?‹,?NAGADƒ~?‹,?ƒ~?‹,?',
+      ROCKET: 'dYs?dYs?ROCKETdYs?dYs?',
+      UPAY: 'dYO?dYO?UPAYdYO?dYO?',
+    }[String(row.bankcode || '').toUpperCase()] || '';
+
+    const legacyPrefix = {
+      BKASH: 'dYO^dYO^BKASHdYO^dYO^',
+      NAGAD: 'ƒ~?‹,?ƒ~?‹,?NAGADƒ~?‹,?ƒ~?‹,?',
+      ROCKET: 'dYs?dYs?ROCKETdYs?dYs?',
+      UPAY: 'dYO?dYO?UPAYdYO?dYO?',
+    }[String(row.bankcode || '').toUpperCase()] || '';
+
+    const text =
+      (legacyPrefix || bankPrefix) +
+      `\nWALLET : ${row.bankcode || ''}` +
+      `\nWD ID : ${row.transactionid || ''}` +
+      `\nCASH IN TO : ${row.dstbankaccount || ''}` +
+      `\nAMOUNT : ${formatGenerateAmount(row.amount || 0)}`;
+
+    try {
+      await navigator.clipboard.writeText(text);
+      showNotification({
+        title: 'Copied',
+        message: 'Generate text copied to clipboard',
+        Color: 'green',
+      });
+    } catch {
+      window.prompt('Copy text:', text);
+    }
+  }, []);
+
+  const fetchList = useCallback(
+    async ({ silent = false } = {}) => {
+      const start = dateRange?.[0]?.startDate;
+      const end = dateRange?.[0]?.endDate;
+      if (!start || !end) {
+        showNotification({
+          title: 'Validation',
+          message: 'Please select a date range',
+          Color: 'yellow',
+        });
+        return;
+      }
+
+      const hourfrom = '00:00';
+      const hourto = '23:59';
+
+      silent ? setRefreshing(true) : setLoading(true);
+
+      try {
+        const payloadDateFrom = dayjs(start).format('YYYY-MM-DD');
+        const payloadDateTo = dayjs(end).format('YYYY-MM-DD');
+        const response = await withdrawAPI.getAutomationWithdrawNtc({
+          datefrom: payloadDateFrom,
+          dateto: payloadDateTo,
+          hourfrom,
+          hourto,
+          merchant: 'all',
+          history,
+        });
+
+        if (!response.success || !response.data) {
+          showNotification({
+            title: 'Error',
+            message:
+              response.error || 'Failed to load automation withdraw check list',
+            Color: 'red',
+          });
+          return;
+        }
+
+        const payload = response.data;
+        if ((payload.status || '').toLowerCase() !== 'ok') {
+          showNotification({
+            title: 'Error',
+            message:
+              payload.message || 'Failed to load automation withdraw check list',
+            Color: 'red',
+          });
+          return;
+        }
+
+        const decodeRecord = (record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {});
+
+        const mapRecords = (records = []) =>
+          records.map((item) => ({
+            ...item,
+            id: item.id ?? item.futuretrxid ?? '',
+            amount: Number(item.amount) || 0,
+            fee: Number(item.fee) || 0,
+          }));
+
+        const records = Array.isArray(payload.records) ? payload.records : [];
+        const decoded = records.map(decodeRecord);
+        setData(mapRecords(decoded));
+      } catch (error) {
+        console.error('Automation withdraw check list fetch error:', error);
+        showNotification({
+          title: 'Error',
+          message: 'Unable to load automation withdraw check list',
+          Color: 'red',
+        });
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [dateRange, history]
+  );
 
   const columns = useMemo(
     () => [
@@ -124,11 +261,6 @@ const WithdrawCheckAutomation = () => {
           <Text
             size="sm"
             fw={600}
-            style={{
-              backgroundColor: getTransactionHighlight(item),
-              padding: '2px 4px',
-              borderRadius: 4,
-            }}
           >
             {item.id}
           </Text>
@@ -275,11 +407,6 @@ const WithdrawCheckAutomation = () => {
         render: (item) => (
           <Text
             size="sm"
-            style={{
-              backgroundColor: getTransactionHighlight(item),
-              padding: '2px 4px',
-              borderRadius: 4,
-            }}
           >
             {item.transactionid || '-'}
           </Text>
@@ -308,6 +435,222 @@ const WithdrawCheckAutomation = () => {
             onChange={(e) => handleFilterChange('memo', e.currentTarget.value)}
           />
         ),
+      },
+      {
+        key: 'action',
+        label: 'Action',
+        minWidth: 120,
+        render: (item) => {
+          const id = item.id ?? item.futuretrxid ?? '';
+          const busy = actionLoadingId === String(id);
+
+          const status = String(item.status || '');
+          const note = String(item.note || '');
+          const agentUser = String(item.agentUser || '');
+
+          const canAssign = agentUser === '';
+          const canReassign =
+            agentUser !== '' && !note.includes('AUTOMATION FAILED') && status !== '';
+
+          const canCheck = status === 'Pending';
+          const canFail = status === 'Order need to check';
+          const canSuccess = status === 'Order need to check';
+
+          const onAssign = async () => {
+            const accountNo = window.prompt('Account No', '') ?? '';
+            if (!accountNo.trim()) return;
+
+            const bankCode =
+              window.prompt('Bank Code', String(item.bankcode || '')) ?? '';
+            const accountName = window.prompt('Account Name', '') ?? '';
+            const username = window.prompt('Username', '') ?? '';
+
+            await runRowAction(id, async () => {
+              const res = await withdrawAPI.assignAutomationWithdraw({
+                id,
+                accountNo,
+                bankCode,
+                accountName,
+                username,
+              });
+
+              const ok = String(res.data?.status || '').toLowerCase() === 'ok';
+              if (!res.success || !ok) {
+                showNotification({
+                  title: 'Error',
+                  message:
+                    res.data?.message || res.error || 'Assignment failed',
+                  Color: 'red',
+                });
+                return;
+              }
+
+              showNotification({
+                title: 'Success',
+                message: 'Assignment Success!',
+                Color: 'green',
+              });
+              await fetchList({ silent: true });
+            });
+          };
+
+          const onCheck = async () => {
+            await runRowAction(id, async () => {
+              const res = await withdrawAPI.checkWithdrawList(id);
+              const ok = String(res.data?.status || '').toLowerCase() === 'ok';
+              if (!res.success || !ok) {
+                showNotification({
+                  title: 'Error',
+                  message: res.data?.message || res.error || 'Check failed',
+                  Color: 'red',
+                });
+                return;
+              }
+              await fetchList({ silent: true });
+            });
+          };
+
+          const onFail = async () => {
+            const confirmed = window.confirm(
+              `Are you sure want to fail this transaction [${id}]?`
+            );
+            if (!confirmed) return;
+
+            const memo = window.prompt('Memo / Reason', '') ?? '';
+
+            await runRowAction(id, async () => {
+              const res = await withdrawAPI.updateAutomationWithdrawTransaction({
+                id,
+                status: 'C',
+                accountdest: '',
+                memo,
+              });
+              const ok = String(res.data?.status || '').toLowerCase() === 'ok';
+              if (!res.success || !ok) {
+                showNotification({
+                  title: 'Error',
+                  message:
+                    res.data?.message || res.error || 'Fail transaction failed',
+                  Color: 'red',
+                });
+                return;
+              }
+
+              showNotification({
+                title: 'Success',
+                message: 'Data Saved',
+                Color: 'green',
+              });
+              await fetchList({ silent: true });
+            });
+          };
+
+          const onSuccess = async () => {
+            const account = window.prompt('Account Dest', '') ?? '';
+            if (!account.trim()) return;
+
+            const bankcode =
+              window.prompt('Bank Code', String(item.bankcode || '')) ?? '';
+            const receipt = window.prompt('Receipt (optional)', '') ?? '';
+
+            await runRowAction(id, async () => {
+              const res = await withdrawAPI.setAutomationWithdrawSuccess({
+                id,
+                account,
+                bankcode,
+                receipt,
+              });
+              const ok = String(res.data?.status || '').toLowerCase() === 'ok';
+              if (!res.success || !ok) {
+                showNotification({
+                  title: 'Error',
+                  message: res.data?.message || res.error || 'Success failed',
+                  Color: 'red',
+                });
+                return;
+              }
+
+              showNotification({
+                title: 'Success',
+                message: 'Success!',
+                Color: 'green',
+              });
+              await fetchList({ silent: true });
+            });
+          };
+
+          return (
+            <Menu shadow="sm" withinPortal>
+              <Menu.Target>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  title="Row Actions"
+                  disabled={busy}
+                >
+                  <IconDotsVertical size={16} />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item
+                  leftSection={<IconSearch size={14} />}
+                  onClick={() => copyGenerateText(item)}
+                  disabled={busy}
+                >
+                  Generate
+                </Menu.Item>
+                {canAssign ? (
+                  <Menu.Item
+                    leftSection={<IconUserPlus size={14} />}
+                    onClick={onAssign}
+                    disabled={busy}
+                  >
+                    Assign
+                  </Menu.Item>
+                ) : null}
+                {canReassign ? (
+                  <Menu.Item
+                    leftSection={<IconUserPlus size={14} />}
+                    onClick={onAssign}
+                    disabled={busy}
+                  >
+                    Re-Assign
+                  </Menu.Item>
+                ) : null}
+                {canCheck ? (
+                  <Menu.Item
+                    leftSection={<IconSearch size={14} />}
+                    onClick={onCheck}
+                    disabled={busy}
+                  >
+                    Check
+                  </Menu.Item>
+                ) : null}
+                {canFail ? (
+                  <Menu.Item
+                    leftSection={<IconX size={14} />}
+                    color="red"
+                    onClick={onFail}
+                    disabled={busy}
+                  >
+                    Fail
+                  </Menu.Item>
+                ) : null}
+                {canSuccess ? (
+                  <Menu.Item
+                    leftSection={<IconCheck size={14} />}
+                    color="green"
+                    onClick={onSuccess}
+                    disabled={busy}
+                  >
+                    Success
+                  </Menu.Item>
+                ) : null}
+              </Menu.Dropdown>
+            </Menu>
+          );
+        },
+        filter: null,
       },
       {
         key: 'accountname',
@@ -516,7 +859,14 @@ const WithdrawCheckAutomation = () => {
         ),
       },
     ],
-    [columnFilters, handleFilterChange]
+    [
+      actionLoadingId,
+      columnFilters,
+      copyGenerateText,
+      fetchList,
+      handleFilterChange,
+      runRowAction,
+    ]
   );
 
   const {
@@ -597,129 +947,11 @@ const WithdrawCheckAutomation = () => {
     }
   }, [totalPages, currentPage]);
 
-  const decodeRecord = (record) =>
-    Object.entries(record || {}).reduce((acc, [key, value]) => {
-      if (typeof value === 'string') {
-        try {
-          acc[key] = decodeURIComponent(value);
-        } catch (_) {
-          acc[key] = value;
-        }
-      } else {
-        acc[key] = value;
-      }
-      return acc;
-    }, {});
-
-  const mapRecords = (records = []) =>
-    records.map((item) => ({
-      ...item,
-      id: item.id ?? item.futuretrxid ?? '',
-      amount: Number(item.amount) || 0,
-      fee: Number(item.fee) || 0,
-    }));
-
-  const fetchMerchants = useCallback(async () => {
-    const response = await merchantAPI.getMerchantList();
-    if (response.success && response.data) {
-      const payload = response.data;
-      if ((payload.status || '').toLowerCase() === 'ok') {
-        const options = (payload.records || []).map((item) => ({
-          value: item.merchantcode,
-          label: `${item.merchantcode} - ${item.merchantname}`,
-        }));
-        setMerchantOptions(options);
-      }
-    }
-  }, []);
-
-  const fetchList = useCallback(
-    async ({ silent = false } = {}) => {
-      const start = dateRange?.[0]?.startDate;
-      const end = dateRange?.[0]?.endDate;
-      if (!start || !end) {
-        showNotification({
-          title: 'Validation',
-          message: 'Please select a date range',
-          color: 'yellow',
-        });
-        return;
-      }
-
-      const diffDays = dayjs(end)
-        .startOf('day')
-        .diff(dayjs(start).startOf('day'), 'day');
-      if (diffDays > 30) {
-        showNotification({
-          title: 'Validation',
-          message: 'Maximum date range is 31 days',
-          color: 'yellow',
-        });
-        return;
-      }
-
-      const [hourfrom = '00:00', hourto = '23:59'] = (
-        hourRange || '00:00-23:59'
-      ).split('-');
-
-      silent ? setRefreshing(true) : setLoading(true);
-
-      try {
-        const payloadDateFrom = dayjs(start).format('YYYY-MM-DD');
-        const payloadDateTo = dayjs(end).format('YYYY-MM-DD');
-        const response = await withdrawAPI.getAutomationWithdrawNtc({
-          datefrom: payloadDateFrom,
-          dateto: payloadDateTo,
-          hourfrom,
-          hourto,
-          merchant: merchantFilter.length ? merchantFilter : 'all',
-          history,
-        });
-
-        if (response.success && response.data) {
-          const payload = response.data;
-          if ((payload.status || '').toLowerCase() === 'ok') {
-            const records = Array.isArray(payload.records)
-              ? payload.records
-              : [];
-            const decoded = records.map(decodeRecord);
-            setData(mapRecords(decoded));
-          } else {
-            showNotification({
-              title: 'Error',
-              message:
-                payload.message ||
-                'Failed to load automation withdraw check list',
-              color: 'red',
-            });
-          }
-        } else {
-          showNotification({
-            title: 'Error',
-            message:
-              response.error || 'Failed to load automation withdraw check list',
-            color: 'red',
-          });
-        }
-      } catch (error) {
-        console.error('Automation withdraw check list fetch error:', error);
-        showNotification({
-          title: 'Error',
-          message: 'Unable to load automation withdraw check list',
-          color: 'red',
-        });
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-      }
-    },
-    [dateRange, hourRange, merchantFilter, history]
-  );
-
   useEffect(() => {
-    fetchMerchants();
     fetchList();
-  }, [fetchMerchants, fetchList]);
+    const timerId = setTimeout(() => fetchList({ silent: true }), 60 * 1000);
+    return () => clearTimeout(timerId);
+  }, [fetchList]);
 
   return (
     <Box p="md">
@@ -823,25 +1055,6 @@ const WithdrawCheckAutomation = () => {
                   </Popover.Dropdown>
                 </Popover>
 
-                <Select
-                  label="Hour Range"
-                  data={hourOptions.map((opt) => ({ value: opt, label: opt }))}
-                  value={hourRange}
-                  onChange={(val) => setHourRange(val || hourOptions[0])}
-                  style={{ minWidth: 160 }}
-                />
-
-                <MultiSelect
-                  label="Merchant"
-                  placeholder="All merchants"
-                  data={merchantOptions}
-                  value={merchantFilter}
-                  onChange={setMerchantFilter}
-                  searchable
-                  clearable
-                  style={{ minWidth: 260 }}
-                />
-
                 <Checkbox
                   label="History"
                   checked={history}
@@ -928,7 +1141,10 @@ const WithdrawCheckAutomation = () => {
                 <Table.Tbody>
                   {paginatedData.length > 0 ? (
                     paginatedData.map((item) => (
-                      <Table.Tr key={makeKey(item)}>
+                      <Table.Tr
+                        key={makeKey(item)}
+                        style={{ backgroundColor: getTransactionHighlight(item) }}
+                      >
                         {visibleColumns.map((col) => (
                           <Table.Td key={col.key}>{col.render(item)}</Table.Td>
                         ))}

@@ -46,7 +46,9 @@ const DashboardMerchant = () => {
     },
   ]);
   const [datePickerOpened, setDatePickerOpened] = useState(false);
-  const [merchantOptions, setMerchantOptions] = useState([{ value: 'ALL', label: 'ALL' }]);
+  const [merchantOptions, setMerchantOptions] = useState([
+    { value: 'ALL', label: 'ALL' },
+  ]);
   const [selectedMerchant, setSelectedMerchant] = useState('ALL');
   const [search, setSearch] = useState('');
   const [data, setData] = useState([]);
@@ -64,7 +66,9 @@ const DashboardMerchant = () => {
     try {
       const response = await merchantDashboardAPI.getMerchantList();
       if (response.success && response.data) {
-        const list = Array.isArray(response.data.records) ? response.data.records : [];
+        const list = Array.isArray(response.data.records)
+          ? response.data.records
+          : [];
         const options = list
           .map((item) => item?.merchantcode || item?.merchantCode || '')
           .filter(Boolean);
@@ -94,8 +98,14 @@ const DashboardMerchant = () => {
     async ({ silent = false } = {}) => {
       silent ? setRefreshing(true) : setLoading(true);
       try {
-        const start = format(dateRange[0].startDate ?? new Date(), 'yyyy-MM-dd');
-        const end = format(dateRange[0].endDate ?? dateRange[0].startDate ?? new Date(), 'yyyy-MM-dd');
+        const start = format(
+          dateRange[0].startDate ?? new Date(),
+          'yyyy-MM-dd'
+        );
+        const end = format(
+          dateRange[0].endDate ?? dateRange[0].startDate ?? new Date(),
+          'yyyy-MM-dd'
+        );
 
         const response = await merchantDashboardAPI.getSummary({
           dateFrom: `${start} 00:00:00`,
@@ -110,14 +120,20 @@ const DashboardMerchant = () => {
             const records = Array.isArray(payload.records)
               ? payload.records
               : Array.isArray(payload.data)
-                ? payload.data
-                : [];
+              ? payload.data
+              : [];
             const normalized = records.map((item, idx) => ({
               ...item,
               merchantcode: item.merchantcode || item.merchantCode || '-',
-              total_deposit: Number(item.total_deposit ?? item.totalDeposit ?? 0),
-              total_withdraw: Number(item.total_withdraw ?? item.totalWithdraw ?? 0),
-              _rowKey: `${item.merchantcode || item.merchantCode || 'merchant'}-${idx}`,
+              total_deposit: Number(
+                item.total_deposit ?? item.totalDeposit ?? 0
+              ),
+              total_withdraw: Number(
+                item.total_withdraw ?? item.totalWithdraw ?? 0
+              ),
+              _rowKey: `${
+                item.merchantcode || item.merchantCode || 'merchant'
+              }-${idx}`,
             }));
             setData(normalized);
           } else {
@@ -180,7 +196,8 @@ const DashboardMerchant = () => {
     if (selectedMerchant && selectedMerchant !== 'ALL') {
       list = list.filter(
         (item) =>
-          (item.merchantcode || '').toString().toLowerCase() === selectedMerchant.toLowerCase()
+          (item.merchantcode || '').toString().toLowerCase() ===
+          selectedMerchant.toLowerCase()
       );
     }
     if (search) {
@@ -209,7 +226,12 @@ const DashboardMerchant = () => {
 
   return (
     <Box p="md">
-      <Card shadow="sm" padding="lg" radius="md" withBorder>
+      <Card
+        shadow="sm"
+        padding="lg"
+        radius="md"
+        withBorder
+      >
         <LoadingOverlay
           visible={loading}
           overlayProps={{ radius: 'md', blur: 2 }}
@@ -217,15 +239,27 @@ const DashboardMerchant = () => {
         />
 
         <Stack gap="lg">
-          <Group justify="space-between" align="center">
+          <Group
+            justify="space-between"
+            align="center"
+          >
             <Box>
               <Group gap={8}>
-                <IconReportMoney size={22} color="#1d4ed8" />
-                <Text size="xl" fw={700}>
+                <IconReportMoney
+                  size={22}
+                  color="#1d4ed8"
+                />
+                <Text
+                  size="xl"
+                  fw={700}
+                >
                   Merchant Dashboard
                 </Text>
               </Group>
-              <Text size="sm" c="dimmed">
+              <Text
+                size="sm"
+                c="dimmed"
+              >
                 Monitor total deposit and withdraw per merchant.
               </Text>
             </Box>
@@ -254,8 +288,17 @@ const DashboardMerchant = () => {
             </Group>
           </Group>
 
-          <Card withBorder radius="md" padding="md" shadow="xs">
-            <Group gap="md" wrap="wrap" align="flex-end">
+          <Card
+            withBorder
+            radius="md"
+            padding="md"
+            shadow="xs"
+          >
+            <Group
+              gap="md"
+              wrap="wrap"
+              align="flex-end"
+            >
               <Popover
                 width="auto"
                 trapFocus
@@ -272,10 +315,10 @@ const DashboardMerchant = () => {
                     leftSection={<IconCalendar size={18} />}
                     onClick={() => setDatePickerOpened((o) => !o)}
                   >
-                    {`${format(dateRange[0].startDate, 'dd MMM yyyy')} - ${format(
-                      dateRange[0].endDate,
+                    {`${format(
+                      dateRange[0].startDate,
                       'dd MMM yyyy'
-                    )}`}
+                    )} - ${format(dateRange[0].endDate, 'dd MMM yyyy')}`}
                   </Button>
                 </Popover.Target>
                 <Popover.Dropdown p={0}>
@@ -298,71 +341,158 @@ const DashboardMerchant = () => {
                 style={{ minWidth: 200 }}
               />
 
-              <TextInput
+              {/* <TextInput
                 label="Search"
                 placeholder="Search merchant code..."
                 value={search}
                 onChange={(e) => setSearch(e.currentTarget.value)}
                 style={{ minWidth: 220 }}
-              />
+              /> */}
             </Group>
           </Card>
 
-          <SimpleGrid cols={3} spacing="sm" breakpoints={[{ maxWidth: 'md', cols: 1 }]}>
-            <Card withBorder padding="md" radius="md" shadow="xs">
-              <Group justify="space-between" align="center">
-                <Text size="sm" c="dimmed">
+          <SimpleGrid
+            cols={3}
+            spacing="sm"
+            breakpoints={[{ maxWidth: 'md', cols: 1 }]}
+          >
+            <Card
+              withBorder
+              padding="md"
+              radius="md"
+              shadow="xs"
+            >
+              <Group
+                justify="space-between"
+                align="center"
+              >
+                <Text
+                  size="sm"
+                  c="dimmed"
+                >
                   Total Deposit
                 </Text>
-                <IconReportMoney size={16} color="#2563eb" />
+                <IconReportMoney
+                  size={16}
+                  color="#2563eb"
+                />
               </Group>
-              <Text fw={700} size="lg">
+              <Text
+                fw={700}
+                size="lg"
+              >
                 {formatNumber(totals.deposit)}
               </Text>
             </Card>
 
-            <Card withBorder padding="md" radius="md" shadow="xs">
-              <Group justify="space-between" align="center">
-                <Text size="sm" c="dimmed">
+            <Card
+              withBorder
+              padding="md"
+              radius="md"
+              shadow="xs"
+            >
+              <Group
+                justify="space-between"
+                align="center"
+              >
+                <Text
+                  size="sm"
+                  c="dimmed"
+                >
                   Total Withdraw
                 </Text>
-                <IconReportMoney size={16} color="#dc2626" />
+                <IconReportMoney
+                  size={16}
+                  color="#dc2626"
+                />
               </Group>
-              <Text fw={700} size="lg">
+              <Text
+                fw={700}
+                size="lg"
+              >
                 {formatNumber(totals.withdraw)}
               </Text>
             </Card>
 
-            <Card withBorder padding="md" radius="md" shadow="xs">
-              <Group justify="space-between" align="center">
-                <Text size="sm" c="dimmed">
+            <Card
+              withBorder
+              padding="md"
+              radius="md"
+              shadow="xs"
+            >
+              <Group
+                justify="space-between"
+                align="center"
+              >
+                <Text
+                  size="sm"
+                  c="dimmed"
+                >
                   Merchants
                 </Text>
-                <IconBuildingBank size={16} color="#16a34a" />
+                <IconBuildingBank
+                  size={16}
+                  color="#16a34a"
+                />
               </Group>
-              <Text fw={700} size="lg">
+              <Text
+                fw={700}
+                size="lg"
+              >
                 {filteredData.length}
               </Text>
             </Card>
           </SimpleGrid>
 
-          <Card withBorder radius="md" padding="md" shadow="xs">
+          <Card
+            withBorder
+            radius="md"
+            padding="md"
+            shadow="xs"
+          >
             <Stack gap="sm">
               <Text fw={700}>Merchant Overview</Text>
-              <SimpleGrid cols={4} spacing="sm" breakpoints={[{ maxWidth: 'md', cols: 2 }]}>
+              <SimpleGrid
+                cols={4}
+                spacing="sm"
+                breakpoints={[{ maxWidth: 'md', cols: 2 }]}
+              >
                 {filteredData.map((item) => (
-                  <Card key={item._rowKey} withBorder padding="md" radius="md" shadow="xs">
-                    <Group justify="space-between" align="center" mb={6}>
+                  <Card
+                    key={item._rowKey}
+                    withBorder
+                    padding="md"
+                    radius="md"
+                    shadow="xs"
+                  >
+                    <Group
+                      justify="space-between"
+                      align="center"
+                      mb={6}
+                    >
                       <Text fw={700}>{item.merchantcode}</Text>
-                      <Badge color="blue" variant="light">
+                      <Badge
+                        color="blue"
+                        variant="light"
+                      >
                         Deposit
                       </Badge>
                     </Group>
-                    <Text size="sm" fw={600}>
+                    <Text
+                      size="sm"
+                      fw={600}
+                    >
                       {formatNumber(item.total_deposit)}
                     </Text>
-                    <Group justify="space-between" align="center" mt={8}>
-                      <Text size="sm" c="dimmed">
+                    <Group
+                      justify="space-between"
+                      align="center"
+                      mt={8}
+                    >
+                      <Text
+                        size="sm"
+                        c="dimmed"
+                      >
                         Withdraw
                       </Text>
                       <Text fw={600}>{formatNumber(item.total_withdraw)}</Text>
@@ -370,8 +500,16 @@ const DashboardMerchant = () => {
                   </Card>
                 ))}
                 {filteredData.length === 0 && (
-                  <Card withBorder padding="md" radius="md" shadow="xs">
-                    <Text size="sm" c="dimmed">
+                  <Card
+                    withBorder
+                    padding="md"
+                    radius="md"
+                    shadow="xs"
+                  >
+                    <Text
+                      size="sm"
+                      c="dimmed"
+                    >
                       No merchant data available.
                     </Text>
                   </Card>
@@ -381,7 +519,10 @@ const DashboardMerchant = () => {
           </Card>
 
           <Box pos="relative">
-            <ScrollArea type="auto" h="60vh">
+            <ScrollArea
+              type="auto"
+              h="60vh"
+            >
               <Table
                 highlightOnHover
                 withTableBorder
@@ -395,17 +536,26 @@ const DashboardMerchant = () => {
                 <Table.Thead>
                   <Table.Tr>
                     <Table.Th style={{ minWidth: 160 }}>
-                      <Text size="sm" fw={600}>
+                      <Text
+                        size="sm"
+                        fw={600}
+                      >
                         Merchant
                       </Text>
                     </Table.Th>
                     <Table.Th style={{ minWidth: 160 }}>
-                      <Text size="sm" fw={600}>
+                      <Text
+                        size="sm"
+                        fw={600}
+                      >
                         Total Deposit
                       </Text>
                     </Table.Th>
                     <Table.Th style={{ minWidth: 160 }}>
-                      <Text size="sm" fw={600}>
+                      <Text
+                        size="sm"
+                        fw={600}
+                      >
                         Total Withdraw
                       </Text>
                     </Table.Th>
@@ -416,22 +566,32 @@ const DashboardMerchant = () => {
                     paginatedData.map((item) => (
                       <Table.Tr key={item._rowKey}>
                         <Table.Td>
-                          <Text size="sm" fw={600}>
+                          <Text
+                            size="sm"
+                            fw={600}
+                          >
                             {item.merchantcode}
                           </Text>
                         </Table.Td>
                         <Table.Td>
-                          <Text size="sm">{formatNumber(item.total_deposit)}</Text>
+                          <Text size="sm">
+                            {formatNumber(item.total_deposit)}
+                          </Text>
                         </Table.Td>
                         <Table.Td>
-                          <Text size="sm">{formatNumber(item.total_withdraw)}</Text>
+                          <Text size="sm">
+                            {formatNumber(item.total_withdraw)}
+                          </Text>
                         </Table.Td>
                       </Table.Tr>
                     ))
                   ) : (
                     <Table.Tr>
                       <Table.Td colSpan={3}>
-                        <Text ta="center" c="dimmed">
+                        <Text
+                          ta="center"
+                          c="dimmed"
+                        >
                           No data available
                         </Text>
                       </Table.Td>
@@ -441,17 +601,26 @@ const DashboardMerchant = () => {
                 <Table.Tfoot>
                   <Table.Tr>
                     <Table.Td>
-                      <Text size="sm" fw={600}>
+                      <Text
+                        size="sm"
+                        fw={600}
+                      >
                         Totals
                       </Text>
                     </Table.Td>
                     <Table.Td>
-                      <Text size="sm" fw={600}>
+                      <Text
+                        size="sm"
+                        fw={600}
+                      >
                         {formatNumber(totals.deposit)}
                       </Text>
                     </Table.Td>
                     <Table.Td>
-                      <Text size="sm" fw={600}>
+                      <Text
+                        size="sm"
+                        fw={600}
+                      >
                         {formatNumber(totals.withdraw)}
                       </Text>
                     </Table.Td>
@@ -461,9 +630,18 @@ const DashboardMerchant = () => {
             </ScrollArea>
           </Box>
 
-          <Group justify="space-between" align="center">
-            <Group gap="sm" align="center">
-              <Text size="sm" c="dimmed">
+          <Group
+            justify="space-between"
+            align="center"
+          >
+            <Group
+              gap="sm"
+              align="center"
+            >
+              <Text
+                size="sm"
+                c="dimmed"
+              >
                 Rows per page:
               </Text>
               <Select
@@ -481,7 +659,10 @@ const DashboardMerchant = () => {
                 style={{ width: 90 }}
                 size="sm"
               />
-              <Text size="sm" fw={600}>
+              <Text
+                size="sm"
+                fw={600}
+              >
                 Rows: {paginatedData.length}
               </Text>
             </Group>

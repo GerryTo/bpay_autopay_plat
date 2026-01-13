@@ -2,17 +2,75 @@
 <div class="page-header-container box">Service BKASH API</div>
 <div class="page-body box">
   <div class="row">
+    <!-- Refresh Button -->
     <div class="col-xs-12 col-sm-4 col-md-1 col-lg-1">
       <div class="button-container">
-        <button type="button" class="btn btn-default btn-sm" ng-click="refresh()"
-          ng-disabled="gridIsLoading==true">{{globallang.refresh}}</button>
+        <button
+          type="button"
+          class="btn btn-default btn-sm"
+          ng-click="refresh()"
+          ng-disabled="gridIsLoading==true"
+        >
+          {{globallang.refresh}}
+        </button>
+      </div>
+    </div>
+
+    <!-- Bulk Action Buttons -->
+    <div class="col-xs-12 col-sm-8 col-md-11 col-lg-11">
+      <div
+        class="button-container"
+        style="display: inline-flex; gap: 5px; align-items: center"
+      >
+        <span
+          style="margin-right: 10px"
+          ng-show="selectedRows.length > 0 && !bulkProgress.isRunning"
+        >
+          <strong>Selected: {{selectedRows.length}}</strong>
+        </span>
+        <button
+          type="button"
+          class="btn btn-warning btn-sm"
+          ng-click="ExecuteBulkService(1)"
+          ng-disabled="gridIsLoading || selectedRows.length == 0"
+        >
+          <i class="fa fa-refresh"></i> RESTART SELECTED
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary btn-sm"
+          ng-click="ExecuteBulkService(2)"
+          ng-disabled="gridIsLoading || selectedRows.length == 0"
+        >
+          <i class="fa fa-play"></i> START SELECTED
+        </button>
+        <button
+          type="button"
+          class="btn btn-danger btn-sm"
+          ng-click="ExecuteBulkService(3)"
+          ng-disabled="gridIsLoading || selectedRows.length == 0"
+        >
+          <i class="fa fa-stop"></i> STOP SELECTED
+        </button>
       </div>
     </div>
   </div>
 
-  <div id="grid1" ui-grid="gridOptions" class="grid" ui-grid-resize-columns ui-grid-auto-resize ui-grid-exporter
-    ng-style="{'height': 700}">
-    <div class="grid-nodata-container" ng-show="gridOptions.data.length == 0 && !gridIsLoading">No Data Available
+  <div
+    id="grid1"
+    ui-grid="gridOptions"
+    class="grid"
+    ui-grid-selection
+    ui-grid-resize-columns
+    ui-grid-auto-resize
+    ui-grid-exporter
+    ng-style="{'height': 700}"
+  >
+    <div
+      class="grid-nodata-container"
+      ng-show="gridOptions.data.length == 0 && !gridIsLoading"
+    >
+      No Data Available
     </div>
     <div class="grid-loading-container" ng-show="gridIsLoading">
       <img src="images/loading.gif" />

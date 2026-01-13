@@ -1,116 +1,273 @@
-app.controller('serviceBkashAPICtrl', ['$state', '$scope', '$http', '$timeout', 'uiGridConstants', '$stateParams', '$uibModal',
-  '$interval', '$rootScope',
-  function ($state, $scope, $http, $timeout, uiGridConstants, $stateParams, $uibModal, $interval, $rootScope) {
-
+app.controller("serviceBkashAPICtrl", [
+  "$state",
+  "$scope",
+  "$http",
+  "$timeout",
+  "uiGridConstants",
+  "$stateParams",
+  "$uibModal",
+  "$interval",
+  "$rootScope",
+  function (
+    $state,
+    $scope,
+    $http,
+    $timeout,
+    uiGridConstants,
+    $stateParams,
+    $uibModal,
+    $interval,
+    $rootScope
+  ) {
     $scope.gridIsLoading = false;
+    $scope.selectedRows = [];
+
+    // Batch config
+    $scope.batchSize = 25;
+    $scope.batchDelay = 1000;
+
+    $scope.bulkProgress = {
+      isRunning: false,
+      total: 0,
+      processed: 0,
+      success: 0,
+      failed: 0,
+      currentBatch: 0,
+      totalBatches: 0,
+    };
 
     $scope.gridOptions = {
       enableSorting: true,
-      showColumnFooter: true,
       enableFiltering: true,
       enableGridMenu: true,
       enableColumnResizing: true,
-      rowTemplate: 'templates/rowTemplate.html',
+
+      // ✅ selection SAME as NAGAD
+      enableRowSelection: true,
+      enableSelectAll: true,
+      selectionRowHeaderWidth: 35,
+      rowHeight: 35,
+
+      rowTemplate: "templates/rowTemplate.html",
+
       columnDefs: [
-        { name: 'User', field: 'v_mainuser'},
-        // { name: 'Email', field: 'v_bankcode'},
-        // { name: 'Phone Number', field: 'v_phonenumber'},
-        // { name: 'Counter', field: 'v_atc'},
-        // { name: 'Session ID', field: 'v_mpaid', width: 300},
-        // { name: 'Operator', field: 'v_operator'},
-        // { name: 'Service Name', field: 'v_servicename' },
-        // { name: 'Description', field: 'v_description' },
+        { name: "User", field: "v_mainuser" },
         {
           name: "Action",
-          field: "n_id",
           width: 250,
+          enableFiltering: false,
           cellTemplate:
-            '<button type="button" class="btn btn-warning btn-sm" style="margin-right:2px;" ng-click="grid.appScope.ExecuteService(row.entity, 1)"> RESTART </button>' +
-            '<button type="button" class="btn btn-primary btn-sm" style="margin-right:2px;" ng-click="grid.appScope.ExecuteService(row.entity, 2)"> START </button>' +
-            '<button type="button" class="btn btn-danger btn-sm" style="margin-right:2px;" ng-click="grid.appScope.ExecuteService(row.entity, 3)"> STOP </button>',
+            '<button class="btn btn-warning btn-sm" ng-click="grid.appScope.ExecuteService(row.entity,1)">RESTART</button> ' +
+            '<button class="btn btn-primary btn-sm" ng-click="grid.appScope.ExecuteService(row.entity,2)">START</button> ' +
+            '<button class="btn btn-danger btn-sm" ng-click="grid.appScope.ExecuteService(row.entity,3)">STOP</button>',
         },
       ],
+
       onRegisterApi: function (gridApi) {
         $scope.gridApi = gridApi;
+
+        // ✅ ini WAJIB agar bulk jalan
+        gridApi.selection.on.rowSelectionChanged($scope, function () {
+          $scope.selectedRows = gridApi.selection.getSelectedRows();
+        });
+
+        gridApi.selection.on.rowSelectionChangedBatch($scope, function () {
+          $scope.selectedRows = gridApi.selection.getSelectedRows();
+        });
       },
+
       data: [],
     };
 
+    function getStatementFromStatus(status) {
+      if (status == 1) return "restart";
+      if (status == 2) return "start";
+      if (status == 3) return "stop";
+      return "";
+    }
+
+    // =========================
+    // SINGLE SERVICE
+    // =========================
     $scope.ExecuteService = function (data, status) {
-      console.log(data);
-      console.log(status);
-      var stmt = '';
-      if (status == 1) {
-        stmt = 'restart';
-      } else if (status == 2) {
-        stmt = 'start';
-      }
-      else if (status == 3) {
-        stmt = 'stop';
-      }
-      console.log(stmt);
-      console.log(data.v_user);
-      var data1 = {
+      var stmt = getStatementFromStatus(status);
+
+      var payload = {
         statment: stmt,
         servicename: data.v_mainuser,
       };
 
       $scope.gridIsLoading = true;
-      $http({
-        method: "POST",
-        url: webservicesUrl + "/executeServiceBkashAPI.php",
-        data: { data: data1 },
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
-      }).then(function mySuccess(response) {
-        $scope.gridIsLoading = false;
-        var data = response.data;
-        console.log(response.data.status);
-        if (data.status.toLowerCase() == 'success') {
-          alert(data.message);
-          $scope.getListData();
-        } else {
-          alert(data.message);
-        }
-      }, function myError(response) {
-        $scope.gridIsLoading = false;
-        console.log(response.data.status);
-      });
-    }
 
-    $scope.getListData = function () {
-      var data = {};
+      $http
+        .post(
+          webservicesUrl + "/executeServiceBkashAPI.php",
+          { data: payload },
+          {
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+            },
+          }
+        )
+        .then(
+          function (res) {
+            $scope.gridIsLoading = false;
+            alert(res.data.message);
+            $scope.getListData();
+          },
+          function () {
+            $scope.gridIsLoading = false;
+            alert("Request failed");
+          }
+        );
+    };
+
+    // =========================
+    // BULK SERVICE
+    // =========================
+    $scope.ExecuteBulkService = function (status) {
+      if ($scope.selectedRows.length === 0) {
+        alert("Please select at least one service");
+        return;
+      }
+
+      var stmt = getStatementFromStatus(status);
+      var total = $scope.selectedRows.length;
+      var totalBatches = Math.ceil(total / $scope.batchSize);
+
+      if (
+        !confirm(
+          "Are you sure want to " +
+            stmt.toUpperCase() +
+            " " +
+            total +
+            " service(s)?\n\nBatch: " +
+            totalBatches
+        )
+      ) {
+        return;
+      }
+
+      $scope.bulkProgress = {
+        isRunning: true,
+        total: total,
+        processed: 0,
+        success: 0,
+        failed: 0,
+        currentBatch: 0,
+        totalBatches: totalBatches,
+      };
 
       $scope.gridIsLoading = true;
-      $http({
-        method: "POST",
-        url: webservicesUrl + "/GetServiceBkashAPI.php",
-        data: data,
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
-      }).then(function mySuccess(response) {
-        $scope.gridIsLoading = false;
-        var data = response.data;
 
-        console.log(data.records);
+      var batches = [];
+      for (var i = 0; i < total; i += $scope.batchSize) {
+        batches.push($scope.selectedRows.slice(i, i + $scope.batchSize));
+      }
 
-        if (data.status.toLowerCase() == 'success') {
-          $scope.gridOptions.data = data.records;
-        } else {
-          alert(data.message);
-        }
-      }, function myError(response) {
-        $scope.gridIsLoading = false;
-        console.log(response.status);
+      processBatch(batches, stmt, 0);
+    };
+
+    function processBatch(batches, stmt, index) {
+      if (index >= batches.length) {
+        onBulkComplete(stmt);
+        return;
+      }
+
+      $scope.bulkProgress.currentBatch = index + 1;
+      var promises = [];
+
+      angular.forEach(batches[index], function (row) {
+        promises.push(
+          $http
+            .post(
+              webservicesUrl + "/executeServiceBkashAPI.php",
+              {
+                data: {
+                  statment: stmt,
+                  servicename: row.v_mainuser,
+                },
+              },
+              {
+                headers: {
+                  "Content-Type":
+                    "application/x-www-form-urlencoded;charset=UTF-8",
+                },
+              }
+            )
+            .then(
+              function (res) {
+                $scope.bulkProgress.processed++;
+                res.data.status === "success"
+                  ? $scope.bulkProgress.success++
+                  : $scope.bulkProgress.failed++;
+              },
+              function () {
+                $scope.bulkProgress.processed++;
+                $scope.bulkProgress.failed++;
+              }
+            )
+        );
+      });
+
+      Promise.all(promises).then(function () {
+        $timeout(function () {
+          processBatch(batches, stmt, index + 1);
+        }, $scope.batchDelay);
       });
     }
 
+    function onBulkComplete(stmt) {
+      $scope.gridIsLoading = false;
+      $scope.bulkProgress.isRunning = false;
 
-    $scope.refresh = function () {
+      alert(
+        "Bulk " +
+          stmt.toUpperCase() +
+          " completed\n\nSuccess: " +
+          $scope.bulkProgress.success +
+          "\nFailed: " +
+          $scope.bulkProgress.failed
+      );
+
+      $scope.gridApi.selection.clearSelectedRows();
+      $scope.selectedRows = [];
       $scope.getListData();
     }
+
+    // =========================
+    // LOAD DATA
+    // =========================
+    $scope.getListData = function () {
+      $scope.gridIsLoading = true;
+
+      $http
+        .post(
+          webservicesUrl + "/GetServiceBkashAPI.php",
+          {},
+          {
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+            },
+          }
+        )
+        .then(
+          function (res) {
+            $scope.gridIsLoading = false;
+            if (res.data.status === "success") {
+              $scope.gridOptions.data = res.data.records;
+            }
+          },
+          function () {
+            $scope.gridIsLoading = false;
+          }
+        );
+    };
 
     $scope.init = function () {
       $scope.getListData();
-    }
-    $scope.init();
-  }]);
+    };
 
+    $scope.init();
+  },
+]);

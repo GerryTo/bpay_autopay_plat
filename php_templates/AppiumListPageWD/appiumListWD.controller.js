@@ -1,4 +1,4 @@
-app.controller("appiumListCtrl", [
+app.controller("appiumListWDCtrl", [
   "$state",
   "$scope",
   "$http",
@@ -107,7 +107,7 @@ app.controller("appiumListCtrl", [
             '<div style="padding:5px;">{{ row.entity.futuretrxid == -1 ? "Expired" : row.entity.futuretrxid }}</div>',
         },
         { name: "Status", field: "status", width: 150 },
-        { name: "Memo", field: "memo", width: 500 },
+        // { name: "Memo", field: "memo", width: 500 },
         /*{
                 name: 'Action', field: 'merchantcode',
                 cellTemplate: '<button type="button" class="btn btn-primary btn-sm" ng-show="false" ng-click="grid.appScope.edit(row.entity)">'+$scope.globallang.proceed+'</button>' 

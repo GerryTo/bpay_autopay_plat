@@ -48,6 +48,13 @@
                     <div style="height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden;">
                         <div style="height: 100%; background: linear-gradient(90deg, #10b981, #059669); border-radius: 3px;" ng-style="{'width': (bank.total > 0 ? (bank.online / bank.total * 100) : 0) + '%'}"></div>
                     </div>
+                    <!-- Offline Reason Summary -->
+                    <div ng-if="bank.reasonCounts && bank.offline > 0" style="margin-top: 8px; font-size: 11px;">
+                        <span ng-if="bank.reasonCounts['PIN LOCK']" class="badge badge-danger" style="margin-right: 3px;">PIN: {{bank.reasonCounts['PIN LOCK']}}</span>
+                        <span ng-if="bank.reasonCounts['MAX OTP']" class="badge badge-warning" style="margin-right: 3px;">OTP: {{bank.reasonCounts['MAX OTP']}}</span>
+                        <span ng-if="bank.reasonCounts['OTP OFFLINE']" class="badge badge-info" style="margin-right: 3px;">OFF: {{bank.reasonCounts['OTP OFFLINE']}}</span>
+                        <span ng-if="bank.reasonCounts['UNMARKED']" class="badge badge-secondary">?: {{bank.reasonCounts['UNMARKED']}}</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -62,8 +69,12 @@
                 </button>
                 <span ng-show="selectedBank" style="margin-left: 10px; font-weight: bold;">{{selectedBank}} Agents</span>
                 <span ng-show="!selectedBank" style="font-weight: bold;">All Agents</span>
+                <span ng-if="getUnmarkedOfflineCount() > 0" class="badge badge-warning" style="margin-left: 10px;">{{getUnmarkedOfflineCount()}} Unmarked Offline</span>
             </div>
             <div style="display: flex; gap: 10px; align-items: center;">
+                <button type="button" class="btn btn-warning btn-sm" ng-click="openBulkReasonModal()">
+                    <i class="fa fa-tags"></i> Bulk Mark
+                </button>
                 <div class="btn-group">
                     <button type="button" class="btn btn-sm" ng-class="{'btn-primary': selectedFilter=='all', 'btn-default': selectedFilter!='all'}" ng-click="setFilter('all')">All ({{getFilterCount('all')}})</button>
                     <button type="button" class="btn btn-sm" ng-class="{'btn-success': selectedFilter=='online', 'btn-default': selectedFilter!='online'}" ng-click="setFilter('online')">Online ({{getFilterCount('online')}})</button>
@@ -76,7 +87,7 @@
             </div>
         </div>
         <div style="font-size: 12px; color: #6b7280; margin-bottom: 10px;">Last Updated: {{lastUpdate}}</div>
-        <div id="grid1" ui-grid="gridOptions" class="grid" ui-grid-exporter style="height: 500px;">
+        <div id="grid1" ui-grid="gridOptions" ui-grid-selection class="grid" ui-grid-exporter style="height: 500px;">
             <div class="grid-nodata-container" ng-show="gridOptions.data.length == 0 && !gridIsLoading">No Data Available</div>
             <div class="grid-loading-container" ng-show="gridIsLoading">
                 <img src="images/loading.gif" />
@@ -115,6 +126,29 @@
                                 </span>
                             </div>
                         </div>
+                        <div class="col-md-6" style="margin-bottom: 15px;" ng-show="!selectedAgent.isOnline">
+                            <label style="color: #6b7280; font-size: 12px;">OFFLINE DURATION</label>
+                            <div style="font-weight: 500; color: #ef4444;">{{selectedAgent.offlineDuration.text || '-'}}</div>
+                        </div>
+                        <div class="col-md-6" style="margin-bottom: 15px;" ng-show="!selectedAgent.isOnline">
+                            <label style="color: #6b7280; font-size: 12px;">OFFLINE SINCE</label>
+                            <div style="font-weight: 500;">{{selectedAgent.offlineSince || '-'}}</div>
+                        </div>
+                        <div class="col-md-6" style="margin-bottom: 15px;">
+                            <label style="color: #6b7280; font-size: 12px;">DISCONNECT COUNT TODAY</label>
+                            <div>
+                                <span class="badge" ng-class="{'badge-danger': selectedAgent.disconnectCountToday > 3, 'badge-warning': selectedAgent.disconnectCountToday > 1, 'badge-success': selectedAgent.disconnectCountToday <= 1}">
+                                    {{selectedAgent.disconnectCountToday || 0}}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-6" style="margin-bottom: 15px;" ng-show="!selectedAgent.isOnline">
+                            <label style="color: #6b7280; font-size: 12px;">OFFLINE REASON</label>
+                            <div>
+                                <span ng-if="selectedAgent.offlineReason" class="badge" ng-class="getReasonBadgeClass(selectedAgent.offlineReason)">{{selectedAgent.offlineReason}}</span>
+                                <span ng-if="!selectedAgent.offlineReason" style="color: #9ca3af;">Not marked</span>
+                            </div>
+                        </div>
                         <div class="col-md-6" style="margin-bottom: 15px;">
                             <label style="color: #6b7280; font-size: 12px;">CURRENT STATE</label>
                             <div><span class="badge" ng-class="getStateBadgeClass(selectedAgent.state)">{{selectedAgent.state || 'IDLE'}}</span></div>
@@ -142,7 +176,67 @@
                     </div>
                 </div>
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-warning" ng-click="closeDetailModal(); openReasonModal(selectedAgent)" ng-show="!selectedAgent.isOnline">
+                        <i class="fa fa-tag"></i> Mark Reason
+                    </button>
                     <button type="button" class="btn btn-default" ng-click="closeDetailModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Offline Reason Modal -->
+    <div class="modal-backdrop fade in" ng-show="showReasonModal" ng-click="closeReasonModal()"></div>
+    <div class="modal fade in" tabindex="-1" role="dialog" ng-show="showReasonModal" style="display: block;">
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" ng-click="closeReasonModal()"><span>&times;</span></button>
+                    <h4 class="modal-title">
+                        <span ng-if="reasonModalMode == 'single'">Mark Offline Reason</span>
+                        <span ng-if="reasonModalMode == 'bulk'">Bulk Mark ({{bulkSelectedAgents.length}} agents)</span>
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <div ng-if="reasonModalMode == 'single'" style="margin-bottom: 15px;">
+                        <strong>{{reasonModalAgent.username}}</strong><br>
+                        <small style="color: #6b7280;">{{reasonModalAgent.bankcode}} - {{reasonModalAgent.accountNo}}</small>
+                    </div>
+                    <div ng-if="reasonModalMode == 'bulk'" style="margin-bottom: 15px;">
+                        <small style="color: #6b7280;">Applying reason to {{bulkSelectedAgents.length}} offline agents</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Select Reason:</label>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <button type="button" class="btn btn-block" 
+                                ng-class="{'btn-danger': selectedReason == 'PIN LOCK', 'btn-default': selectedReason != 'PIN LOCK'}"
+                                ng-click="setOfflineReason('PIN LOCK')">
+                                <i class="fa fa-lock"></i> PIN LOCK
+                            </button>
+                            <button type="button" class="btn btn-block"
+                                ng-class="{'btn-warning': selectedReason == 'MAX OTP', 'btn-default': selectedReason != 'MAX OTP'}"
+                                ng-click="setOfflineReason('MAX OTP')">
+                                <i class="fa fa-key"></i> MAX OTP
+                            </button>
+                            <button type="button" class="btn btn-block"
+                                ng-class="{'btn-info': selectedReason == 'OTP OFFLINE', 'btn-default': selectedReason != 'OTP OFFLINE'}"
+                                ng-click="setOfflineReason('OTP OFFLINE')">
+                                <i class="fa fa-phone-slash"></i> OTP OFFLINE
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" ng-click="clearOfflineReason()" ng-if="reasonModalMode == 'single' && reasonModalAgent.offlineReason">
+                        <i class="fa fa-times"></i> Clear Mark
+                    </button>
+                    <button type="button" class="btn btn-danger" ng-click="bulkClearOfflineReason()" ng-if="reasonModalMode == 'bulk'">
+                        <i class="fa fa-times"></i> Clear All Marks
+                    </button>
+                    <button type="button" class="btn btn-default" ng-click="closeReasonModal()">Cancel</button>
+                    <button type="button" class="btn btn-primary" ng-click="saveOfflineReason()" ng-disabled="!selectedReason">
+                        <i class="fa fa-check"></i> Save
+                    </button>
                 </div>
             </div>
         </div>
