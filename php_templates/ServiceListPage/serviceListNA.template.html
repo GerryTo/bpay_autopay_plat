@@ -1,0 +1,21 @@
+<div></div>
+<div class="page-header-container box">Credentials BKASHM</div>
+<div class="page-body box">
+  <div class="row">
+    <div class="col-xs-12 col-sm-4 col-md-1 col-lg-1">
+      <div class="button-container">
+        <button type="button" class="btn btn-default btn-sm" ng-click="refresh()"
+          ng-disabled="gridIsLoading==true">{{globallang.refresh}}</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="grid1" ui-grid="gridOptions" class="grid" ui-grid-resize-columns ui-grid-auto-resize ui-grid-exporter
+    ng-style="{'height': 700}">
+    <div class="grid-nodata-container" ng-show="gridOptions.data.length == 0 && !gridIsLoading">No Data Available
+    </div>
+    <div class="grid-loading-container" ng-show="gridIsLoading">
+      <img src="images/loading.gif" />
+    </div>
+  </div>
+</div>

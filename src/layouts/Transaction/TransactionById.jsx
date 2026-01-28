@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActionIcon,
   Badge,
   Box,
   Button,
@@ -8,7 +7,6 @@ import {
   Checkbox,
   Group,
   LoadingOverlay,
-  Menu,
   Pagination,
   ScrollArea,
   Select,
@@ -19,59 +17,21 @@ import {
 } from '@mantine/core';
 import {
   IconArrowDownCircle,
-  IconCash,
   IconCheck,
-  IconFilter,
   IconPencil,
   IconRefresh,
   IconRepeat,
   IconSearch,
   IconShieldCheck,
-  IconDotsVertical,
   IconTransfer,
   IconX,
 } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
-import ColumnActionMenu from '../../components/ColumnActionMenu';
 import { transactionAPI } from '../../helper/api';
 import { showNotification } from '../../helper/showNotification';
 import { useTableControls } from '../../hooks/useTableControls';
 
-const defaultFilters = {
-  futuretrxid: '',
-  insert: '',
-  insertBD: '',
-  completedate: '',
-  lastresend: '',
-  merchantcode: '',
-  customercode: '',
-  bankcode: '',
-  DB: '',
-  CR: '',
-  transactiontype: '',
-  status: '',
-  callbackresponse: '',
-  fee: '',
-  notes: '',
-  notes2: '',
-  notes3: '',
-  memo: '',
-  memo3: '',
-  flag3: '',
-  flag4: '',
-  phonenumber: '',
-  user: '',
-  transactionid: '',
-  reference: '',
-  alias: '',
-  accountno: '',
-  accountsrcname: '',
-  accountdst: '',
-  accountdstname: '',
-  servername: '',
-  serverurl: '',
-  disable: '',
-};
+const defaultFilters = {};
 
 const formatNumber = (value) => {
   if (value === null || value === undefined || value === '') return '0';
@@ -95,20 +55,11 @@ const TransactionById = () => {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState('');
-  const [columnFilters, setColumnFilters] = useState(defaultFilters);
+  const [columnFilters] = useState(defaultFilters);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const handleFilterChange = useCallback((column, value) => {
-    setColumnFilters((prev) => ({
-      ...prev,
-      [column]: value,
-    }));
-  }, []);
-
-  const handleClearFilters = useCallback(() => {
-    setColumnFilters(defaultFilters);
-  }, []);
+  const handleFilterChange = useCallback(() => {}, []);
 
   const loginUserType = useMemo(() => {
     const raw =
@@ -127,14 +78,14 @@ const TransactionById = () => {
       const disable = String(row?.disable ?? '');
       return (
         ['Order need to check', 'Pending', 'Transaction Failed'].includes(
-          status
+          status,
         ) &&
         transactiontype === 'D' &&
         disable === '1' &&
         loginUserType === 'S'
       );
     },
-    [loginUserType]
+    [loginUserType],
   );
 
   const runRowAction = useCallback(async (futuretrxid, action) => {
@@ -190,7 +141,7 @@ const TransactionById = () => {
             const mapped = records.map((item) => {
               const amount = Number(item.amount) || 0;
               const isDeposit = ['D', 'Topup', 'Y', 'I'].includes(
-                item.transactiontype
+                item.transactiontype,
               );
               return {
                 ...item,
@@ -228,7 +179,7 @@ const TransactionById = () => {
         setRefreshing(false);
       }
     },
-    [history, similarSearch, transId]
+    [history, similarSearch, transId],
   );
 
   const columns = useMemo(
@@ -468,10 +419,10 @@ const TransactionById = () => {
       {
         key: 'status',
         label: 'Status',
-        minWidth: 140,
+        minWidth: 180,
         render: (item) => (
           <Badge
-            color="gray"
+            color="green"
             variant="outline"
           >
             {item.status || '-'}
@@ -835,7 +786,7 @@ const TransactionById = () => {
           const handleResendCallback = async () => {
             await runRowAction(item.futuretrxid, async () => {
               const res = await transactionAPI.resendCallbackByFutureTrxId(
-                item.futuretrxid
+                item.futuretrxid,
               );
               const status = String(res.data?.status ?? '').toLowerCase();
               if (!res.success || status !== 'ok') {
@@ -862,7 +813,7 @@ const TransactionById = () => {
           const handleEdit = async () => {
             const amountInput = window.prompt(
               `New amount for [${item.futuretrxid}]`,
-              String(item.amount ?? item.DB ?? item.CR ?? '')
+              String(item.amount ?? item.DB ?? item.CR ?? ''),
             );
             if (amountInput === null) return;
 
@@ -909,7 +860,7 @@ const TransactionById = () => {
 
           const handleFail = async () => {
             const ok = window.confirm(
-              `Fail this transaction [${item.futuretrxid}]?`
+              `Fail this transaction [${item.futuretrxid}]?`,
             );
             if (!ok) return;
 
@@ -947,7 +898,7 @@ const TransactionById = () => {
           const handleRematchTrxId = async () => {
             const notes3 = window.prompt(
               `Notes3 / Trx ID for [${item.futuretrxid}]`,
-              String(item.notes3 ?? '')
+              String(item.notes3 ?? ''),
             );
             if (notes3 === null) return;
 
@@ -980,7 +931,7 @@ const TransactionById = () => {
 
           const handleApprove = async () => {
             const wasabi = window.confirm(
-              'Approve to Wasabi?\nOK = Yes, Cancel = No'
+              'Approve to Wasabi?\nOK = Yes, Cancel = No',
             );
 
             await runRowAction(item.futuretrxid, async () => {
@@ -1013,7 +964,7 @@ const TransactionById = () => {
           const handleUpdateMemo2 = async () => {
             const memo2 = window.prompt(
               `Update memo2 for [${item.futuretrxid}]`,
-              String(item.memo2 ?? '')
+              String(item.memo2 ?? ''),
             );
             if (memo2 === null) return;
 
@@ -1050,7 +1001,7 @@ const TransactionById = () => {
 
             const transid = window.prompt(
               'Trans ID (bank trx id)',
-              String(item.notes3 ?? item.transactionid ?? '')
+              String(item.notes3 ?? item.transactionid ?? ''),
             );
             if (transid === null) return;
 
@@ -1059,13 +1010,13 @@ const TransactionById = () => {
             const account =
               window.prompt(
                 'Account name',
-                String(item.accountdstname ?? '')
+                String(item.accountdstname ?? ''),
               ) ?? '';
             const accountNo =
               window.prompt('Account number', String(item.accountdst ?? '')) ??
               '';
             const receipt = isWithdraw
-              ? window.prompt('Receipt (optional)', '') ?? ''
+              ? (window.prompt('Receipt (optional)', '') ?? '')
               : '';
 
             await runRowAction(item.futuretrxid, async () => {
@@ -1122,97 +1073,106 @@ const TransactionById = () => {
           }
 
           return (
-            <Menu
-              shadow="sm"
-              withinPortal
+            <Group
+              gap="xs"
+              wrap="nowrap"
             >
-              <Menu.Target>
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  title="Row Actions"
-                >
-                  <IconDotsVertical size={16} />
-                </ActionIcon>
-              </Menu.Target>
-              <Menu.Dropdown>
-                {isOrderNeedCheck ? (
-                  <>
-                    <Menu.Item
-                      leftSection={<IconPencil size={14} />}
-                      onClick={handleEdit}
-                      disabled={busy}
-                    >
-                      Edit
-                    </Menu.Item>
-                    <Menu.Item
-                      leftSection={<IconX size={14} />}
-                      color="red"
-                      onClick={handleFail}
-                      disabled={busy}
-                    >
-                      Fail
-                    </Menu.Item>
-                    {isDeposit || isWithdraw ? (
-                      <Menu.Item
-                        leftSection={<IconCheck size={14} />}
-                        color="green"
-                        onClick={handleSuccess}
-                        disabled={busy || isDisabled}
-                      >
-                        Success
-                      </Menu.Item>
-                    ) : null}
-                    {isDeposit ? (
-                      <Menu.Item
-                        leftSection={<IconRepeat size={14} />}
-                        onClick={handleRematchTrxId}
-                        disabled={busy || isDisabled}
-                      >
-                        Rematch Trx ID
-                      </Menu.Item>
-                    ) : null}
-                    {canApprove ? (
-                      <Menu.Item
-                        leftSection={<IconShieldCheck size={14} />}
-                        color="red"
-                        onClick={handleApprove}
-                        disabled={busy}
-                      >
-                        Approve
-                      </Menu.Item>
-                    ) : null}
-                    <Menu.Divider />
-                  </>
-                ) : null}
-
-                {canResendCallback ? (
-                  <Menu.Item
-                    leftSection={<IconRepeat size={14} />}
-                    onClick={handleResendCallback}
+              {isOrderNeedCheck ? (
+                <>
+                  <Button
+                    variant="light"
+                    color="blue"
+                    size="xs"
+                    leftSection={<IconPencil size={14} />}
+                    onClick={handleEdit}
                     disabled={busy}
                   >
-                    Resend Callback
-                  </Menu.Item>
-                ) : null}
+                    Edit
+                  </Button>
+                  <Button
+                    variant="light"
+                    color="red"
+                    size="xs"
+                    leftSection={<IconX size={14} />}
+                    onClick={handleFail}
+                    disabled={busy}
+                  >
+                    Fail
+                  </Button>
+                  {isDeposit || isWithdraw ? (
+                    <Button
+                      variant="light"
+                      color="green"
+                      size="xs"
+                      leftSection={<IconCheck size={14} />}
+                      onClick={handleSuccess}
+                      disabled={busy || isDisabled}
+                    >
+                      Success
+                    </Button>
+                  ) : null}
+                  {isDeposit ? (
+                    <Button
+                      variant="light"
+                      color="orange"
+                      size="xs"
+                      leftSection={<IconRepeat size={14} />}
+                      onClick={handleRematchTrxId}
+                      disabled={busy || isDisabled}
+                    >
+                      Rematch Trx ID
+                    </Button>
+                  ) : null}
+                  {canApprove ? (
+                    <Button
+                      variant="light"
+                      color="red"
+                      size="xs"
+                      leftSection={<IconShieldCheck size={14} />}
+                      onClick={handleApprove}
+                      disabled={busy}
+                    >
+                      Approve
+                    </Button>
+                  ) : null}
+                </>
+              ) : null}
 
-                <Menu.Item
-                  leftSection={<IconPencil size={14} />}
-                  onClick={handleUpdateMemo2}
+              {canResendCallback ? (
+                <Button
+                  variant="light"
+                  color="grape"
+                  size="xs"
+                  leftSection={<IconRepeat size={14} />}
+                  onClick={handleResendCallback}
                   disabled={busy}
                 >
-                  Update Memo2
-                </Menu.Item>
+                  Resend Callback
+                </Button>
+              ) : null}
 
-                <Menu.Item
-                  leftSection={<IconArrowDownCircle size={14} />}
-                  onClick={showLegacyOnly}
-                  disabled={busy}
-                >
-                  Date TRXID
-                </Menu.Item>
-              </Menu.Dropdown>
-            </Menu>
+              <Button
+                variant="light"
+                color="gray"
+                size="xs"
+                leftSection={<IconPencil size={14} />}
+                onClick={handleUpdateMemo2}
+                disabled={busy}
+              >
+                Update Memo2
+              </Button>
+
+              <Button
+                variant="light"
+                color="gray"
+                size="xs"
+                leftSection={<IconArrowDownCircle size={14} />}
+                onClick={showLegacyOnly}
+                disabled={busy}
+              >
+                Date TRXID
+              </Button>
+            </Group>
           );
         },
       },
@@ -1225,57 +1185,22 @@ const TransactionById = () => {
       history,
       runRowAction,
       validateApprove,
-    ]
+    ],
   );
 
-  const {
-    visibleColumns,
-    sortConfig,
-    handleHideColumn,
-    handleSort,
-    handleResetAll,
-  } = useTableControls(columns, {
-    onResetFilters: () => setColumnFilters(defaultFilters),
-  });
+  const { visibleColumns } = useTableControls(columns);
 
   const makeKey = (item) =>
     `${item.futuretrxid || ''}-${item.transactionid || ''}`;
 
-  const includesValue = (field, value) => {
-    if (!value) return true;
-    return (field ?? '').toString().toLowerCase().includes(value.toLowerCase());
-  };
+  const filteredData = useMemo(() => data, [data]);
 
-  const filteredData = useMemo(
-    () =>
-      data.filter((item) => {
-        return Object.keys(defaultFilters).every((key) =>
-          includesValue(item[key], columnFilters[key])
-        );
-      }),
-    [data, columnFilters]
-  );
-
-  const sortedData = useMemo(() => {
-    if (!sortConfig) return filteredData;
-    const { key, direction } = sortConfig;
-    const dir = direction === 'desc' ? -1 : 1;
-    return [...filteredData].sort((a, b) => {
-      const av = a[key] ?? '';
-      const bv = b[key] ?? '';
-      if (av === bv) return 0;
-      return av > bv ? dir : -dir;
-    });
-  }, [filteredData, sortConfig]);
+  const sortedData = useMemo(() => filteredData, [filteredData]);
 
   const totalPages = Math.max(1, Math.ceil(sortedData.length / itemsPerPage));
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedData = sortedData.slice(startIndex, endIndex);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [columnFilters]);
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -1292,20 +1217,10 @@ const TransactionById = () => {
           acc.fee += Number(item.fee) || 0;
           return acc;
         },
-        { debit: 0, credit: 0, fee: 0 }
+        { debit: 0, credit: 0, fee: 0 },
       ),
-    [data]
+    [data],
   );
-
-  const handleReset = () => {
-    setTransId('');
-    setHistory(false);
-    setSimilarSearch(false);
-    setData([]);
-    setHasSearched(false);
-    handleClearFilters();
-    setCurrentPage(1);
-  };
 
   const emptyStateMessage = useMemo(() => {
     if (!hasSearched) return 'Input Transaction ID then click Search.';
@@ -1372,16 +1287,6 @@ const TransactionById = () => {
                 onClick={() => fetchData({ silent: true })}
               >
                 Refresh
-              </Button>
-              <Button
-                variant="light"
-                color="gray"
-                radius="md"
-                size="sm"
-                leftSection={<IconFilter size={18} />}
-                onClick={handleReset}
-              >
-                Reset
               </Button>
             </Group>
           </Group>
@@ -1482,7 +1387,26 @@ const TransactionById = () => {
                 horizontalSpacing="sm"
                 verticalSpacing="xs"
                 styles={{
-                  th: { backgroundColor: '#f8f9fa', fontWeight: 600 },
+                  thead: {
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 2,
+                  },
+                  th: {
+                    background:
+                      'linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%)',
+                    fontWeight: 700,
+                    fontSize: '12px',
+                    letterSpacing: '0.02em',
+                    textTransform: 'uppercase',
+                    color: '#1f2937',
+                    borderBottom: '1px solid #e5e7eb',
+                    whiteSpace: 'nowrap',
+                  },
+                  td: {
+                    borderBottom: '1px solid #f1f3f5',
+                    whiteSpace: 'nowrap',
+                  },
                 }}
               >
                 <Table.Thead>
@@ -1502,26 +1426,7 @@ const TransactionById = () => {
                           >
                             {col.label}
                           </Text>
-                          <ColumnActionMenu
-                            columnKey={col.key}
-                            sortConfig={sortConfig}
-                            onSort={handleSort}
-                            onHide={handleHideColumn}
-                          />
                         </Group>
-                      </Table.Th>
-                    ))}
-                  </Table.Tr>
-                  <Table.Tr style={{ backgroundColor: '#e7f5ff' }}>
-                    {visibleColumns.map((col) => (
-                      <Table.Th
-                        key={`${col.key}-filter`}
-                        style={{
-                          minWidth: col.minWidth || 120,
-                          padding: '8px',
-                        }}
-                      >
-                        {col.filter || null}
                       </Table.Th>
                     ))}
                   </Table.Tr>
@@ -1555,8 +1460,8 @@ const TransactionById = () => {
                             {hasSearched && data.length === 0
                               ? 'Not Found'
                               : hasSearched && filteredData.length === 0
-                              ? 'No Results'
-                              : 'Search'}
+                                ? 'No Results'
+                                : 'Search'}
                           </Text>
                           <Text
                             ta="left"
@@ -1577,18 +1482,6 @@ const TransactionById = () => {
                               {lastSearch.history ? 'yes' : 'no'}, similar:{' '}
                               {lastSearch.similarSearch ? 'yes' : 'no'})
                             </Text>
-                          ) : null}
-                          {hasSearched &&
-                          data.length > 0 &&
-                          filteredData.length === 0 ? (
-                            <Button
-                              variant="light"
-                              size="xs"
-                              leftSection={<IconFilter size={14} />}
-                              onClick={handleClearFilters}
-                            >
-                              Clear Filters
-                            </Button>
                           ) : null}
                         </Stack>
                       </Table.Td>
@@ -1628,16 +1521,6 @@ const TransactionById = () => {
                 style={{ width: 90 }}
                 size="sm"
               />
-              {hasSearched && data.length > 0 ? (
-                <Text
-                  size="sm"
-                  c="dimmed"
-                >
-                  Total DB: {formatNumber(totals.debit)} | Total CR:{' '}
-                  {formatNumber(totals.credit)} | Total Fee:{' '}
-                  {formatNumber(totals.fee)}
-                </Text>
-              ) : null}
               {footerStatus ? (
                 <Text
                   size="sm"

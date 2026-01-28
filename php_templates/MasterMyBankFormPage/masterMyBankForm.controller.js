@@ -42,7 +42,7 @@ app.controller("masterMyBankFormCtrl", [
     $scope.checkall = false;
     $scope.logintype = "";
     $scope.isSetMerchant = "";
-    
+
     $scope.isOpentypeDisabled = function () {
       return (
         $scope.edit.mode === true &&
@@ -52,19 +52,19 @@ app.controller("masterMyBankFormCtrl", [
 
     $scope.session_type = window.sessionInfo.type;
     console.log("Session Type:", $scope.session_type);
-    
+
     // NEW: Handler when bank selection changes
-    $scope.onBankChange = function() {
+    $scope.onBankChange = function () {
       console.log("Bank changed to:", $scope.data.bankCode);
-      
+
       // Reset merchant selection
       $scope.merchants = [];
       $scope.checkall = false;
-      
+
       // Re-load merchants based on new bank
       $scope.getMerchantsForBank($scope.data.bankCode);
     };
-    
+
     $scope.loadData = function () {
       if ($scope.data.merchantCode == "") return false;
       var data = {
@@ -73,7 +73,7 @@ app.controller("masterMyBankFormCtrl", [
       };
       console.log(data);
       var jsonData = CRYPTO.encrypt(data);
-      
+
       $http({
         method: "POST",
         url: webservicesUrl + "/getMasterMyBank.php",
@@ -84,25 +84,35 @@ app.controller("masterMyBankFormCtrl", [
       }).then(
         function mySuccess(response) {
           var data = response.data;
-          
+
           if (data.status.toLowerCase() == "ok") {
             data.records = $scope.urlDecode(data.records);
             if (data.records.length > 0) {
               // Preserve important values before overwrite
               var preservedPhone = $scope.data.phoneNumber;
               var preservedBankCode = $scope.data.bankCode;
-              
-              data.records[0].dailywithdrawallimit = Number(data.records[0].dailywithdrawallimit);
+
+              data.records[0].dailywithdrawallimit = Number(
+                data.records[0].dailywithdrawallimit
+              );
               data.records[0].dailylimit = Number(data.records[0].dailylimit);
-              data.records[0].dailydepositlimit = Number(data.records[0].dailydepositlimit);
+              data.records[0].dailydepositlimit = Number(
+                data.records[0].dailydepositlimit
+              );
               data.records[0].minDeposit = Number(data.records[0].minDeposit);
               data.records[0].maxDeposit = Number(data.records[0].maxDeposit);
-              data.records[0].agentCommission = Number(data.records[0].agentCommission);
-              data.records[0].agentCommissionWithdraw = Number(data.records[0].agentCommissionWithdraw);
-              data.records[0].balanceDifferent = Number(data.records[0].balanceDifferent);
-              
+              data.records[0].agentCommission = Number(
+                data.records[0].agentCommission
+              );
+              data.records[0].agentCommissionWithdraw = Number(
+                data.records[0].agentCommissionWithdraw
+              );
+              data.records[0].balanceDifferent = Number(
+                data.records[0].balanceDifferent
+              );
+
               $scope.data = $scope.urlDecode(data.records[0]);
-              
+
               // Restore values if lost
               if (!$scope.data.phoneNumber && preservedPhone) {
                 $scope.data.phoneNumber = preservedPhone;
@@ -294,12 +304,12 @@ app.controller("masterMyBankFormCtrl", [
         $event.preventDefault();
         $event.stopPropagation();
       }
-      
+
       console.log("Pick called:", item);
       $scope.data.phoneNumber = item.phoneNumber || item.phonenumber || "";
       $scope.pickAccount = item;
       $scope.isShow = false;
-      
+
       if (!$scope.$$phase) {
         $scope.$apply();
       }
@@ -312,12 +322,16 @@ app.controller("masterMyBankFormCtrl", [
     };
 
     // NEW: Dynamic merchant loading based on selected bank
-    $scope.getMerchantsForBank = function(selectedBankCode) {
-      var targetBankCode = selectedBankCode || $scope.data.bankCode || ($stateParams.data ? $stateParams.data.bankCode : '');
-      
+    $scope.getMerchantsForBank = function (selectedBankCode) {
+      var targetBankCode =
+        selectedBankCode ||
+        $scope.data.bankCode ||
+        ($stateParams.data ? $stateParams.data.bankCode : "");
+
       var data1 = {
-        bankaccountno: $stateParams.data == null ? "" : $stateParams.data.bankAccNo,
-        bankcode: targetBankCode
+        bankaccountno:
+          $stateParams.data == null ? "" : $stateParams.data.bankAccNo,
+        bankcode: targetBankCode,
       };
 
       var jsonData = CRYPTO.encrypt(data1);
@@ -334,18 +348,28 @@ app.controller("masterMyBankFormCtrl", [
           var data = CRYPTO.decrypt(response.data.data);
           if (data.status.toLowerCase() == "ok") {
             const frequentlyUsed = [
-              "BB88", "LGRB", "CTAPP", "D88", "BGTK", 
-              "B777", "BJ001", "BHGO1149", "LB88-Agent", "BB88AGENT"
+              "BB88",
+              "LGRB",
+              "CTAPP",
+              "D88",
+              "BGTK",
+              "B777",
+              "BJ001",
+              "BHGO1149",
+              "LB88-Agent",
+              "BB88AGENT",
             ];
             const lessUsed = ["BB88V2", "D88V2", "LB88V2"];
             const bankCode = (targetBankCode || "").toLowerCase();
 
             let records = [];
-            
+
             if (bankCode === "bkashm") {
-              const bkashSpecial = ["D88xP", "LB88xP", "BBXP"];
+              const bkashSpecial = ["D88xP", "LB88xP", "BBXP", "MERCHANTDEMO"];
               records = data.records
-                .filter((m) => bkashSpecial.includes((m.merchantcode || "").trim()))
+                .filter((m) =>
+                  bkashSpecial.includes((m.merchantcode || "").trim())
+                )
                 .map((m) => ({
                   ...m,
                   check: m.check === true,
@@ -422,7 +446,10 @@ app.controller("masterMyBankFormCtrl", [
       console.log("State params:", $stateParams.data);
 
       if ($stateParams.data) {
-        if ($stateParams.data.bankAccNo && $stateParams.data.bankAccNo.length > 0) {
+        if (
+          $stateParams.data.bankAccNo &&
+          $stateParams.data.bankAccNo.length > 0
+        ) {
           $scope.edit.mode = true;
 
           $scope.data.phoneNumber = $stateParams.data.phoneNumber;
@@ -433,11 +460,17 @@ app.controller("masterMyBankFormCtrl", [
           $scope.data.opentype = $stateParams.data.opentype;
           $scope.data.automationStatus = $stateParams.data.automationStatus;
           $scope.data.dailylimit = Number($stateParams.data.dailylimit);
-          $scope.data.dailywithdrawallimit = Number($stateParams.data.dailywithdrawallimit);
-          $scope.data.dailydepositlimit = Number($stateParams.data.dailydepositlimit);
+          $scope.data.dailywithdrawallimit = Number(
+            $stateParams.data.dailywithdrawallimit
+          );
+          $scope.data.dailydepositlimit = Number(
+            $stateParams.data.dailydepositlimit
+          );
           $scope.data.minDeposit = Number($stateParams.data.minDeposit);
           $scope.data.maxDeposit = Number($stateParams.data.maxDeposit);
-          $scope.data.agentCommission = Number($stateParams.data.agentCommission);
+          $scope.data.agentCommission = Number(
+            $stateParams.data.agentCommission
+          );
 
           $scope.loadData();
         }
@@ -445,7 +478,7 @@ app.controller("masterMyBankFormCtrl", [
         $state.go("master-mybank");
       }
     };
-    
+
     $scope.init();
   },
 ]);

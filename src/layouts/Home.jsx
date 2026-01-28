@@ -3,7 +3,7 @@ import { useDisclosure } from "@mantine/hooks";
 import HeaderSection from "../components/header";
 import NavigationSection from "../components/navbar";
 import { filterRoutesByRole, mockdataRoutes } from "../routes";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { useSelector } from "react-redux";
 
 export default function Home() {
@@ -45,7 +45,10 @@ export default function Home() {
             </AppShell.Navbar>
 
             <AppShell.Main>
-                <Routes>{renderRoutes(filteredRoutes)}</Routes>
+                <Routes>
+                    <Route path="/" element={<Navigate to="/dashboard-merchant" replace />} />
+                    {renderRoutes(filteredRoutes)}
+                </Routes>
             </AppShell.Main>
         </AppShell>
     );

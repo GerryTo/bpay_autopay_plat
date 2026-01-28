@@ -127,9 +127,9 @@
             ng-model="data.dailywithdrawallimit"
           />
         </div>
-        
+
         <!-- PHONE NUMBER DROPDOWN - FIXED VERSION -->
-        <div class="col-md-4 mb-2" style="position: relative;">
+        <div class="col-md-4 mb-2" style="position: relative">
           <label>Phone Number :</label>
           <input
             type="text"
@@ -150,13 +150,17 @@
               background-color: white;
               border: 1px solid #ccc;
               z-index: 9999;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             "
           >
             <div
               ng-repeat="item in phoneNumber | filter:data.phoneNumber track by $index"
               ng-mousedown="pick(item, $event)"
-              style="padding: 8px; cursor: pointer; transition: background-color 0.2s;"
+              style="
+                padding: 8px;
+                cursor: pointer;
+                transition: background-color 0.2s;
+              "
               onmouseover="this.style.backgroundColor='#f0f0f0'"
               onmouseout="this.style.backgroundColor='white'"
             >
@@ -164,7 +168,7 @@
             </div>
           </div>
         </div>
-        
+
         <div class="col-md-4 mb-2">
           <label>Min. Deposit :</label>
           <input
@@ -226,7 +230,11 @@
         </div>
         <div class="col-md-4 mb-2">
           <label>Appium Online :</label>
-          <select class="form-control" ng-model="data.useAppium" ng-disabled="session_type !== 'S'">
+          <select
+            class="form-control"
+            ng-model="data.useAppium"
+            ng-disabled="session_type !== 'S'"
+          >
             <option value="0">No</option>
             <option value="1">Yes</option>
           </select>
@@ -252,8 +260,8 @@
       </div>
 
       <!-- MERCHANT LIST WITH GROUPING -->
-      <div class="row" style="margin-top:10px;">
-        <div class="col-md-12" style="font-weight:bold;">List Merchant :</div>
+      <div class="row" style="margin-top: 10px">
+        <div class="col-md-12" style="font-weight: bold">List Merchant :</div>
       </div>
 
       <div class="row">
@@ -271,11 +279,16 @@
       <!-- BANK NON-BKASHM: GROUPED MERCHANTS -->
       <div ng-if="data.bankCode.toLowerCase() !== 'bkashm'">
         <!-- Frequently Used -->
-        <div class="row" ng-if="(merchants | filter:{group:'Frequently Used'}:true).length > 0">
-          <div class="col-md-12" style="font-weight:bold; margin-top:8px;">Frequently Used</div>
+        <div
+          class="row"
+          ng-if="(merchants | filter:{group:'Frequently Used'}:true).length > 0"
+        >
+          <div class="col-md-12" style="font-weight: bold; margin-top: 8px">
+            Frequently Used
+          </div>
           <div
             class="col-md-4"
-            style="margin-top:4px;"
+            style="margin-top: 4px"
             ng-repeat="item in merchants | filter:{group:'Frequently Used'}:true"
           >
             <input
@@ -288,11 +301,16 @@
         </div>
 
         <!-- V2 / Less Used -->
-        <div class="row" ng-if="(merchants | filter:{group:'Less Used'}:true).length > 0">
-          <div class="col-md-12" style="font-weight:bold; margin-top:8px;">V2</div>
+        <div
+          class="row"
+          ng-if="(merchants | filter:{group:'Less Used'}:true).length > 0"
+        >
+          <div class="col-md-12" style="font-weight: bold; margin-top: 8px">
+            V2
+          </div>
           <div
             class="col-md-4"
-            style="margin-top:4px;"
+            style="margin-top: 4px"
             ng-repeat="item in merchants | filter:{group:'Less Used'}:true"
           >
             <input
@@ -305,11 +323,16 @@
         </div>
 
         <!-- Useless / Other -->
-        <div class="row" ng-if="(merchants | filter:{group:'Other'}:true).length > 0">
-          <div class="col-md-12" style="font-weight:bold; margin-top:8px;">Useless</div>
+        <div
+          class="row"
+          ng-if="(merchants | filter:{group:'Other'}:true).length > 0"
+        >
+          <div class="col-md-12" style="font-weight: bold; margin-top: 8px">
+            Useless
+          </div>
           <div
             class="col-md-4"
-            style="margin-top:4px;"
+            style="margin-top: 4px"
             ng-repeat="item in merchants | filter:{group:'Other'}:true"
           >
             <input
@@ -325,10 +348,12 @@
       <!-- BKASHM: SPECIAL MERCHANT LIST -->
       <div ng-if="data.bankCode.toLowerCase() === 'bkashm'">
         <div class="row">
-          <div class="col-md-12" style="font-weight:bold; margin-top:8px;">Frequently Used</div>
+          <div class="col-md-12" style="font-weight: bold; margin-top: 8px">
+            Frequently Used
+          </div>
           <div
             class="col-md-4"
-            style="margin-top:4px;"
+            style="margin-top: 4px"
             ng-repeat="item in merchants | filter:{group:'BkashM Special'}:true"
           >
             <input

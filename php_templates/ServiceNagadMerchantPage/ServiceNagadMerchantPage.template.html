@@ -1,0 +1,139 @@
+<div></div>
+<div class="page-header-container box">Service Nagad API</div>
+<div class="page-body box">
+  <div class="row">
+    <!-- Refresh Button -->
+    <div class="col-xs-12 col-sm-4 col-md-1 col-lg-1">
+      <div class="button-container">
+        <button
+          type="button"
+          class="btn btn-default btn-sm"
+          ng-click="refresh()"
+          ng-disabled="gridIsLoading==true"
+        >
+          {{globallang.refresh}}
+        </button>
+      </div>
+    </div>
+
+    <!-- Bulk Action Buttons -->
+    <div class="col-xs-12 col-sm-8 col-md-11 col-lg-11">
+      <div
+        class="button-container"
+        style="display: inline-flex; gap: 5px; align-items: center"
+      >
+        <span
+          style="margin-right: 10px"
+          ng-show="selectedRows.length > 0 && !bulkProgress.isRunning"
+        >
+          <strong>Selected: {{selectedRows.length}}</strong>
+        </span>
+        <button
+          type="button"
+          class="btn btn-warning btn-sm"
+          ng-click="ExecuteBulkService(1)"
+          ng-disabled="gridIsLoading || selectedRows.length == 0"
+        >
+          <i class="fa fa-refresh"></i> RESTART SELECTED
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary btn-sm"
+          ng-click="ExecuteBulkService(2)"
+          ng-disabled="gridIsLoading || selectedRows.length == 0"
+        >
+          <i class="fa fa-play"></i> START SELECTED
+        </button>
+        <button
+          type="button"
+          class="btn btn-danger btn-sm"
+          ng-click="ExecuteBulkService(3)"
+          ng-disabled="gridIsLoading || selectedRows.length == 0"
+        >
+          <i class="fa fa-stop"></i> STOP SELECTED
+        </button>
+        <button
+          type="button"
+          class="btn btn-danger btn-sm"
+          ng-click="openAddAgentModal()"
+        >
+          ADD AGENT
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress Indicator -->
+  <div class="row" ng-show="bulkProgress.isRunning" style="margin-top: 15px">
+    <div class="col-xs-12">
+      <div class="panel panel-info">
+        <div class="panel-heading">
+          <strong>Bulk Operation Progress</strong>
+          <button
+            type="button"
+            class="btn btn-danger btn-xs pull-right"
+            ng-click="cancelBulkOperation()"
+          >
+            <i class="fa fa-times"></i> Cancel
+          </button>
+        </div>
+        <div class="panel-body">
+          <div class="progress" style="margin-bottom: 10px">
+            <div
+              class="progress-bar progress-bar-striped active"
+              role="progressbar"
+              style="min-width: 3%"
+              ng-style="{'width': ((bulkProgress.processed / bulkProgress.total) * 100) + '%'}"
+            >
+              {{bulkProgress.processed}} / {{bulkProgress.total}}
+            </div>
+          </div>
+          <div class="row text-center">
+            <div class="col-xs-3">
+              <span class="label label-default" style="font-size: 12px">
+                Batch: {{bulkProgress.currentBatch}} /
+                {{bulkProgress.totalBatches}}
+              </span>
+            </div>
+            <div class="col-xs-3">
+              <span class="label label-info" style="font-size: 12px">
+                Processed: {{bulkProgress.processed}}
+              </span>
+            </div>
+            <div class="col-xs-3">
+              <span class="label label-success" style="font-size: 12px">
+                Success: {{bulkProgress.success}}
+              </span>
+            </div>
+            <div class="col-xs-3">
+              <span class="label label-danger" style="font-size: 12px">
+                Failed: {{bulkProgress.failed}}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div
+    id="grid1"
+    ui-grid="gridOptions"
+    ui-grid-selection
+    ui-grid-resize-columns
+    ui-grid-auto-resize
+    ui-grid-exporter
+    class="grid"
+    ng-style="{'height': 700}"
+  >
+    <div
+      class="grid-nodata-container"
+      ng-show="gridOptions.data.length == 0 && !gridIsLoading"
+    >
+      No Data Available
+    </div>
+    <div class="grid-loading-container" ng-show="gridIsLoading">
+      <img src="images/loading.gif" />
+    </div>
+  </div>
+</div>

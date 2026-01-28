@@ -97,6 +97,7 @@ import AgentSummary from './layouts/Crawler/AgentSummary';
 import MonthlySummaryReport from './layouts/Crawler/MonthlySummaryReport';
 import ReportDifference from './layouts/Crawler/ReportDifference';
 import CredentialsBkashm from './layouts/Crawler/CredentialsBkashm';
+import CredentialsNagadm from './layouts/Crawler/CredentialsNagadm';
 import SettlementTopup from './layouts/Settlement/SettlementTopup';
 import RequestList from './layouts/Settlement/RequestList';
 import B2bSendList from './layouts/Settlement/B2bSendList';
@@ -113,6 +114,7 @@ import EmergencyDeposit from './layouts/Setting/EmergencyDeposit';
 import ServiceSeleniumList from './layouts/Setting/ServiceSeleniumList';
 import ServiceNagadApi from './layouts/Setting/ServiceNagadApi';
 import ServiceBkashApi from './layouts/Setting/ServiceBkashApi';
+import ServiceNagadMerchant from './layouts/Setting/ServiceNagadMerchant';
 import ServiceResendCallback from './layouts/Setting/ServiceResendCallback';
 import AgentTrackerDashboard from './layouts/Setting/AgentTrackerDashboard';
 import SmsLogById from './layouts/SMS/SmsLogById';
@@ -1284,6 +1286,12 @@ export const mockdataRoutes = [
         link: '/credentials-bkashm-list',
         element: <CredentialsBkashm />,
       },
+      {
+        label: 'Credentials NAGADM',
+        icon: <IconUserShield />,
+        link: '/credentials-nagadm-list',
+        element: <CredentialsNagadm />,
+      },
     ],
   },
   {
@@ -1388,6 +1396,13 @@ export const mockdataRoutes = [
         link: '/service-nagad-api',
         roles: ['S'],
         element: <ServiceNagadApi />,
+      },
+      {
+        label: 'Service Nagad Merchant',
+        icon: <IconSettings />,
+        link: '/service-nagad-merchant',
+        roles: ['S'],
+        element: <ServiceNagadMerchant />,
       },
       {
         label: 'Service BKASH API',

@@ -10,14 +10,14 @@ import {
   Popover,
   ScrollArea,
   Select,
-  SegmentedControl,
   SimpleGrid,
   Stack,
   Table,
   Text,
+  TextInput,
 } from '@mantine/core';
 import { DateRangePicker } from 'react-date-range';
-import { eachDayOfInterval, format } from 'date-fns';
+import { format } from 'date-fns';
 import {
   IconBuildingBank,
   IconCalendar,
@@ -25,7 +25,7 @@ import {
   IconRefresh,
   IconReportMoney,
 } from '@tabler/icons-react';
-import { merchantAPI, merchantDashboardAPI } from '../../helper/api';
+import { merchantDashboardAPI } from '../../helper/api';
 import { showNotification } from '../../helper/showNotification';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
@@ -36,28 +36,6 @@ const formatNumber = (value) => {
   const num = Number(value);
   if (Number.isNaN(num)) return value;
   return num.toLocaleString('en-US', { maximumFractionDigits: 0 });
-};
-
-const getMerchantCode = (item) =>
-  item?.merchantcode ||
-  item?.merchantCode ||
-  item?.v_merchantcode ||
-  item?.merchant ||
-  item?.mc ||
-  '';
-
-const toDayKey = (value) => {
-  if (!value) return null;
-  if (typeof value === 'string') {
-    const datePart = value.split(' ')[0];
-    const parsed = Date.parse(datePart);
-    if (!Number.isNaN(parsed)) {
-      return format(new Date(parsed), 'yyyy-MM-dd');
-    }
-  }
-  const parsed = Date.parse(value);
-  if (Number.isNaN(parsed)) return null;
-  return format(new Date(parsed), 'yyyy-MM-dd');
 };
 
 const DashboardMerchant = () => {
@@ -77,11 +55,8 @@ const DashboardMerchant = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [chartMetric, setChartMetric] = useState('total');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [chartRecords, setChartRecords] = useState([]);
-  const [chartLoading, setChartLoading] = useState(false);
 
   const includesValue = (field, value) => {
     if (!value) return true;
@@ -90,43 +65,19 @@ const DashboardMerchant = () => {
 
   const fetchMerchantList = useCallback(async () => {
     try {
-      const response = await merchantAPI.getMerchantList();
+      const response = await merchantDashboardAPI.getMerchantList();
       if (response.success && response.data) {
-        const payload = response.data;
-        const status = (payload.status || '').toLowerCase();
-        if (!payload.status || status === 'ok' || status === 'success') {
-          const list = Array.isArray(payload.records)
-            ? payload.records
-            : Array.isArray(payload.data)
-              ? payload.data
-              : [];
-          const options = list
-            .map((item) => {
-              const code = item?.merchantcode || item?.merchantCode || '';
-              const name = item?.merchantname || item?.merchantName || '';
-              if (!code) return null;
-              return {
-                value: code,
-                label: name ? `${code} - ${name}` : code,
-              };
-            })
-            .filter(Boolean);
-          const unique = Array.from(
-            new Map(
-              [{ value: 'ALL', label: 'ALL' }, ...options].map((item) => [
-                item.value,
-                item,
-              ]),
-            ).values(),
-          );
-          setMerchantOptions(unique);
-        } else {
-          showNotification({
-            title: 'Error',
-            message: payload.message || 'Failed to load merchants',
-            color: 'red',
-          });
-        }
+        const list = Array.isArray(response.data.records)
+          ? response.data.records
+          : [];
+        const options = list
+          .map((item) => item?.merchantcode || item?.merchantCode || '')
+          .filter(Boolean);
+        const unique = Array.from(new Set(['ALL', ...options])).map((code) => ({
+          value: code,
+          label: code,
+        }));
+        setMerchantOptions(unique);
       } else {
         showNotification({
           title: 'Error',
@@ -215,68 +166,13 @@ const DashboardMerchant = () => {
     [dateRange, selectedMerchant],
   );
 
-  const fetchChartData = useCallback(async () => {
-    setChartLoading(true);
-    try {
-      const start = format(dateRange[0].startDate ?? new Date(), 'yyyy-MM-dd');
-      const end = format(
-        dateRange[0].endDate ?? dateRange[0].startDate ?? new Date(),
-        'yyyy-MM-dd',
-      );
-
-      const response = await merchantDashboardAPI.getTransactionByMerchant({
-        dateFrom: `${start} 00:00:00`,
-        dateTo: `${end} 23:59:59`,
-        merchantCode: selectedMerchant || 'ALL',
-      });
-
-      if (response.success && response.data) {
-        const payload = response.data;
-        const status = (payload.status || '').toLowerCase();
-        if (!payload.status || status === 'ok' || status === 'success') {
-          const records = Array.isArray(payload.records)
-            ? payload.records
-            : Array.isArray(payload.data)
-              ? payload.data
-              : [];
-          setChartRecords(records);
-        } else {
-          showNotification({
-            title: 'Error',
-            message: payload.message || 'Failed to load chart data',
-            color: 'red',
-          });
-          setChartRecords([]);
-        }
-      } else {
-        showNotification({
-          title: 'Error',
-          message: response.error || 'Failed to load chart data',
-          color: 'red',
-        });
-        setChartRecords([]);
-      }
-    } catch (error) {
-      console.error('Dashboard merchant chart fetch error:', error);
-      showNotification({
-        title: 'Error',
-        message: 'Unable to load chart data',
-        color: 'red',
-      });
-      setChartRecords([]);
-    } finally {
-      setChartLoading(false);
-    }
-  }, [dateRange, selectedMerchant]);
-
   useEffect(() => {
     fetchMerchantList();
   }, [fetchMerchantList]);
 
   useEffect(() => {
     fetchSummary();
-    fetchChartData();
-  }, [fetchSummary, fetchChartData]);
+  }, [fetchSummary]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -324,21 +220,10 @@ const DashboardMerchant = () => {
     [filteredData],
   );
 
-  const chartDays = useMemo(() => {
-    const start = dateRange[0]?.startDate ?? new Date();
-    const end = dateRange[0]?.endDate ?? start;
-    return eachDayOfInterval({ start, end }).map((date) =>
-      format(date, 'yyyy-MM-dd'),
-    );
-  }, [dateRange]);
-
-  const filteredChartRecords = useMemo(() => {
-    if (!selectedMerchant || selectedMerchant === 'ALL') return chartRecords;
-    return chartRecords.filter(
-      (item) =>
-        getMerchantCode(item).toLowerCase() === selectedMerchant.toLowerCase(),
-    );
-  }, [chartRecords, selectedMerchant]);
+  const chartCategories = useMemo(
+    () => filteredData.map((item) => item.merchantcode || '-'),
+    [filteredData],
+  );
 
   /** @type {import('apexcharts').ApexOptions} */
   const chartOptions = useMemo(
@@ -361,11 +246,7 @@ const DashboardMerchant = () => {
       dataLabels: { enabled: false },
       xaxis: {
         type: 'category',
-        categories: chartDays,
-        labels: {
-          rotate: -45,
-          formatter: (value) => value,
-        },
+        categories: chartCategories,
       },
       tooltip: {
         shared: true,
@@ -385,52 +266,23 @@ const DashboardMerchant = () => {
         },
       },
       legend: { position: 'top' },
-      colors: [
-        '#1d4ed8',
-        '#dc2626',
-        '#16a34a',
-        '#f59e0b',
-        '#9333ea',
-        '#0f766e',
-        '#0ea5e9',
-        '#f97316',
-      ],
+      colors: ['#1d4ed8', '#dc2626'],
     }),
-    [chartDays],
+    [chartCategories],
   );
 
   const chartSeries = useMemo(() => {
-    const merchantMap = new Map();
-    filteredChartRecords.forEach((item) => {
-      const merchant = getMerchantCode(item);
-      if (!merchant) return;
-      const dayKey = toDayKey(item.day) || toDayKey(item.insert);
-      if (!dayKey) return;
-
-      const totalDeposit = Number(item.total_deposit || 0);
-      const totalWithdraw = Number(item.total_withdraw || 0);
-      const totalAmount = Number(
-        item.total_amount || totalDeposit + totalWithdraw,
-      );
-
-      let value = totalAmount;
-      if (chartMetric === 'deposit') value = totalDeposit;
-      if (chartMetric === 'withdraw') value = totalWithdraw;
-
-      if (!merchantMap.has(merchant)) {
-        merchantMap.set(merchant, new Map());
-      }
-      const dayTotals = merchantMap.get(merchant);
-      dayTotals.set(dayKey, (dayTotals.get(dayKey) || 0) + value);
-    });
-
-    return Array.from(merchantMap.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([merchant, dayTotals]) => ({
-        name: merchant,
-        data: chartDays.map((day) => dayTotals.get(day) || 0),
-      }));
-  }, [chartDays, chartMetric, filteredChartRecords]);
+    return [
+      {
+        name: 'Total Deposit',
+        data: filteredData.map((item) => Number(item.total_deposit || 0)),
+      },
+      {
+        name: 'Total Withdraw',
+        data: filteredData.map((item) => Number(item.total_withdraw || 0)),
+      },
+    ];
+  }, [filteredData]);
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -484,10 +336,7 @@ const DashboardMerchant = () => {
                 color="blue"
                 radius="md"
                 loading={refreshing}
-                onClick={() => {
-                  fetchSummary({ silent: true });
-                  fetchChartData();
-                }}
+                onClick={() => fetchSummary({ silent: true })}
               >
                 Refresh
               </Button>
@@ -667,43 +516,22 @@ const DashboardMerchant = () => {
             shadow="xs"
           >
             <Stack gap="sm">
-              <Group
-                justify="space-between"
-                align="center"
-              >
-                <Text fw={700}>Trend Overview</Text>
-                <SegmentedControl
-                  value={chartMetric}
-                  onChange={setChartMetric}
-                  data={[
-                    { label: 'Total', value: 'total' },
-                    { label: 'Deposit', value: 'deposit' },
-                    { label: 'Withdraw', value: 'withdraw' },
-                  ]}
-                  size="xs"
+              <Text fw={700}>Trend Overview</Text>
+              {filteredData.length === 0 ? (
+                <Text
+                  size="sm"
+                  c="dimmed"
+                >
+                  No chart data available.
+                </Text>
+              ) : (
+                <ReactApexChart
+                  type="area"
+                  height={280}
+                  options={chartOptions}
+                  series={chartSeries}
                 />
-              </Group>
-              <Box pos="relative">
-                <LoadingOverlay
-                  visible={chartLoading}
-                  overlayProps={{ blur: 2 }}
-                />
-                {chartSeries.length === 0 ? (
-                  <Text
-                    size="sm"
-                    c="dimmed"
-                  >
-                    No chart data available.
-                  </Text>
-                ) : (
-                  <ReactApexChart
-                    type="area"
-                    height={460}
-                    options={chartOptions}
-                    series={chartSeries}
-                  />
-                )}
-              </Box>
+              )}
             </Stack>
           </Card>
 

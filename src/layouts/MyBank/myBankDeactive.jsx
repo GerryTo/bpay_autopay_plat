@@ -58,7 +58,10 @@ const MyBankDeactive = () => {
         label: 'Group',
         minWidth: 90,
         render: (item) => (
-          <Text fw={600} size="sm">
+          <Text
+            fw={600}
+            size="sm"
+          >
             {item.group || '-'}
           </Text>
         ),
@@ -76,7 +79,11 @@ const MyBankDeactive = () => {
         label: 'Account No',
         minWidth: 140,
         render: (item) => (
-          <Text fw={600} size="sm" c="blue">
+          <Text
+            fw={600}
+            size="sm"
+            c="blue"
+          >
             {item.bankAccNo}
           </Text>
         ),
@@ -112,7 +119,10 @@ const MyBankDeactive = () => {
         label: 'Bank',
         minWidth: 120,
         render: (item) => (
-          <Badge color="blue" variant="light">
+          <Badge
+            color="blue"
+            variant="light"
+          >
             {item.bankCode}
           </Badge>
         ),
@@ -146,7 +156,10 @@ const MyBankDeactive = () => {
         label: 'Type',
         minWidth: 80,
         render: (item) => (
-          <Badge color="gray" variant="outline">
+          <Badge
+            color="gray"
+            variant="outline"
+          >
             {item.type}
           </Badge>
         ),
@@ -164,7 +177,10 @@ const MyBankDeactive = () => {
         label: 'Active',
         minWidth: 110,
         render: (item) => (
-          <Badge color={item.active === 'Y' ? 'green' : 'red'} variant="light">
+          <Badge
+            color={item.active === 'Y' ? 'green' : 'red'}
+            variant="light"
+          >
             {item.active === 'Y' ? 'Active' : 'Inactive'}
           </Badge>
         ),
@@ -184,7 +200,10 @@ const MyBankDeactive = () => {
         label: 'Balance',
         minWidth: 140,
         render: (item) => (
-          <Text size="sm" className="grid-alignright">
+          <Text
+            size="sm"
+            className="grid-alignright"
+          >
             {formatNumber(item.curr)}
           </Text>
         ),
@@ -194,7 +213,10 @@ const MyBankDeactive = () => {
         label: 'Daily Limit',
         minWidth: 140,
         render: (item) => (
-          <Text size="sm" className="grid-alignright">
+          <Text
+            size="sm"
+            className="grid-alignright"
+          >
             {formatNumber(item.dailylimit)}
           </Text>
         ),
@@ -204,7 +226,10 @@ const MyBankDeactive = () => {
         label: 'Daily',
         minWidth: 140,
         render: (item) => (
-          <Text size="sm" className="grid-alignright">
+          <Text
+            size="sm"
+            className="grid-alignright"
+          >
             {formatNumber(item.daily)}
           </Text>
         ),
@@ -214,7 +239,10 @@ const MyBankDeactive = () => {
         label: 'Action',
         minWidth: 200,
         render: (item) => (
-          <Group gap="xs" wrap="nowrap">
+          <Group
+            gap="xs"
+            wrap="nowrap"
+          >
             <Button
               variant="light"
               color="blue"
@@ -268,7 +296,7 @@ const MyBankDeactive = () => {
         ),
       },
     ],
-    [columnFilters]
+    [columnFilters],
   );
 
   const {
@@ -315,7 +343,7 @@ const MyBankDeactive = () => {
           includesValue(item.active, columnFilters.active)
         );
       }),
-    [data, columnFilters]
+    [data, columnFilters],
   );
 
   const sortedData = useMemo(() => {
@@ -336,7 +364,7 @@ const MyBankDeactive = () => {
 
   const selectedRecords = useMemo(
     () => data.filter((item) => selectedKeys.includes(makeKey(item))),
-    [data, selectedKeys]
+    [data, selectedKeys],
   );
 
   const pageKeys = paginatedData.map((item) => makeKey(item));
@@ -409,14 +437,14 @@ const MyBankDeactive = () => {
     setSelectedKeys((current) =>
       current.includes(key)
         ? current.filter((k) => k !== key)
-        : [...current, key]
+        : [...current, key],
     );
   };
 
   const toggleAllOnPage = () => {
     if (pageFullySelected) {
       setSelectedKeys((current) =>
-        current.filter((key) => !pageKeys.includes(key))
+        current.filter((key) => !pageKeys.includes(key)),
       );
     } else {
       setSelectedKeys((current) => [
@@ -431,7 +459,7 @@ const MyBankDeactive = () => {
     const numberValue = Number(value);
     if (Number.isNaN(numberValue)) return value;
     return new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(
-      numberValue
+      numberValue,
     );
   };
 
@@ -533,7 +561,7 @@ const MyBankDeactive = () => {
     try {
       const response = await myBankAPI.getLastTransaction(
         record.bankAccNo,
-        record.bankCode
+        record.bankCode,
       );
 
       if (response.success && response.data) {
@@ -641,14 +669,14 @@ const MyBankDeactive = () => {
               value={columnFilters.active}
               onChange={(e) => handleFilterChange('active', e.currentTarget.value)}
             /> */}
-            <Button
+            {/* <Button
               leftSection={<IconPlus size={16} />}
               variant="filled"
               color="blue"
               onClick={handleAddNew}
             >
               Add New
-            </Button>
+            </Button> */}
             <Button
               leftSection={<IconRefresh size={16} />}
               variant="light"
@@ -739,9 +767,19 @@ const MyBankDeactive = () => {
                       />
                     </Table.Th>
                     {visibleColumns.map((col) => (
-                      <Table.Th key={col.key} style={{ minWidth: col.minWidth }}>
-                        <Group gap={6} align="center" wrap="nowrap">
-                          <Text size="sm" fw={600}>
+                      <Table.Th
+                        key={col.key}
+                        style={{ minWidth: col.minWidth }}
+                      >
+                        <Group
+                          gap={6}
+                          align="center"
+                          wrap="nowrap"
+                        >
+                          <Text
+                            size="sm"
+                            fw={600}
+                          >
                             {col.label}
                           </Text>
                           <ColumnActionMenu
@@ -816,7 +854,7 @@ const MyBankDeactive = () => {
                             c="dimmed"
                           >
                             {Object.values(columnFilters).some(
-                              (val) => val !== ''
+                              (val) => val !== '',
                             )
                               ? 'Coba sesuaikan filter pencarian'
                               : 'Klik Refresh untuk memuat data terbaru'}

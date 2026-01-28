@@ -6,25 +6,30 @@ import {
   Card,
   Group,
   LoadingOverlay,
+  Modal,
   Pagination,
   ScrollArea,
+  Select,
   Stack,
   Table,
   Text,
   TextInput,
-  Select,
 } from '@mantine/core';
-import { IconFilter, IconRefresh, IconServer } from '@tabler/icons-react';
-import { serviceNagadAPI } from '../../helper/api';
+import {
+  IconFilter,
+  IconPlus,
+  IconRefresh,
+  IconServer,
+} from '@tabler/icons-react';
+import { serviceNagadMerchantAPI } from '../../helper/api';
 import { showNotification } from '../../helper/showNotification';
 import { useTableControls } from '../../hooks/useTableControls';
 import ColumnActionMenu from '../../components/ColumnActionMenu';
 
 const defaultFilters = {
   user: '',
-  counter: '',
-  sessionId: '',
-  operator: '',
+  username: '',
+  password: '',
 };
 
 const batchSize = 25;
@@ -40,7 +45,7 @@ const initialBulkProgress = {
   totalBatches: 0,
 };
 
-const ServiceNagadApi = () => {
+const ServiceNagadMerchant = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -50,6 +55,8 @@ const ServiceNagadApi = () => {
   const [saving, setSaving] = useState(false);
   const [selectedKeys, setSelectedKeys] = useState([]);
   const [bulkProgress, setBulkProgress] = useState(initialBulkProgress);
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [newServiceName, setNewServiceName] = useState('');
 
   const handleFilterChange = useCallback((key, value) => {
     setColumnFilters((prev) => ({
@@ -68,22 +75,20 @@ const ServiceNagadApi = () => {
       data.filter((item) => {
         return (
           includesValue(item.v_user, columnFilters.user) &&
-          includesValue(item.v_atc, columnFilters.counter) &&
-          includesValue(item.v_mpaid, columnFilters.sessionId) &&
-          includesValue(item.v_operator, columnFilters.operator)
+          includesValue(item.v_email, columnFilters.username) &&
+          includesValue(item.v_password_bkash, columnFilters.password)
         );
       }),
-    [data, columnFilters],
+    [data, columnFilters]
   );
 
   const sortAccessors = useMemo(
     () => ({
       user: (item) => item.v_user ?? '',
-      counter: (item) => item.v_atc ?? '',
-      sessionId: (item) => item.v_mpaid ?? '',
-      operator: (item) => item.v_operator ?? '',
+      username: (item) => item.v_email ?? '',
+      password: (item) => item.v_password_bkash ?? '',
     }),
-    [],
+    []
   );
 
   const columns = useMemo(
@@ -110,49 +115,33 @@ const ServiceNagadApi = () => {
         ),
       },
       {
-        key: 'counter',
-        label: 'Counter',
-        minWidth: 120,
-        render: (item) => <Text size="sm">{item.v_atc || '-'}</Text>,
-        filter: (
-          <TextInput
-            placeholder="Filter counter..."
-            size="xs"
-            value={columnFilters.counter}
-            onChange={(e) =>
-              handleFilterChange('counter', e.currentTarget.value)
-            }
-          />
-        ),
-      },
-      {
-        key: 'sessionId',
-        label: 'Session ID',
+        key: 'username',
+        label: 'Username',
         minWidth: 220,
-        render: (item) => <Text size="sm">{item.v_mpaid || '-'}</Text>,
+        render: (item) => <Text size="sm">{item.v_email || '-'}</Text>,
         filter: (
           <TextInput
-            placeholder="Filter session..."
+            placeholder="Filter username..."
             size="xs"
-            value={columnFilters.sessionId}
+            value={columnFilters.username}
             onChange={(e) =>
-              handleFilterChange('sessionId', e.currentTarget.value)
+              handleFilterChange('username', e.currentTarget.value)
             }
           />
         ),
       },
       {
-        key: 'operator',
-        label: 'Operator',
-        minWidth: 160,
-        render: (item) => <Text size="sm">{item.v_operator || '-'}</Text>,
+        key: 'password',
+        label: 'Password',
+        minWidth: 220,
+        render: (item) => <Text size="sm">{item.v_password_bkash || '-'}</Text>,
         filter: (
           <TextInput
-            placeholder="Filter operator..."
+            placeholder="Filter password..."
             size="xs"
-            value={columnFilters.operator}
+            value={columnFilters.password}
             onChange={(e) =>
-              handleFilterChange('operator', e.currentTarget.value)
+              handleFilterChange('password', e.currentTarget.value)
             }
           />
         ),
@@ -160,18 +149,9 @@ const ServiceNagadApi = () => {
       {
         key: 'action',
         label: 'Action',
-        minWidth: 360,
+        minWidth: 260,
         render: (item) => (
           <Group gap="xs">
-            <Button
-              size="xs"
-              variant="light"
-              color="green"
-              onClick={() => handleAddCounter(item)}
-              disabled={saving || bulkProgress.isRunning}
-            >
-              +1
-            </Button>
             <Button
               size="xs"
               variant="light"
@@ -199,20 +179,11 @@ const ServiceNagadApi = () => {
             >
               Stop
             </Button>
-            {/* <Button
-              size="xs"
-              variant="light"
-              color="red"
-              onClick={() => handleDeleteSession(item)}
-              disabled={saving || bulkProgress.isRunning}
-            >
-              Delete
-            </Button> */}
           </Group>
         ),
       },
     ],
-    [columnFilters, handleFilterChange, saving, bulkProgress.isRunning],
+    [columnFilters, handleFilterChange, saving, bulkProgress.isRunning]
   );
 
   const {
@@ -233,19 +204,8 @@ const ServiceNagadApi = () => {
 
     const dir = direction === 'desc' ? -1 : 1;
     return [...filteredData].sort((a, b) => {
-      const avRaw = accessor(a);
-      const bvRaw = accessor(b);
-
-      const avNum = Number(avRaw);
-      const bvNum = Number(bvRaw);
-      const bothNumeric = Number.isFinite(avNum) && Number.isFinite(bvNum);
-      if (bothNumeric) {
-        if (avNum === bvNum) return 0;
-        return avNum > bvNum ? dir : -dir;
-      }
-
-      const av = (avRaw ?? '').toString().toLowerCase();
-      const bv = (bvRaw ?? '').toString().toLowerCase();
+      const av = (accessor(a) ?? '').toString().toLowerCase();
+      const bv = (accessor(b) ?? '').toString().toLowerCase();
       if (av === bv) return 0;
       return av > bv ? dir : -dir;
     });
@@ -269,7 +229,7 @@ const ServiceNagadApi = () => {
   const fetchList = useCallback(async ({ silent = false } = {}) => {
     silent ? setRefreshing(true) : setLoading(true);
     try {
-      const response = await serviceNagadAPI.getList();
+      const response = await serviceNagadMerchantAPI.getList();
       if (response.success && response.data) {
         const payload = response.data;
         const status = (payload.status || '').toLowerCase();
@@ -277,7 +237,7 @@ const ServiceNagadApi = () => {
           const records = Array.isArray(payload.records) ? payload.records : [];
           const withKeys = records.map((item, idx) => ({
             ...item,
-            _rowKey: `${item.v_user || 'service'}-${item.v_mpaid || idx}`,
+            _rowKey: `${item.v_user || 'service'}-${item.v_email || idx}`,
           }));
           setData(withKeys);
         } else {
@@ -295,7 +255,7 @@ const ServiceNagadApi = () => {
         });
       }
     } catch (error) {
-      console.error('Service Nagad fetch error:', error);
+      console.error('Service Nagad Merchant fetch error:', error);
       showNotification({
         title: 'Error',
         message: 'Unable to load service list',
@@ -322,33 +282,33 @@ const ServiceNagadApi = () => {
   };
 
   const makeKey = (item) =>
-    item._rowKey || `${item.v_user || 'user'}-${item.v_mpaid || 'session'}`;
+    item._rowKey || `${item.v_user || 'user'}-${item.v_email || 'email'}`;
 
   const toggleRow = (item) => {
     const key = makeKey(item);
     setSelectedKeys((current) =>
       current.includes(key)
         ? current.filter((k) => k !== key)
-        : [...current, key],
+        : [...current, key]
     );
   };
 
   const pageKeys = useMemo(
     () => paginatedData.map((item) => makeKey(item)).filter(Boolean),
-    [paginatedData],
+    [paginatedData]
   );
   const pageFullySelected =
     pageKeys.length > 0 && pageKeys.every((key) => selectedKeys.includes(key));
   const pagePartiallySelected =
     pageKeys.some((key) => selectedKeys.includes(key)) && !pageFullySelected;
   const totalSelectedOnPage = paginatedData.filter((item) =>
-    selectedKeys.includes(makeKey(item)),
+    selectedKeys.includes(makeKey(item))
   ).length;
 
   const toggleAllOnPage = () => {
     if (pageFullySelected) {
       setSelectedKeys((current) =>
-        current.filter((key) => !pageKeys.includes(key)),
+        current.filter((key) => !pageKeys.includes(key))
       );
     } else {
       setSelectedKeys((current) => {
@@ -360,7 +320,7 @@ const ServiceNagadApi = () => {
 
   const selectedItems = useMemo(
     () => data.filter((item) => selectedKeys.includes(makeKey(item))),
-    [data, selectedKeys],
+    [data, selectedKeys]
   );
 
   async function handleExecute(item, statement) {
@@ -370,7 +330,7 @@ const ServiceNagadApi = () => {
         statment: statement,
         servicename: item.v_user,
       };
-      const response = await serviceNagadAPI.execute(payload);
+      const response = await serviceNagadMerchantAPI.execute(payload);
       if (response.success && response.data) {
         const status = (response.data.status || '').toLowerCase();
         showNotification({
@@ -387,84 +347,10 @@ const ServiceNagadApi = () => {
         });
       }
     } catch (error) {
-      console.error('Execute Nagad service error:', error);
+      console.error('Execute Nagad Merchant error:', error);
       showNotification({
         title: 'Error',
         message: 'Unable to execute service',
-        color: 'red',
-      });
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handleAddCounter(item) {
-    setSaving(true);
-    try {
-      const response = await serviceNagadAPI.addCounter(item.v_user);
-      const status = (response.data?.status || '').toLowerCase();
-      if (response.success && (status === 'success' || status === 'ok')) {
-        showNotification({
-          title: 'Success',
-          message: response.data?.message || 'Counter updated',
-          color: 'green',
-        });
-        fetchList({ silent: true });
-      } else {
-        showNotification({
-          title: 'Error',
-          message:
-            response.error || response.data?.message || 'Failed to add counter',
-          color: 'red',
-        });
-      }
-    } catch (error) {
-      console.error('Add counter error:', error);
-      showNotification({
-        title: 'Error',
-        message: 'Unable to add counter',
-        color: 'red',
-      });
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handleDeleteSession(item) {
-    if (
-      !window.confirm(
-        `Are you sure you want to delete the MPAID for the user ${item.v_user}?`,
-      )
-    ) {
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const response = await serviceNagadAPI.deleteSession(item.v_mpaid);
-      const status = (response.data?.status || '').toLowerCase();
-      if (response.success && (status === 'success' || status === 'ok')) {
-        showNotification({
-          title: 'Success',
-          message: response.data?.message || 'Session deleted',
-          color: 'green',
-        });
-        fetchList({ silent: true });
-      } else {
-        showNotification({
-          title: 'Error',
-          message:
-            response.error ||
-            response.data?.message ||
-            'Failed to delete session',
-          color: 'red',
-        });
-      }
-    } catch (error) {
-      console.error('Delete session error:', error);
-      showNotification({
-        title: 'Error',
-        message: 'Unable to delete session',
         color: 'red',
       });
     } finally {
@@ -490,7 +376,7 @@ const ServiceNagadApi = () => {
 
     if (
       !window.confirm(
-        `Are you sure want to ${actionLabel} ${total} service(s)?\n\nBatch: ${totalBatches}`,
+        `Are you sure want to ${actionLabel} ${total} service(s)?\n\nBatch: ${totalBatches}`
       )
     ) {
       return;
@@ -524,7 +410,7 @@ const ServiceNagadApi = () => {
       await Promise.all(
         batches[index].map(async (row) => {
           try {
-            const response = await serviceNagadAPI.execute({
+            const response = await serviceNagadMerchantAPI.execute({
               statment: statement,
               servicename: row.v_user,
             });
@@ -549,7 +435,7 @@ const ServiceNagadApi = () => {
               failed: prev.failed + 1,
             }));
           }
-        }),
+        })
       );
 
       if (index < batches.length - 1) {
@@ -571,97 +457,49 @@ const ServiceNagadApi = () => {
     fetchList({ silent: true });
   };
 
-  const handleBulkAddCounter = async () => {
-    if (selectedItems.length === 0) {
+  const handleAddService = async () => {
+    if (!newServiceName.trim()) {
       showNotification({
         title: 'Info',
-        message: 'Please select at least one service',
+        message: 'Please enter a service name',
         color: 'blue',
       });
       return;
     }
 
-    const total = selectedItems.length;
-    const totalBatches = Math.ceil(total / batchSize);
-
-    if (
-      !window.confirm(
-        `Are you sure want to ADD COUNTER for ${total} service(s)?\n\nBatch: ${totalBatches}`,
-      )
-    ) {
-      return;
-    }
-
-    setBulkProgress({
-      isRunning: true,
-      total,
-      processed: 0,
-      success: 0,
-      failed: 0,
-      currentBatch: 0,
-      totalBatches,
-    });
     setSaving(true);
-
-    let localSuccess = 0;
-    let localFailed = 0;
-
-    const batches = [];
-    for (let i = 0; i < total; i += batchSize) {
-      batches.push(selectedItems.slice(i, i + batchSize));
-    }
-
-    for (let index = 0; index < batches.length; index += 1) {
-      setBulkProgress((prev) => ({
-        ...prev,
-        currentBatch: index + 1,
-      }));
-
-      await Promise.all(
-        batches[index].map(async (row) => {
-          try {
-            const response = await serviceNagadAPI.addCounter(row.v_user);
-            const status = (response.data?.status || '').toLowerCase();
-            const success = status === 'success' || status === 'ok';
-            if (success) {
-              localSuccess += 1;
-            } else {
-              localFailed += 1;
-            }
-            setBulkProgress((prev) => ({
-              ...prev,
-              processed: prev.processed + 1,
-              success: prev.success + (success ? 1 : 0),
-              failed: prev.failed + (success ? 0 : 1),
-            }));
-          } catch (error) {
-            localFailed += 1;
-            setBulkProgress((prev) => ({
-              ...prev,
-              processed: prev.processed + 1,
-              failed: prev.failed + 1,
-            }));
-          }
-        }),
+    try {
+      const response = await serviceNagadMerchantAPI.addService(
+        newServiceName.trim()
       );
-
-      if (index < batches.length - 1) {
-        await sleep(batchDelay);
+      const status = (response.data?.status || '').toLowerCase();
+      if (response.success && (status === 'success' || status === 'ok')) {
+        showNotification({
+          title: 'Success',
+          message: response.data?.message || 'Service added',
+          color: 'green',
+        });
+        setAddModalOpen(false);
+        setNewServiceName('');
+        fetchList({ silent: true });
+      } else {
+        showNotification({
+          title: 'Error',
+          message:
+            response.error || response.data?.message || 'Failed to add service',
+          color: 'red',
+        });
       }
+    } catch (error) {
+      console.error('Add service error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to add service',
+        color: 'red',
+      });
+    } finally {
+      setSaving(false);
     }
-
-    setBulkProgress((prev) => ({
-      ...prev,
-      isRunning: false,
-    }));
-    setSaving(false);
-    showNotification({
-      title: 'Bulk ADD COUNTER completed',
-      message: `Success: ${localSuccess} | Failed: ${localFailed}`,
-      color: localFailed > 0 ? 'yellow' : 'green',
-    });
-    setSelectedKeys([]);
-    fetchList({ silent: true });
   };
 
   return (
@@ -693,14 +531,14 @@ const ServiceNagadApi = () => {
                   size="xl"
                   fw={700}
                 >
-                  Service Nagad API
+                  Service Nagad Merchant
                 </Text>
               </Group>
               <Text
                 size="sm"
                 c="dimmed"
               >
-                Manage Nagad services (start/stop/restart).
+                Manage Nagad merchant services (start/stop/restart).
               </Text>
             </Box>
 
@@ -743,15 +581,6 @@ const ServiceNagadApi = () => {
               <Button
                 size="xs"
                 variant="light"
-                color="green"
-                onClick={handleBulkAddCounter}
-                disabled={bulkProgress.isRunning || selectedKeys.length === 0}
-              >
-                Add Counter Selected
-              </Button>
-              <Button
-                size="xs"
-                variant="light"
                 color="orange"
                 onClick={() => handleBulkExecute('restart')}
                 disabled={bulkProgress.isRunning || selectedKeys.length === 0}
@@ -778,15 +607,27 @@ const ServiceNagadApi = () => {
               </Button>
             </Group>
 
-            {bulkProgress.isRunning ? (
-              <Text
-                size="sm"
-                c="dimmed"
+            <Group gap="xs">
+              <Button
+                size="xs"
+                variant="light"
+                color="green"
+                leftSection={<IconPlus size={16} />}
+                onClick={() => setAddModalOpen(true)}
+                disabled={bulkProgress.isRunning}
               >
-                Batch {bulkProgress.currentBatch}/{bulkProgress.totalBatches} -
-                Processed {bulkProgress.processed}/{bulkProgress.total}
-              </Text>
-            ) : null}
+                Add Agent
+              </Button>
+              {bulkProgress.isRunning ? (
+                <Text
+                  size="sm"
+                  c="dimmed"
+                >
+                  Batch {bulkProgress.currentBatch}/{bulkProgress.totalBatches} -
+                  Processed {bulkProgress.processed}/{bulkProgress.total}
+                </Text>
+              ) : null}
+            </Group>
           </Group>
 
           <Box pos="relative">
@@ -1002,8 +843,40 @@ const ServiceNagadApi = () => {
           </Group>
         </Stack>
       </Card>
+
+      <Modal
+        opened={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        title="Add Nagad Merchant Service"
+        centered
+      >
+        <Stack>
+          <TextInput
+            label="Service Name"
+            placeholder="Enter service name"
+            value={newServiceName}
+            onChange={(e) => setNewServiceName(e.currentTarget.value)}
+          />
+          <Group justify="flex-end">
+            <Button
+              variant="light"
+              color="gray"
+              onClick={() => setAddModalOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              color="blue"
+              onClick={handleAddService}
+              loading={saving}
+            >
+              Submit
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </Box>
   );
 };
 
-export default ServiceNagadApi;
+export default ServiceNagadMerchant;

@@ -548,6 +548,104 @@ export const myBankAPI = {
   },
 
   /**
+   * Get master mybank detail by account + bank code
+   * @param {String} bankAccNo
+   * @param {String} bankCode
+   */
+  getMasterMyBankDetail: async (bankAccNo = '', bankCode = '') => {
+    try {
+      const payload = { bankAccNo, bankCode };
+      const jsonData = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/getMasterMyBank.php', formData);
+
+      let payloadData = response.data;
+      if (response.data && response.data.data) {
+        payloadData = CRYPTO.decrypt(response.data.data);
+      }
+
+      if (payloadData?.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          CRYPTO.decodeRawUrl(record)
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Get mybank detail error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load mybank detail',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get login type & merchant access flag (not encrypted)
+   */
+  getLoginType: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '');
+
+      const response = await apiClient.post('/getLoginType.php', formData);
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Get login type error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load login type',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get login phone numbers (not encrypted)
+   */
+  getMsLogin: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '{}');
+
+      const response = await apiClient.post('/getMsLogin.php', formData);
+      let payload = response.data;
+      if (payload?.data && typeof payload.data === 'string') {
+        try {
+          payload = CRYPTO.decrypt(payload.data);
+        } catch (error) {
+          console.warn('getMsLogin decrypt failed, using raw payload', error);
+          payload = response.data;
+        }
+      } else if (payload?.data && typeof payload.data === 'object') {
+        payload = payload.data;
+      }
+
+      return {
+        success: true,
+        data: payload,
+      };
+    } catch (error) {
+      console.error('Get ms login error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load phone numbers',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
    * Delete mybank record
    * @param {String} bankAccNo - Account number
    * @param {String} bankCode - Bank code
@@ -7958,6 +8056,49 @@ export const crawlerAPI = {
   },
 
   /**
+   * Get credentials NAGADM (service list NM)
+   */
+  getCredentialsNagadm: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '{}');
+
+      const response = await apiClient.post('/GetServiceListNM.php', formData);
+
+      const payloadData = response.data?.data ?? response.data;
+
+      if (payloadData?.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Credentials NAGADM API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load credentials',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
    * Get settlement & topup (request manual) list
    * @param {Object} params
    * @param {String} params.datefrom - YYYY-MM-DD
@@ -8897,6 +9038,99 @@ export const serviceNagadAPI = {
   },
 };
 
+// Service Nagad Merchant list / execution
+export const serviceNagadMerchantAPI = {
+  /**
+   * Get Nagad Merchant service list
+   */
+  getList: async () => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', '{}');
+
+      const response = await apiClient.post('/GetServiceNagadMerchant.php', formData);
+      const payloadData = response.data?.data ?? response.data;
+
+      if (payloadData?.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          Object.entries(record || {}).reduce((acc, [key, value]) => {
+            if (typeof value === 'string') {
+              try {
+                acc[key] = decodeURIComponent(value);
+              } catch (_) {
+                acc[key] = value;
+              }
+            } else {
+              acc[key] = value;
+            }
+            return acc;
+          }, {})
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Service Nagad Merchant list error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load Nagad merchant services',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Execute Nagad Merchant service (restart/start/stop)
+   * @param {Object} payload - { statment, servicename }
+   */
+  execute: async (payload = {}) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', JSON.stringify(payload));
+
+      const response = await apiClient.post('/executeServiceNagadMerchant.php', formData);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Execute Nagad Merchant service error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to execute Nagad merchant service',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Add Nagad Merchant service
+   * @param {String} servicename
+   */
+  addService: async (servicename) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data', JSON.stringify({ servicename }));
+
+      const response = await apiClient.post('/addServiceNagadMerchant.php', formData);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Add Nagad Merchant service error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to add Nagad merchant service',
+        details: error.response?.data || null,
+      };
+    }
+  },
+};
+
 // Service Bkash API list / execution
 export const serviceBkashAPI = {
   /**
@@ -9231,7 +9465,11 @@ export const merchantDashboardAPI = {
       const formData = new URLSearchParams();
       formData.append('data', '');
 
-      const response = await apiClient.post('/masterMerchant_getList.php', formData);
+      const response = await apiClient.post(
+        '/masterMerchant_getList.php',
+        formData,
+        { timeout: 120000 }
+      );
       const payload = response.data ?? {};
       let records = [];
 
@@ -9292,6 +9530,57 @@ export const merchantDashboardAPI = {
       return {
         success: false,
         error: error.message || 'Failed to load dashboard data',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Get merchant transaction list for charting (encrypted request)
+   * @param {Object} params - { dateFrom, dateTo }
+   */
+  getTransactionByMerchant: async ({
+    dateFrom,
+    dateTo,
+    merchantCode = 'ALL',
+  }) => {
+    try {
+      const payload = {
+        datefrom: dateFrom,
+        dateto: dateTo,
+        merchantcode: merchantCode || 'ALL',
+        groupBy: 'day',
+      };
+      const encrypted = CRYPTO.encrypt(payload);
+      const formData = new URLSearchParams();
+      formData.append('data', encrypted);
+
+      const response = await apiClient.post(
+        '/getDashboardMerchant_test.php',
+        formData,
+        { timeout: 120000 }
+      );
+
+      let payloadData = response.data;
+      if (response.data?.data) {
+        payloadData = CRYPTO.decrypt(response.data.data);
+      }
+
+      if (payloadData?.records && Array.isArray(payloadData.records)) {
+        payloadData.records = payloadData.records.map((record) =>
+          CRYPTO.decodeRawUrl(record)
+        );
+      }
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Merchant transaction list error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to load merchant transactions',
         details: error.response?.data || null,
       };
     }
