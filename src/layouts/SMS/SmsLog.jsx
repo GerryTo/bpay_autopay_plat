@@ -588,7 +588,14 @@ const SmsLog = () => {
   );
 
   const sortedData = useMemo(() => {
-    if (!sortConfig) return filteredData;
+    if (!sortConfig) {
+      return [...filteredData].sort((a, b) => {
+        const av = a.timestamp ?? '';
+        const bv = b.timestamp ?? '';
+        if (av === bv) return 0;
+        return av > bv ? -1 : 1;
+      });
+    }
     const { key, direction } = sortConfig;
     const dir = direction === 'desc' ? -1 : 1;
     return [...filteredData].sort((a, b) => {

@@ -29,10 +29,11 @@ import {
   IconRefresh,
   IconSearch,
 } from '@tabler/icons-react';
-import { withdrawAPI, merchantAPI } from '../../helper/api';
+import { withdrawAPI, merchantAPI, transactionAPI } from '../../helper/api';
 import { showNotification } from '../../helper/showNotification';
 import { useTableControls } from '../../hooks/useTableControls';
 import ColumnActionMenu from '../../components/ColumnActionMenu';
+import { AesCtr } from '../../helper/aes-ctr';
 
 const defaultFilters = {
   id: '',
@@ -51,6 +52,7 @@ const defaultFilters = {
   originaldate: '',
   fee: '',
   status: '',
+  generated: '',
   notes2: '',
   notes3: '',
   finalstatusdesc: '',
@@ -73,6 +75,26 @@ const formatNumber = (value) => {
   return num.toLocaleString('en-US', { maximumFractionDigits: 2 });
 };
 
+const getServerToken = () => {
+  try {
+    const meta = document.querySelector('meta[name="server_token"]');
+    const token = meta?.getAttribute('content') || '';
+    if (token.length < 16) return '';
+    const publicKey = token.substring(0, 16);
+    const data = token.substring(16);
+    return AesCtr.decrypt(data, `${publicKey}{([<.?*+-#!,>])}`, 256);
+  } catch (error) {
+    console.error('Server token decode error:', error);
+    return '';
+  }
+};
+
+const validateServer = (server) => {
+  const list = ['development', 'dpay'];
+  const value = String(server || '').toLowerCase();
+  return list.includes(value);
+};
+
 const WithdrawCheck = () => {
   const [dateRange, setDateRange] = useState([
     {
@@ -92,6 +114,7 @@ const WithdrawCheck = () => {
   const [columnFilters, setColumnFilters] = useState(defaultFilters);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const canGenerate = useMemo(() => validateServer(getServerToken()), []);
 
   const handleFilterChange = useCallback((column, value) => {
     setColumnFilters((prev) => ({
@@ -265,6 +288,22 @@ const WithdrawCheck = () => {
             value={columnFilters.transactionid}
             onChange={(e) =>
               handleFilterChange('transactionid', e.currentTarget.value)
+            }
+          />
+        ),
+      },
+      {
+        key: 'generated',
+        label: 'Is Generated',
+        minWidth: 120,
+        render: (item) => <Text size="sm">{item.generated || '-'}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter generated..."
+            size="xs"
+            value={columnFilters.generated}
+            onChange={(e) =>
+              handleFilterChange('generated', e.currentTarget.value)
             }
           />
         ),
@@ -475,8 +514,79 @@ const WithdrawCheck = () => {
           />
         ),
       },
+      {
+        key: 'actions',
+        label: 'Action',
+        minWidth: 320,
+        render: (item) => {
+          const hasAgent =
+            String(item.agentUser || item.agentAlias || '').trim().length > 0;
+          return (
+            <Group
+              gap="xs"
+              wrap="nowrap"
+            >
+              {canGenerate ? (
+                <Button
+                  size="xs"
+                  variant="light"
+                  onClick={() => handleGenerate(item)}
+                >
+                  Generate
+                </Button>
+              ) : null}
+              <Button
+                size="xs"
+                variant="light"
+                color={hasAgent ? 'yellow' : 'blue'}
+                onClick={() => handleAssign(item)}
+              >
+                {hasAgent ? 'Re-Assign' : 'Assign'}
+              </Button>
+              {item.status === 'Pending' ? (
+                <Button
+                  size="xs"
+                  variant="light"
+                  onClick={() => handleCheck(item)}
+                >
+                  Check
+                </Button>
+              ) : null}
+              {item.status === 'Order need to check' ? (
+                <>
+                  <Button
+                    size="xs"
+                    variant="light"
+                    color="red"
+                    onClick={() => handleFail(item)}
+                  >
+                    Fail
+                  </Button>
+                  <Button
+                    size="xs"
+                    variant="light"
+                    color="yellow"
+                    onClick={() => handleSuccess(item)}
+                  >
+                    Success
+                  </Button>
+                </>
+              ) : null}
+            </Group>
+          );
+        },
+      },
     ],
-    [columnFilters, handleFilterChange]
+    [
+      canGenerate,
+      columnFilters,
+      handleAssign,
+      handleCheck,
+      handleFail,
+      handleFilterChange,
+      handleGenerate,
+      handleSuccess,
+    ]
   );
 
   const {
@@ -509,6 +619,7 @@ const WithdrawCheck = () => {
           includesValue(item.timestamp, columnFilters.timestamp) &&
           includesValue(item.dstbankaccount, columnFilters.dstbankaccount) &&
           includesValue(item.transactionid, columnFilters.transactionid) &&
+          includesValue(item.generated, columnFilters.generated) &&
           includesValue(item.accountname, columnFilters.accountname) &&
           includesValue(item.sourcebankcode, columnFilters.sourcebankcode) &&
           includesValue(item.accountno, columnFilters.accountno) &&
@@ -676,6 +787,382 @@ const WithdrawCheck = () => {
     fetchMerchants();
     fetchList();
   }, [fetchMerchants, fetchList]);
+
+  const buildGenerateText = (item) => {
+    const bankCode = String(item?.bankcode ?? '').toUpperCase();
+    let text = '';
+    switch (bankCode) {
+      case 'BKASH':
+        text = 'dYO^dYO^BKASHdYO^dYO^';
+        break;
+      case 'NAGAD':
+        text =
+          '\u0192~?\u2039,?\u0192~?\u2039,?NAGAD\u0192~?\u2039,?\u0192~?\u2039,?';
+        break;
+      case 'ROCKET':
+        text = 'dYs?dYs?ROCKETdYs?dYs?';
+        break;
+      case 'UPAY':
+        text = 'dYO?dYO?UPAYdYO?dYO?';
+        break;
+      default:
+        text = '';
+    }
+
+    const amountText = Number(item?.amount || 0)
+      .toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+      .replace(/\$/g, '');
+
+    return (
+      `${text}\n` +
+      `WALLET : ${item?.bankcode || ''}\n` +
+      `WD ID : ${item?.transactionid || ''}\n` +
+      `CASH IN TO : ${item?.dstbankaccount || ''}\n` +
+      `AMOUNT : ${amountText}`
+    );
+  };
+
+  async function handleGenerate(item) {
+    const id = item?.id ?? '';
+    if (!id) {
+      showNotification({
+        title: 'Validation',
+        message: 'Future ID is missing',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const generatedText = buildGenerateText(item);
+    if (generatedText) {
+      try {
+        await navigator.clipboard.writeText(generatedText);
+        showNotification({
+          title: 'Success',
+          message: 'Generate text copied to clipboard',
+          color: 'green',
+        });
+      } catch (error) {
+        console.error('Clipboard copy error:', error);
+      }
+    }
+
+    setLoading(true);
+    try {
+      const response = await withdrawAPI.checkWithdrawNtcDuplicate({
+        amount: item?.amount ?? '',
+        dstbankacc: item?.dstbankaccount ?? '',
+        futuretrx: id,
+        bankcode: item?.bankcode ?? '',
+      });
+
+      if (response.success && response.data) {
+        const status = String(response.data.status ?? '').toLowerCase();
+        if (status === 'ok') {
+          showNotification({
+            title: 'Success',
+            message: response.data.message || 'Generate check complete',
+            color: 'green',
+          });
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.data.message || 'Generate check failed',
+            color: 'red',
+          });
+        }
+      } else {
+        showNotification({
+          title: 'Error',
+          message: response.error || 'Generate check failed',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Generate withdraw check error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to generate withdraw check',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleAssign(item) {
+    const id = item?.id ?? '';
+    if (!id) {
+      showNotification({
+        title: 'Validation',
+        message: 'Future ID is missing',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const accountNo = window.prompt('Account No', '');
+    if (accountNo === null) return;
+    if (!accountNo.trim()) {
+      showNotification({
+        title: 'Validation',
+        message: 'Account No is required',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const bankCode = window.prompt('Bank Code', String(item?.bankcode ?? ''));
+    if (bankCode === null) return;
+    if (!bankCode.trim()) {
+      showNotification({
+        title: 'Validation',
+        message: 'Bank Code is required',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const accountName = window.prompt('Account Name', '');
+    if (accountName === null) return;
+
+    const username = window.prompt('Username', '');
+    if (username === null) return;
+
+    setLoading(true);
+    try {
+      const response = await withdrawAPI.assignWithdraw({
+        id,
+        accountNo,
+        bankCode,
+        accountName,
+        username,
+      });
+      if (response.success && response.data) {
+        const status = String(response.data.status ?? '').toLowerCase();
+        if (status === 'ok') {
+          showNotification({
+            title: 'Success',
+            message: response.data.message || 'Assignment success',
+            color: 'green',
+          });
+          await fetchList({ silent: true });
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.data.message || 'Assignment failed',
+            color: 'red',
+          });
+        }
+      } else {
+        showNotification({
+          title: 'Error',
+          message: response.error || 'Assignment failed',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Assign withdraw error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to assign withdraw',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleCheck(item) {
+    const id = item?.id ?? '';
+    if (!id) {
+      showNotification({
+        title: 'Validation',
+        message: 'Future ID is missing',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await withdrawAPI.checkWithdrawList(id);
+      if (response.success && response.data) {
+        const status = String(response.data.status ?? '').toLowerCase();
+        if (status === 'ok') {
+          await fetchList({ silent: true });
+          showNotification({
+            title: 'Success',
+            message: response.data.message || 'Withdraw checked',
+            color: 'green',
+          });
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.data.message || 'Failed to check withdraw',
+            color: 'red',
+          });
+        }
+      } else {
+        showNotification({
+          title: 'Error',
+          message: response.error || 'Failed to check withdraw',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Withdraw check error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to check withdraw',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleFail(item) {
+    const id = item?.id ?? '';
+    if (!id) {
+      showNotification({
+        title: 'Validation',
+        message: 'Future ID is missing',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    if (!window.confirm(`Are you sure want to fail [${id}]?`)) return;
+
+    const memo = window.prompt('Fail memo (optional)', '');
+    if (memo === null) return;
+
+    setLoading(true);
+    try {
+      const response = await transactionAPI.updateManualTransaction({
+        id,
+        status: 'C',
+        accountdest: '',
+        memo,
+      });
+
+      if (response.success && response.data) {
+        const status = String(response.data.status ?? '').toLowerCase();
+        if (status === 'ok') {
+          await fetchList({ silent: true });
+          showNotification({
+            title: 'Success',
+            message: response.data.message || 'Withdraw failed',
+            color: 'green',
+          });
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.data.message || 'Failed to fail withdraw',
+            color: 'red',
+          });
+        }
+      } else {
+        showNotification({
+          title: 'Error',
+          message: response.error || 'Failed to fail withdraw',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Withdraw fail error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to fail withdraw',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSuccess(item) {
+    const id = item?.id ?? '';
+    if (!id) {
+      showNotification({
+        title: 'Validation',
+        message: 'Future ID is missing',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const bankcode = window.prompt('Bank code', String(item?.bankcode ?? ''));
+    if (bankcode === null) return;
+    if (!bankcode.trim()) {
+      showNotification({
+        title: 'Validation',
+        message: 'Bank code is required',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const account = window.prompt(
+      'Destination account',
+      String(item?.dstbankaccount ?? '')
+    );
+    if (account === null) return;
+    if (!account.trim()) {
+      showNotification({
+        title: 'Validation',
+        message: 'Destination account is required',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const receipt = window.prompt('Receipt (optional)', '') ?? '';
+
+    setLoading(true);
+    try {
+      const response = await transactionAPI.setTransactionSuccessByFutureTrxId({
+        id,
+        bankcode,
+        account,
+        receipt,
+      });
+
+      if (response.success && response.data) {
+        const status = String(response.data.status ?? '').toLowerCase();
+        if (status === 'ok') {
+          await fetchList({ silent: true });
+          showNotification({
+            title: 'Success',
+            message: response.data.message || 'Withdraw marked as success',
+            color: 'green',
+          });
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.data.message || 'Failed to mark success',
+            color: 'red',
+          });
+        }
+      } else {
+        showNotification({
+          title: 'Error',
+          message: response.error || 'Failed to mark success',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Withdraw success error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to mark success',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <Box p="md">

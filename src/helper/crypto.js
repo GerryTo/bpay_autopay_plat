@@ -128,8 +128,15 @@ export const CRYPTO = {
     const decoded = {};
     for (const key in data) {
       if (data.hasOwnProperty(key)) {
-        // Decode rawurlencoded strings
-        decoded[key] = typeof data[key] === 'string' ? decodeURIComponent(data[key]) : data[key];
+      if (typeof data[key] === 'string') {
+        try {
+          decoded[key] = decodeURIComponent(data[key]);
+        } catch (_) {
+          decoded[key] = data[key];
+        }
+      } else {
+        decoded[key] = data[key];
+      }
       }
     }
     return decoded;

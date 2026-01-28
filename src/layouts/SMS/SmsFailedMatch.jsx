@@ -17,7 +17,13 @@ import {
 } from '@mantine/core';
 import { DateRangePicker } from 'react-date-range';
 import { format } from 'date-fns';
-import { IconCalendar, IconFilter, IconMessage, IconRefresh, IconSearch } from '@tabler/icons-react';
+import {
+  IconCalendar,
+  IconFilter,
+  IconMessage,
+  IconRefresh,
+  IconSearch,
+} from '@tabler/icons-react';
 import dayjs from 'dayjs';
 import ColumnActionMenu from '../../components/ColumnActionMenu';
 import { smsAPI } from '../../helper/api';
@@ -80,14 +86,17 @@ const SmsFailedMatch = () => {
 
   const handleResetAllFilters = () => {
     handleClearFilters();
-    setDateRange([{ startDate: new Date(), endDate: new Date(), key: 'selection' }]);
+    setDateRange([
+      { startDate: new Date(), endDate: new Date(), key: 'selection' },
+    ]);
     setDatePickerOpened(false);
     setHistory(false);
     setData([]);
     setSelectedKeys(new Set());
   };
 
-  const makeKey = (item) => `${item.futuretrxid || ''}-${item.trxid || ''}-${item.transactionid || ''}`;
+  const makeKey = (item) =>
+    `${item.futuretrxid || ''}-${item.trxid || ''}-${item.transactionid || ''}`;
 
   const toggleSelect = (item) => {
     const key = makeKey(item);
@@ -114,7 +123,7 @@ const SmsFailedMatch = () => {
     () => [
       {
         key: 'select',
-        label: 'Select',
+        label: '',
         minWidth: 70,
         render: (item) => (
           <Checkbox
@@ -129,7 +138,10 @@ const SmsFailedMatch = () => {
         label: 'Future Trx ID',
         minWidth: 140,
         render: (item) => (
-          <Text size="sm" fw={600}>
+          <Text
+            size="sm"
+            fw={600}
+          >
             {item.futuretrxid || '-'}
           </Text>
         ),
@@ -138,7 +150,9 @@ const SmsFailedMatch = () => {
             placeholder="Filter future trx..."
             size="xs"
             value={columnFilters.futuretrxid}
-            onChange={(e) => handleFilterChange('futuretrxid', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('futuretrxid', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -152,7 +166,9 @@ const SmsFailedMatch = () => {
             placeholder="Filter timestamp..."
             size="xs"
             value={columnFilters.insert}
-            onChange={(e) => handleFilterChange('insert', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('insert', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -166,7 +182,9 @@ const SmsFailedMatch = () => {
             placeholder="Filter merchant..."
             size="xs"
             value={columnFilters.merchantcode}
-            onChange={(e) => handleFilterChange('merchantcode', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('merchantcode', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -180,7 +198,9 @@ const SmsFailedMatch = () => {
             placeholder="Filter transaction/ref..."
             size="xs"
             value={columnFilters.transactionid}
-            onChange={(e) => handleFilterChange('transactionid', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('transactionid', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -194,7 +214,9 @@ const SmsFailedMatch = () => {
             placeholder="Filter bank..."
             size="xs"
             value={columnFilters.bankcode}
-            onChange={(e) => handleFilterChange('bankcode', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('bankcode', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -222,7 +244,9 @@ const SmsFailedMatch = () => {
             placeholder="Filter phone..."
             size="xs"
             value={columnFilters.phonenumber}
-            onChange={(e) => handleFilterChange('phonenumber', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('phonenumber', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -231,7 +255,10 @@ const SmsFailedMatch = () => {
         label: 'Amount',
         minWidth: 120,
         render: (item) => (
-          <Text size="sm" ta="right">
+          <Text
+            size="sm"
+            ta="right"
+          >
             {formatNumber(item.amount)}
           </Text>
         ),
@@ -240,7 +267,9 @@ const SmsFailedMatch = () => {
             placeholder="Filter amount..."
             size="xs"
             value={columnFilters.amount}
-            onChange={(e) => handleFilterChange('amount', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('amount', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -254,7 +283,9 @@ const SmsFailedMatch = () => {
             placeholder="Filter SMS bank..."
             size="xs"
             value={columnFilters.smsbank}
-            onChange={(e) => handleFilterChange('smsbank', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('smsbank', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -268,7 +299,9 @@ const SmsFailedMatch = () => {
             placeholder="Filter SMS timestamp..."
             size="xs"
             value={columnFilters.smsinsert}
-            onChange={(e) => handleFilterChange('smsinsert', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('smsinsert', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -282,7 +315,9 @@ const SmsFailedMatch = () => {
             placeholder="Filter SMS phone..."
             size="xs"
             value={columnFilters.customerphone}
-            onChange={(e) => handleFilterChange('customerphone', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('customerphone', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -296,7 +331,9 @@ const SmsFailedMatch = () => {
             placeholder="Filter service center..."
             size="xs"
             value={columnFilters.servicecenter}
-            onChange={(e) => handleFilterChange('servicecenter', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('servicecenter', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -310,7 +347,9 @@ const SmsFailedMatch = () => {
             placeholder="Filter trans type..."
             size="xs"
             value={columnFilters.transactionType}
-            onChange={(e) => handleFilterChange('transactionType', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('transactionType', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -319,7 +358,10 @@ const SmsFailedMatch = () => {
         label: 'Amount (SMS)',
         minWidth: 120,
         render: (item) => (
-          <Text size="sm" ta="right">
+          <Text
+            size="sm"
+            ta="right"
+          >
             {formatNumber(item.smsamount)}
           </Text>
         ),
@@ -328,7 +370,9 @@ const SmsFailedMatch = () => {
             placeholder="Filter SMS amount..."
             size="xs"
             value={columnFilters.smsamount}
-            onChange={(e) => handleFilterChange('smsamount', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('smsamount', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -342,7 +386,9 @@ const SmsFailedMatch = () => {
             placeholder="Filter agent..."
             size="xs"
             value={columnFilters.actualagent}
-            onChange={(e) => handleFilterChange('actualagent', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('actualagent', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -351,7 +397,10 @@ const SmsFailedMatch = () => {
         label: 'Reason',
         minWidth: 180,
         render: (item) => (
-          <Text size="sm" lineClamp={2}>
+          <Text
+            size="sm"
+            lineClamp={2}
+          >
             {item.reason || '-'}
           </Text>
         ),
@@ -360,7 +409,9 @@ const SmsFailedMatch = () => {
             placeholder="Filter reason..."
             size="xs"
             value={columnFilters.reason}
-            onChange={(e) => handleFilterChange('reason', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('reason', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -369,7 +420,10 @@ const SmsFailedMatch = () => {
         label: 'Suspected Reason',
         minWidth: 200,
         render: (item) => (
-          <Text size="sm" lineClamp={2}>
+          <Text
+            size="sm"
+            lineClamp={2}
+          >
             {item.suspectedReason || '-'}
           </Text>
         ),
@@ -378,7 +432,9 @@ const SmsFailedMatch = () => {
             placeholder="Filter suspected reason..."
             size="xs"
             value={columnFilters.suspectedReason}
-            onChange={(e) => handleFilterChange('suspectedReason', e.currentTarget.value)}
+            onChange={(e) =>
+              handleFilterChange('suspectedReason', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -387,7 +443,10 @@ const SmsFailedMatch = () => {
         label: 'Memo',
         minWidth: 180,
         render: (item) => (
-          <Text size="sm" lineClamp={2}>
+          <Text
+            size="sm"
+            lineClamp={2}
+          >
             {item.memo || '-'}
           </Text>
         ),
@@ -405,7 +464,10 @@ const SmsFailedMatch = () => {
         label: 'Matching Detail',
         minWidth: 180,
         render: (item) => (
-          <Text size="sm" lineClamp={2}>
+          <Text
+            size="sm"
+            lineClamp={2}
+          >
             {item.memo3 || '-'}
           </Text>
         ),
@@ -423,7 +485,10 @@ const SmsFailedMatch = () => {
         label: 'Reason Matching',
         minWidth: 180,
         render: (item) => (
-          <Text size="sm" lineClamp={2}>
+          <Text
+            size="sm"
+            lineClamp={2}
+          >
             {item.flag3 || '-'}
           </Text>
         ),
@@ -441,8 +506,16 @@ const SmsFailedMatch = () => {
         label: 'Actions',
         minWidth: 200,
         render: (item) => (
-          <Group gap={6} wrap="wrap">
-            <Button size="xs" variant="light" color="blue" onClick={() => handleMatch(item)}>
+          <Group
+            gap={6}
+            wrap="wrap"
+          >
+            <Button
+              size="xs"
+              variant="light"
+              color="blue"
+              onClick={() => handleMatch(item)}
+            >
               Match
             </Button>
             <Button
@@ -458,10 +531,16 @@ const SmsFailedMatch = () => {
         ),
       },
     ],
-    [columnFilters, handleFilterChange, selectedKeys]
+    [columnFilters, handleFilterChange, selectedKeys],
   );
 
-  const { visibleColumns, sortConfig, handleHideColumn, handleSort, handleResetAll } = useTableControls(columns, {
+  const {
+    visibleColumns,
+    sortConfig,
+    handleHideColumn,
+    handleSort,
+    handleResetAll,
+  } = useTableControls(columns, {
     onResetFilters: handleResetAllFilters,
   });
 
@@ -496,7 +575,7 @@ const SmsFailedMatch = () => {
           includesValue(item.flag3, columnFilters.flag3)
         );
       }),
-    [data, columnFilters]
+    [data, columnFilters],
   );
 
   const sortedData = useMemo(() => {
@@ -536,7 +615,9 @@ const SmsFailedMatch = () => {
       return;
     }
 
-    const from = `${dayjs(dateRange[0].startDate).format('YYYY-MM-DD')} 00:00:00`;
+    const from = `${dayjs(dateRange[0].startDate).format(
+      'YYYY-MM-DD',
+    )} 00:00:00`;
     const to = `${dayjs(dateRange[0].endDate).format('YYYY-MM-DD')} 23:59:59`;
 
     silent ? setRefreshing(true) : setLoading(true);
@@ -550,13 +631,16 @@ const SmsFailedMatch = () => {
 
       if (response.success && response.data) {
         if ((response.data.status || '').toLowerCase() === 'ok') {
-          const records = Array.isArray(response.data.records) ? response.data.records : [];
+          const records = Array.isArray(response.data.records)
+            ? response.data.records
+            : [];
           setData(records);
           setSelectedKeys(new Set());
         } else {
           showNotification({
             title: 'Error',
-            message: response.data.message || 'Failed to load SMS failed match data',
+            message:
+              response.data.message || 'Failed to load SMS failed match data',
             color: 'red',
           });
         }
@@ -600,12 +684,15 @@ const SmsFailedMatch = () => {
       });
       return;
     }
-    const confirmed = window.confirm(`Fail ${selectedItems.length} transaction(s)?`);
+    const confirmed = window.confirm(
+      `Fail ${selectedItems.length} transaction(s)?`,
+    );
     if (!confirmed) return;
     setRefreshing(true);
     try {
       const response = await smsAPI.bulkFailFailedMatch(selectedItems);
-      const status = response.data?.status || response.data?.status?.toLowerCase?.();
+      const status =
+        response.data?.status || response.data?.status?.toLowerCase?.();
       if ((status || '').toLowerCase() === 'ok') {
         showNotification({
           title: 'Success',
@@ -641,12 +728,15 @@ const SmsFailedMatch = () => {
       });
       return;
     }
-    const confirmed = window.confirm(`Mark ${selectedItems.length} transaction(s) as success?`);
+    const confirmed = window.confirm(
+      `Mark ${selectedItems.length} transaction(s) as success?`,
+    );
     if (!confirmed) return;
     setRefreshing(true);
     try {
       const response = await smsAPI.bulkSuccessFailedMatch(selectedItems);
-      const status = response.data?.status || response.data?.status?.toLowerCase?.();
+      const status =
+        response.data?.status || response.data?.status?.toLowerCase?.();
       if ((status || '').toLowerCase() === 'ok') {
         showNotification({
           title: 'Success',
@@ -777,41 +867,49 @@ const SmsFailedMatch = () => {
           acc.smsamount += Number(item.smsamount) || 0;
           return acc;
         },
-        { rows: 0, amount: 0, smsamount: 0 }
+        { rows: 0, amount: 0, smsamount: 0 },
       ),
-    [filteredData]
+    [filteredData],
   );
 
   return (
     <Box p="md">
-      <Card shadow="sm" padding="lg" radius="md" withBorder>
-        <LoadingOverlay visible={loading} overlayProps={{ radius: 'md', blur: 2 }} />
+      <Card
+        shadow="sm"
+        padding="lg"
+        radius="md"
+        withBorder
+      >
+        <LoadingOverlay
+          visible={loading}
+          overlayProps={{ radius: 'md', blur: 2 }}
+        />
 
         <Stack gap="lg">
-          <Group justify="space-between" align="flex-start">
+          <Group
+            justify="space-between"
+            align="flex-start"
+          >
             <Stack gap={4}>
               <Group gap={8}>
                 <IconMessage size={22} />
-                <Text size="xl" fw={700}>
+                <Text
+                  size="xl"
+                  fw={700}
+                >
                   SMS Failed Match
                 </Text>
               </Group>
-              <Text size="sm" c="dimmed">
-                Review failed SMS matches by date range. Totals are shown in the footer.
+              <Text
+                size="sm"
+                c="dimmed"
+              >
+                Review failed SMS matches by date range. Totals are shown in the
+                footer.
               </Text>
             </Stack>
 
             <Group gap="xs">
-              <Button
-                variant="light"
-                color="gray"
-                radius="md"
-                size="sm"
-                leftSection={<IconFilter size={18} />}
-                onClick={handleResetAll}
-              >
-                Reset Filters
-              </Button>
               <Button
                 leftSection={<IconRefresh size={18} />}
                 variant="light"
@@ -822,11 +920,30 @@ const SmsFailedMatch = () => {
               >
                 Refresh
               </Button>
+              <Button
+                variant="light"
+                color="gray"
+                radius="md"
+                size="sm"
+                leftSection={<IconFilter size={18} />}
+                onClick={handleResetAll}
+              >
+                Reset Filters
+              </Button>
             </Group>
           </Group>
 
-          <Card withBorder radius="md" padding="md" shadow="xs">
-            <Group align="flex-end" gap="md" wrap="wrap">
+          <Card
+            withBorder
+            radius="md"
+            padding="md"
+            shadow="xs"
+          >
+            <Group
+              align="flex-end"
+              gap="md"
+              wrap="wrap"
+            >
               <Popover
                 position="bottom-start"
                 opened={datePickerOpened}
@@ -864,7 +981,7 @@ const SmsFailedMatch = () => {
                 checked={history}
                 onChange={(e) => setHistory(e.currentTarget.checked)}
               />
-              <Group gap="xs">
+              {/* <Group gap="xs">
                 <Button
                   leftSection={<IconSearch size={18} />}
                   color="blue"
@@ -891,12 +1008,15 @@ const SmsFailedMatch = () => {
                 >
                   Bulk Success
                 </Button>
-              </Group>
+              </Group> */}
             </Group>
           </Card>
 
           <Box pos="relative">
-            <ScrollArea type="auto" h="60vh">
+            <ScrollArea
+              type="auto"
+              h="60vh"
+            >
               <Table
                 highlightOnHover
                 withTableBorder
@@ -910,17 +1030,28 @@ const SmsFailedMatch = () => {
                 <Table.Thead>
                   <Table.Tr>
                     {visibleColumns.map((col) => (
-                      <Table.Th key={col.key} style={{ minWidth: col.minWidth || 120 }}>
-                        <Group gap={6} align="center">
-                          <Text size="sm" fw={600}>
+                      <Table.Th
+                        key={col.key}
+                        style={{ minWidth: col.minWidth || 120 }}
+                      >
+                        <Group
+                          gap={6}
+                          align="center"
+                        >
+                          <Text
+                            size="sm"
+                            fw={600}
+                          >
                             {col.label}
                           </Text>
-                          <ColumnActionMenu
-                            columnKey={col.key}
-                            sortConfig={sortConfig}
-                            onSort={handleSort}
-                            onHide={handleHideColumn}
-                          />
+                          {col.key !== 'select' && (
+                            <ColumnActionMenu
+                              columnKey={col.key}
+                              sortConfig={sortConfig}
+                              onSort={handleSort}
+                              onHide={handleHideColumn}
+                            />
+                          )}
                         </Group>
                       </Table.Th>
                     ))}
@@ -952,7 +1083,10 @@ const SmsFailedMatch = () => {
                   ) : (
                     <Table.Tr>
                       <Table.Td colSpan={visibleColumns.length}>
-                        <Text ta="center" c="dimmed">
+                        <Text
+                          ta="center"
+                          c="dimmed"
+                        >
                           No data available
                         </Text>
                       </Table.Td>
@@ -960,7 +1094,7 @@ const SmsFailedMatch = () => {
                   )}
                 </Table.Tbody>
 
-                <Table.Tfoot>
+                {/* <Table.Tfoot>
                   <Table.Tr>
                     {visibleColumns.map((col, index) => {
                       if (col.key === 'amount') {
@@ -983,14 +1117,23 @@ const SmsFailedMatch = () => {
                       return <Table.Th key={`${col.key}-footer`} />;
                     })}
                   </Table.Tr>
-                </Table.Tfoot>
+                </Table.Tfoot> */}
               </Table>
             </ScrollArea>
           </Box>
 
-          <Group justify="space-between" align="center">
-            <Group gap="sm" align="center">
-              <Text size="sm" c="dimmed">
+          <Group
+            justify="space-between"
+            align="center"
+          >
+            <Group
+              gap="sm"
+              align="center"
+            >
+              <Text
+                size="sm"
+                c="dimmed"
+              >
                 Rows per page:
               </Text>
               <Select
@@ -1008,7 +1151,10 @@ const SmsFailedMatch = () => {
                 style={{ width: 90 }}
                 size="sm"
               />
-              <Text size="sm" c="dimmed">
+              <Text
+                size="sm"
+                c="dimmed"
+              >
                 Total Rows: {totals.rows}
               </Text>
             </Group>

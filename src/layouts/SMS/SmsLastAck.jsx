@@ -499,7 +499,7 @@ const SmsLastAck = () => {
                   )}
                 </Table.Tbody>
 
-                <Table.Tfoot>
+                {/* <Table.Tfoot>
                   <Table.Tr>
                     {visibleColumns.map((col, index) => {
                       if (index === 0) {
@@ -512,7 +512,7 @@ const SmsLastAck = () => {
                       return <Table.Th key={`${col.key}-footer`} />;
                     })}
                   </Table.Tr>
-                </Table.Tfoot>
+                </Table.Tfoot> */}
               </Table>
             </ScrollArea>
           </Box>

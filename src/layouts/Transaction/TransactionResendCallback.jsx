@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import dayjs from 'dayjs';
+import { format } from 'date-fns';
 import {
   Badge,
   Box,
@@ -7,6 +9,7 @@ import {
   Group,
   LoadingOverlay,
   Pagination,
+  Popover,
   ScrollArea,
   Select,
   Stack,
@@ -14,8 +17,12 @@ import {
   Text,
   TextInput,
 } from '@mantine/core';
+import { DateRangePicker } from 'react-date-range';
+import 'react-date-range/dist/styles.css';
+import 'react-date-range/dist/theme/default.css';
 import {
   IconBrandTelegram,
+  IconCalendar,
   IconFilter,
   IconRefresh,
   IconSearch,
@@ -40,10 +47,19 @@ const defaultFilters = {
   merchantcallbackresponse: '',
 };
 
-const todayISO = () => new Date().toISOString().slice(0, 10);
+const defaultDateRange = () => [
+  {
+    startDate: new Date(),
+    endDate: new Date(),
+    key: 'selection',
+  },
+];
+const formatDateForApi = (value) =>
+  value ? dayjs(value).format('YYYY-MM-DD') : '';
 
 const TransactionResendCallback = () => {
-  const [date, setDate] = useState(todayISO());
+  const [dateRange, setDateRange] = useState(defaultDateRange());
+  const [datePickerOpened, setDatePickerOpened] = useState(false);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -251,14 +267,14 @@ const TransactionResendCallback = () => {
             onChange={(e) =>
               handleFilterChange(
                 'merchantcallbackresponse',
-                e.currentTarget.value
+                e.currentTarget.value,
               )
             }
           />
         ),
       },
     ],
-    [columnFilters, handleFilterChange]
+    [columnFilters, handleFilterChange],
   );
 
   const {
@@ -283,10 +299,10 @@ const TransactionResendCallback = () => {
     () =>
       data.filter((item) => {
         return Object.keys(defaultFilters).every((key) =>
-          includesValue(item[key], columnFilters[key])
+          includesValue(item[key], columnFilters[key]),
         );
       }),
-    [data, columnFilters]
+    [data, columnFilters],
   );
 
   const sortedData = useMemo(() => {
@@ -306,18 +322,9 @@ const TransactionResendCallback = () => {
   const endIndex = startIndex + itemsPerPage;
   const paginatedData = sortedData.slice(startIndex, endIndex);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [columnFilters]);
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages || 1);
-    }
-  }, [totalPages, currentPage]);
-
   const fetchData = async ({ silent = false } = {}) => {
-    if (!date) {
+    const startDate = dateRange?.[0]?.startDate;
+    if (!startDate) {
       showNotification({
         title: 'Validation',
         message: 'Please select a date',
@@ -329,7 +336,9 @@ const TransactionResendCallback = () => {
     silent ? setRefreshing(true) : setLoading(true);
 
     try {
-      const response = await transactionAPI.getTransactionCallbackEmpty(date);
+      const response = await transactionAPI.getTransactionCallbackEmpty(
+        formatDateForApi(startDate),
+      );
 
       if (response.success && response.data) {
         if ((response.data.status || '').toLowerCase() === 'ok') {
@@ -370,10 +379,6 @@ const TransactionResendCallback = () => {
     }
   };
 
-  useEffect(() => {
-    fetchData({ silent: true });
-  }, []);
-
   const handleResend = async () => {
     if (!data.length) {
       showNotification({
@@ -387,9 +392,8 @@ const TransactionResendCallback = () => {
     setLoading(true);
     try {
       const payload = data.map((item) => ({ id: item.futuretrxid }));
-      const response = await transactionAPI.resendTransactionCallbackEmpty(
-        payload
-      );
+      const response =
+        await transactionAPI.resendTransactionCallbackEmpty(payload);
       if (response.success && response.data) {
         showNotification({
           title:
@@ -423,7 +427,7 @@ const TransactionResendCallback = () => {
   };
 
   const handleReset = () => {
-    setDate(todayISO());
+    setDateRange(defaultDateRange());
     setData([]);
     handleClearFilters();
     setCurrentPage(1);
@@ -490,7 +494,7 @@ const TransactionResendCallback = () => {
               >
                 Reset
               </Button>
-              <Button
+              {/* <Button
                 variant="filled"
                 color="teal"
                 radius="md"
@@ -499,7 +503,7 @@ const TransactionResendCallback = () => {
                 onClick={handleResend}
               >
                 Resend Callback
-              </Button>
+              </Button> */}
             </Group>
           </Group>
 
@@ -514,13 +518,37 @@ const TransactionResendCallback = () => {
               gap="md"
               wrap="wrap"
             >
-              <TextInput
-                label="Date"
-                placeholder="YYYY-MM-DD"
-                value={date}
-                onChange={(e) => setDate(e.currentTarget.value)}
-                style={{ minWidth: 180 }}
-              />
+              <Popover
+                position="bottom-start"
+                opened={datePickerOpened}
+                onChange={setDatePickerOpened}
+                width="auto"
+                withArrow
+                shadow="md"
+              >
+                <Popover.Target>
+                  <Button
+                    variant="light"
+                    color="blue"
+                    leftSection={<IconCalendar size={18} />}
+                    onClick={() => setDatePickerOpened((o) => !o)}
+                  >
+                    {format(dateRange[0].startDate, 'dd MMM yyyy')} -{' '}
+                    {format(dateRange[0].endDate, 'dd MMM yyyy')}
+                  </Button>
+                </Popover.Target>
+                <Popover.Dropdown p="sm">
+                  <DateRangePicker
+                    onChange={(ranges) => {
+                      const selection = ranges.selection;
+                      setDateRange([selection]);
+                    }}
+                    moveRangeOnFirstSelection={false}
+                    ranges={dateRange}
+                    maxDate={new Date()}
+                  />
+                </Popover.Dropdown>
+              </Popover>
               <Button
                 leftSection={<IconSearch size={18} />}
                 color="blue"
@@ -655,14 +683,14 @@ const TransactionResendCallback = () => {
             </Group>
 
             <Group gap="xs">
-              <Button
+              {/* <Button
                 variant="light"
                 size="xs"
                 onClick={handleResetAll}
                 leftSection={<IconRefresh size={14} />}
               >
                 Reset Columns/Sort
-              </Button>
+              </Button> */}
               <Pagination
                 total={totalPages}
                 value={currentPage}

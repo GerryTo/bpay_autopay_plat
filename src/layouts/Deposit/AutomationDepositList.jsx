@@ -32,7 +32,7 @@ import {
   IconRefresh,
   IconX,
 } from '@tabler/icons-react';
-import { depositAPI } from '../../helper/api';
+import { depositAPI, transactionAPI } from '../../helper/api';
 import { showNotification } from '../../helper/showNotification';
 import { useTableControls } from '../../hooks/useTableControls';
 import ColumnActionMenu from '../../components/ColumnActionMenu';
@@ -47,12 +47,17 @@ const statusOptions = [
 
 const defaultFilters = {
   futuretrxid: '',
+  insertGmt6: '',
+  completedateGmt6: '',
   merchantcode: '',
   customercode: '',
+  ccy: '',
   bankcode: '',
+  ip: '',
   transactiontype: '',
   status: '',
   callbackresponse: '',
+  accountsrc: '',
   accountno: '',
   accountdst: '',
   accountsrcname: '',
@@ -68,6 +73,8 @@ const defaultFilters = {
   notes: '',
   notes2: '',
   notes3: '',
+  memo: '',
+  memo3: '',
   memo2: '',
 };
 
@@ -87,7 +94,7 @@ const AutomationDepositList = () => {
     },
   ]);
   const [datePickerOpened, setDatePickerOpened] = useState(false);
-  const [status, setStatus] = useState(statusOptions[1].value);
+  const [status, setStatus] = useState(statusOptions[2].value);
   const [agent, setAgent] = useState('');
   const [agentOptions, setAgentOptions] = useState([]);
   const [data, setData] = useState([]);
@@ -97,6 +104,18 @@ const AutomationDepositList = () => {
   const [columnFilters, setColumnFilters] = useState(defaultFilters);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  const agentSelectData = useMemo(() => {
+    if (!agentOptions.length) return [{ value: '', label: 'All' }];
+    const withAll = [{ value: '', label: 'All' }, ...agentOptions];
+    const seen = new Set();
+    return withAll.filter((option) => {
+      if (!option.value && option.value !== '') return false;
+      if (seen.has(option.value)) return false;
+      seen.add(option.value);
+      return true;
+    });
+  }, [agentOptions]);
 
   const handleFilterChange = useCallback((column, value) => {
     setColumnFilters((prev) => ({
@@ -108,6 +127,159 @@ const AutomationDepositList = () => {
   const handleClearFilters = useCallback(() => {
     setColumnFilters(defaultFilters);
   }, []);
+
+  const isHistoryDate = (date) => {
+    if (!date) return false;
+    const selected = dayjs(date).startOf('day');
+    const today = dayjs().startOf('day');
+    const yesterday = dayjs().subtract(1, 'day').startOf('day');
+    return !selected.isSame(today) && !selected.isSame(yesterday);
+  };
+
+  const handleUpdateMemo2 = async (item) => {
+    const futuretrxid = item?.futuretrxid ?? '';
+    if (!futuretrxid) {
+      showNotification({
+        title: 'Validation',
+        message: 'Future Trx ID is missing',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const memo2 = window.prompt(
+      `Update memo2 for [${futuretrxid}]`,
+      String(item?.memo2 ?? '')
+    );
+    if (memo2 === null) return;
+
+    setLoading(true);
+    try {
+      const ishistory = isHistoryDate(dateRange?.[0]?.startDate);
+      const response = await transactionAPI.updateMemo2ByFutureTrxId({
+        futuretrxid,
+        memo2,
+        ishistory,
+      });
+
+      if (response.success && response.data) {
+        const status = String(response.data.status ?? '').toLowerCase();
+        if (status === 'ok') {
+          showNotification({
+            title: 'Success',
+            message: response.data.message || 'Memo2 updated',
+            color: 'green',
+          });
+          await fetchList({ silent: true });
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.data.message || 'Failed to update memo2',
+            color: 'red',
+          });
+        }
+      } else {
+        showNotification({
+          title: 'Error',
+          message: response.error || 'Failed to update memo2',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Update memo2 error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to update memo2',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = async (item) => {
+    const futuretrxid = item?.futuretrxid ?? '';
+    if (!futuretrxid) {
+      showNotification({
+        title: 'Validation',
+        message: 'Future Trx ID is missing',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const amountInput = window.prompt(
+      `Edit amount for [${futuretrxid}]`,
+      String(item?.amount ?? '')
+    );
+    if (amountInput === null) return;
+
+    const amount = Number(amountInput);
+    if (Number.isNaN(amount)) {
+      showNotification({
+        title: 'Validation',
+        message: 'Amount must be a number',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const note = window.prompt(
+      `Edit note for [${futuretrxid}]`,
+      String(item?.notes ?? '')
+    );
+    if (note === null) return;
+
+    setLoading(true);
+    try {
+      const response = await transactionAPI.editTransactionByFutureTrxId({
+        id: futuretrxid,
+        amount,
+        note,
+      });
+
+      if (response.success && response.data) {
+        const status = String(response.data.status ?? '').toLowerCase();
+        if (status === 'ok') {
+          showNotification({
+            title: 'Success',
+            message: response.data.message || 'Transaction updated',
+            color: 'green',
+          });
+          await fetchList({ silent: true });
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.data.message || 'Failed to update transaction',
+            color: 'red',
+          });
+        }
+      } else {
+        showNotification({
+          title: 'Error',
+          message: response.error || 'Failed to update transaction',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Edit transaction error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to update transaction',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAnalyze = () => {
+    showNotification({
+      title: 'Info',
+      message: 'Analyze action is not available in the React view yet',
+      color: 'yellow',
+    });
+  };
 
   const columns = useMemo(
     () => [
@@ -141,10 +313,42 @@ const AutomationDepositList = () => {
         render: (item) => <Text size="sm">{item.insert}</Text>,
       },
       {
+        key: 'insertGmt6',
+        label: 'Date GMT+6',
+        minWidth: 160,
+        render: (item) => <Text size="sm">{item.insertGmt6 || '-'}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter date GMT+6..."
+            size="xs"
+            value={columnFilters.insertGmt6}
+            onChange={(e) =>
+              handleFilterChange('insertGmt6', e.currentTarget.value)
+            }
+          />
+        ),
+      },
+      {
         key: 'completedate',
         label: 'Complete Date',
         minWidth: 180,
         render: (item) => <Text size="sm">{item.completedate || '-'}</Text>,
+      },
+      {
+        key: 'completedateGmt6',
+        label: 'Complete Date GMT+6',
+        minWidth: 190,
+        render: (item) => <Text size="sm">{item.completedateGmt6 || '-'}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter complete GMT+6..."
+            size="xs"
+            value={columnFilters.completedateGmt6}
+            onChange={(e) =>
+              handleFilterChange('completedateGmt6', e.currentTarget.value)
+            }
+          />
+        ),
       },
       {
         key: 'merchantcode',
@@ -175,6 +379,20 @@ const AutomationDepositList = () => {
             onChange={(e) =>
               handleFilterChange('customercode', e.currentTarget.value)
             }
+          />
+        ),
+      },
+      {
+        key: 'ccy',
+        label: 'CCY',
+        minWidth: 80,
+        render: (item) => <Text size="sm">{item.ccy || '-'}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter ccy..."
+            size="xs"
+            value={columnFilters.ccy}
+            onChange={(e) => handleFilterChange('ccy', e.currentTarget.value)}
           />
         ),
       },
@@ -228,6 +446,20 @@ const AutomationDepositList = () => {
         ),
       },
       {
+        key: 'ip',
+        label: 'IP',
+        minWidth: 140,
+        render: (item) => <Text size="sm">{item.ip || '-'}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter IP..."
+            size="xs"
+            value={columnFilters.ip}
+            onChange={(e) => handleFilterChange('ip', e.currentTarget.value)}
+          />
+        ),
+      },
+      {
         key: 'transactiontype',
         label: 'Trans Type',
         minWidth: 130,
@@ -278,6 +510,22 @@ const AutomationDepositList = () => {
             value={columnFilters.callbackresponse}
             onChange={(e) =>
               handleFilterChange('callbackresponse', e.currentTarget.value)
+            }
+          />
+        ),
+      },
+      {
+        key: 'accountsrc',
+        label: 'Account Src',
+        minWidth: 130,
+        render: (item) => <Text size="sm">{item.accountsrc || '-'}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter account src..."
+            size="xs"
+            value={columnFilters.accountsrc}
+            onChange={(e) =>
+              handleFilterChange('accountsrc', e.currentTarget.value)
             }
           />
         ),
@@ -467,21 +715,17 @@ const AutomationDepositList = () => {
       },
       {
         key: 'notes2',
-        label: 'Receipt ID',
+        label: 'Notes 2',
         minWidth: 120,
         render: (item) => <Text size="sm">{item.notes2 || '-'}</Text>,
-      },
-      {
-        key: 'memo2',
-        label: 'Memo 2',
-        minWidth: 120,
-        render: (item) => <Text size="sm">{item.memo2 || '-'}</Text>,
         filter: (
           <TextInput
-            placeholder="Filter memo 2..."
+            placeholder="Filter notes 2..."
             size="xs"
-            value={columnFilters.memo2}
-            onChange={(e) => handleFilterChange('memo2', e.currentTarget.value)}
+            value={columnFilters.notes2}
+            onChange={(e) =>
+              handleFilterChange('notes2', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -498,6 +742,54 @@ const AutomationDepositList = () => {
             onChange={(e) =>
               handleFilterChange('notes3', e.currentTarget.value)
             }
+          />
+        ),
+      },
+      {
+        key: 'receiptid',
+        label: 'Receipt ID',
+        minWidth: 120,
+        render: (item) => <Text size="sm">{item.notes2 || '-'}</Text>,
+      },
+      {
+        key: 'memo',
+        label: 'Matching Source',
+        minWidth: 150,
+        render: (item) => <Text size="sm">{item.memo || '-'}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter matching..."
+            size="xs"
+            value={columnFilters.memo}
+            onChange={(e) => handleFilterChange('memo', e.currentTarget.value)}
+          />
+        ),
+      },
+      {
+        key: 'memo3',
+        label: 'Matching Details',
+        minWidth: 160,
+        render: (item) => <Text size="sm">{item.memo3 || '-'}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter details..."
+            size="xs"
+            value={columnFilters.memo3}
+            onChange={(e) => handleFilterChange('memo3', e.currentTarget.value)}
+          />
+        ),
+      },
+      {
+        key: 'memo2',
+        label: 'Memo 2',
+        minWidth: 120,
+        render: (item) => <Text size="sm">{item.memo2 || '-'}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter memo 2..."
+            size="xs"
+            value={columnFilters.memo2}
+            onChange={(e) => handleFilterChange('memo2', e.currentTarget.value)}
           />
         ),
       },
@@ -533,8 +825,53 @@ const AutomationDepositList = () => {
           />
         ),
       },
+      {
+        key: 'actions',
+        label: 'Action',
+        minWidth: 240,
+        render: (item) => (
+          <Group
+            gap="xs"
+            wrap="nowrap"
+          >
+            <Button
+              size="xs"
+              variant="light"
+              onClick={() => handleUpdateMemo2(item)}
+            >
+              Update Memo 2
+            </Button>
+            {item.status === 'Order need to check' ? (
+              <>
+                <Button
+                  size="xs"
+                  variant="light"
+                  color="yellow"
+                  onClick={() => handleEdit(item)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  size="xs"
+                  variant="light"
+                  color="red"
+                  onClick={handleAnalyze}
+                >
+                  Analyze
+                </Button>
+              </>
+            ) : null}
+          </Group>
+        ),
+      },
     ],
-    [columnFilters, handleFilterChange]
+    [
+      columnFilters,
+      handleFilterChange,
+      handleAnalyze,
+      handleEdit,
+      handleUpdateMemo2,
+    ]
   );
 
   const {
@@ -561,15 +898,23 @@ const AutomationDepositList = () => {
       data.filter((item) => {
         return (
           includesValue(item.futuretrxid, columnFilters.futuretrxid) &&
+          includesValue(item.insertGmt6, columnFilters.insertGmt6) &&
+          includesValue(
+            item.completedateGmt6,
+            columnFilters.completedateGmt6
+          ) &&
           includesValue(item.merchantcode, columnFilters.merchantcode) &&
           includesValue(item.customercode, columnFilters.customercode) &&
+          includesValue(item.ccy, columnFilters.ccy) &&
           includesValue(item.bankcode, columnFilters.bankcode) &&
+          includesValue(item.ip, columnFilters.ip) &&
           includesValue(item.transactiontype, columnFilters.transactiontype) &&
           includesValue(item.status, columnFilters.status) &&
           includesValue(
             item.callbackresponse,
             columnFilters.callbackresponse
           ) &&
+          includesValue(item.accountsrc, columnFilters.accountsrc) &&
           includesValue(item.accountno, columnFilters.accountno) &&
           includesValue(item.accountdst, columnFilters.accountdst) &&
           includesValue(item.accountsrcname, columnFilters.accountsrcname) &&
@@ -583,6 +928,8 @@ const AutomationDepositList = () => {
           includesValue(item.notes, columnFilters.notes) &&
           includesValue(item.notes2, columnFilters.notes2) &&
           includesValue(item.notes3, columnFilters.notes3) &&
+          includesValue(item.memo, columnFilters.memo) &&
+          includesValue(item.memo3, columnFilters.memo3) &&
           includesValue(item.memo2, columnFilters.memo2) &&
           includesValue(item.servername, columnFilters.servername) &&
           includesValue(item.serverurl, columnFilters.serverurl)
@@ -666,20 +1013,24 @@ const AutomationDepositList = () => {
         });
         const options = deduped.map((item) => ({
           value: item.bankAccNo || item.account,
-          label: `${item.bankAccNo || item.account} - ${
-            item.bankAccName || item.alias || item.bankCode || ''
-          }`,
+          label:
+            item.bankAccName ||
+            item.alias ||
+            item.bankCode ||
+            item.bankAccNo ||
+            item.account ||
+            '',
         }));
         setAgentOptions(options);
-        if (options[0]) {
-          setAgent(options[0].value);
-        }
       }
     }
   }, []);
 
   const fetchList = useCallback(
     async ({ silent = false } = {}) => {
+      if (agentOptions.length === 0) {
+        await fetchAgents();
+      }
       const start = dateRange?.[0]?.startDate;
       const end = dateRange?.[0]?.endDate;
       if (!start || !end) {
@@ -750,13 +1101,8 @@ const AutomationDepositList = () => {
         setRefreshing(false);
       }
     },
-    [agent, dateRange, status]
+    [agent, agentOptions.length, dateRange, fetchAgents, status]
   );
-
-  useEffect(() => {
-    fetchAgents();
-    fetchList();
-  }, [fetchAgents, fetchList]);
 
   const toggleRow = (item) => {
     const key = makeKey(item);
@@ -990,15 +1336,20 @@ const AutomationDepositList = () => {
                   style={{ minWidth: 180 }}
                 />
 
-                {/* <Select
+                <Select
                   label="Agent"
                   placeholder="Choose agent"
-                  data={agentOptions}
+                  data={agentSelectData}
                   value={agent}
                   onChange={(val) => setAgent(val || '')}
+                  onDropdownOpen={() => {
+                    if (agentOptions.length === 0) {
+                      fetchAgents();
+                    }
+                  }}
                   searchable
                   style={{ minWidth: 240 }}
-                /> */}
+                />
 
                 {/* <Button
                   onClick={() => fetchList()}
@@ -1022,7 +1373,7 @@ const AutomationDepositList = () => {
                 </Group>
               </Group>
 
-              <Divider />
+              {/* <Divider />
 
               <SimpleGrid
                 cols={3}
@@ -1113,7 +1464,7 @@ const AutomationDepositList = () => {
                     {formatNumber(totalFee)}
                   </Text>
                 </Card>
-              </SimpleGrid>
+              </SimpleGrid> */}
             </Stack>
           </Card>
 
@@ -1184,6 +1535,17 @@ const AutomationDepositList = () => {
                             onHide={handleHideColumn}
                           />
                         </Group>
+                      </Table.Th>
+                    ))}
+                  </Table.Tr>
+                  <Table.Tr style={{ backgroundColor: '#e7f5ff' }}>
+                    <Table.Th w={40} />
+                    {visibleColumns.map((col) => (
+                      <Table.Th
+                        key={`${col.key}-filter`}
+                        style={{ minWidth: col.minWidth || 120, padding: '8px' }}
+                      >
+                        {col.filter || null}
                       </Table.Th>
                     ))}
                   </Table.Tr>

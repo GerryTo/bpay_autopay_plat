@@ -1,4 +1,4 @@
-app.controller('servicePythonListNACtrl', ['$state', '$scope', '$http', '$timeout', 'uiGridConstants', '$stateParams', '$uibModal',
+app.controller('servicePythonListNMCtrl', ['$state', '$scope', '$http', '$timeout', 'uiGridConstants', '$stateParams', '$uibModal',
   '$interval', '$rootScope',
   function ($state, $scope, $http, $timeout, uiGridConstants, $stateParams, $uibModal, $interval, $rootScope) {
 
@@ -80,7 +80,7 @@ app.controller('servicePythonListNACtrl', ['$state', '$scope', '$http', '$timeou
       $scope.gridIsLoading = true;
       $http({
         method: "POST",
-        url: webservicesUrl + "/GetServiceList.php",
+        url: webservicesUrl + "/GetServiceListNM.php",
         data: data,
         headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }
       }).then(function mySuccess(response) {

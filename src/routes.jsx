@@ -873,12 +873,12 @@ export const mockdataRoutes = [
       //   link: '/withdraw-bank',
       //   element: <WithdrawAllowedBank />,
       // },
-      // {
-      //   label: 'Merchant Transaction Withdrawal',
-      //   icon: <IconShoppingCart />,
-      //   link: '/transaction-merchant-withdraw',
-      //   element: <MerchantTransactionWithdraw />,
-      // },
+      {
+        label: 'Merchant Transaction Withdrawal',
+        icon: <IconShoppingCart />,
+        link: '/transaction-merchant-withdraw',
+        element: <MerchantTransactionWithdraw />,
+      },
       {
         label: 'Assignment',
         icon: <IconUserShield />,

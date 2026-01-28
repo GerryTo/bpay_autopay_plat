@@ -32,7 +32,7 @@ import {
   IconRefresh,
   IconCalendar,
 } from '@tabler/icons-react';
-import { depositAPI } from '../../helper/api';
+import { depositAPI, transactionAPI } from '../../helper/api';
 import { showNotification } from '../../helper/showNotification';
 import { useTableControls } from '../../hooks/useTableControls';
 import ColumnActionMenu from '../../components/ColumnActionMenu';
@@ -49,10 +49,13 @@ const defaultFilters = {
   futuretrxid: '',
   merchantcode: '',
   customercode: '',
+  ccy: '',
   bankcode: '',
+  ip: '',
   transactiontype: '',
   status: '',
   callbackresponse: '',
+  accountsrc: '',
   accountno: '',
   accountdst: '',
   accountsrcname: '',
@@ -106,6 +109,75 @@ const DepositPendingList = () => {
   const handleClearFilters = useCallback(() => {
     setColumnFilters(defaultFilters);
   }, []);
+
+  const isHistoryDate = (date) => {
+    if (!date) return false;
+    const selected = dayjs(date).startOf('day');
+    const today = dayjs().startOf('day');
+    const yesterday = dayjs().subtract(1, 'day').startOf('day');
+    return !selected.isSame(today) && !selected.isSame(yesterday);
+  };
+
+  const handleUpdateMemo2 = async (item) => {
+    const futuretrxid = item?.futuretrxid ?? '';
+    if (!futuretrxid) {
+      showNotification({
+        title: 'Validation',
+        message: 'Future Trx ID is missing',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const memo2 = window.prompt(
+      `Update memo2 for [${futuretrxid}]`,
+      String(item?.memo2 ?? '')
+    );
+    if (memo2 === null) return;
+
+    setLoading(true);
+    try {
+      const ishistory = isHistoryDate(dateRange?.[0]?.startDate);
+      const response = await transactionAPI.updateMemo2ByFutureTrxId({
+        futuretrxid,
+        memo2,
+        ishistory,
+      });
+
+      if (response.success && response.data) {
+        const status = String(response.data.status ?? '').toLowerCase();
+        if (status === 'ok') {
+          showNotification({
+            title: 'Success',
+            message: response.data.message || 'Memo2 updated',
+            color: 'green',
+          });
+          await fetchList({ silent: true });
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.data.message || 'Failed to update memo2',
+            color: 'red',
+          });
+        }
+      } else {
+        showNotification({
+          title: 'Error',
+          message: response.error || 'Failed to update memo2',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Update memo2 error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to update memo2',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const columns = useMemo(
     () => [
@@ -177,6 +249,20 @@ const DepositPendingList = () => {
         ),
       },
       {
+        key: 'ccy',
+        label: 'CCY',
+        minWidth: 80,
+        render: (item) => <Text size="sm">{item.ccy || '-'}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter ccy..."
+            size="xs"
+            value={columnFilters.ccy}
+            onChange={(e) => handleFilterChange('ccy', e.currentTarget.value)}
+          />
+        ),
+      },
+      {
         key: 'bankcode',
         label: 'Bank',
         minWidth: 140,
@@ -223,6 +309,20 @@ const DepositPendingList = () => {
           >
             {formatNumber(item.CR)}
           </Text>
+        ),
+      },
+      {
+        key: 'ip',
+        label: 'IP',
+        minWidth: 140,
+        render: (item) => <Text size="sm">{item.ip || '-'}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter IP..."
+            size="xs"
+            value={columnFilters.ip}
+            onChange={(e) => handleFilterChange('ip', e.currentTarget.value)}
+          />
         ),
       },
       {
@@ -276,6 +376,22 @@ const DepositPendingList = () => {
             value={columnFilters.callbackresponse}
             onChange={(e) =>
               handleFilterChange('callbackresponse', e.currentTarget.value)
+            }
+          />
+        ),
+      },
+      {
+        key: 'accountsrc',
+        label: 'Account Src',
+        minWidth: 130,
+        render: (item) => <Text size="sm">{item.accountsrc || '-'}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter account src..."
+            size="xs"
+            value={columnFilters.accountsrc}
+            onChange={(e) =>
+              handleFilterChange('accountsrc', e.currentTarget.value)
             }
           />
         ),
@@ -547,8 +663,22 @@ const DepositPendingList = () => {
           />
         ),
       },
+      {
+        key: 'actions',
+        label: 'Action',
+        minWidth: 160,
+        render: (item) => (
+          <Button
+            size="xs"
+            variant="light"
+            onClick={() => handleUpdateMemo2(item)}
+          >
+            Update Memo 2
+          </Button>
+        ),
+      },
     ],
-    [columnFilters, handleFilterChange]
+    [columnFilters, handleFilterChange, handleUpdateMemo2]
   );
 
   const {
@@ -577,13 +707,16 @@ const DepositPendingList = () => {
           includesValue(item.futuretrxid, columnFilters.futuretrxid) &&
           includesValue(item.merchantcode, columnFilters.merchantcode) &&
           includesValue(item.customercode, columnFilters.customercode) &&
+          includesValue(item.ccy, columnFilters.ccy) &&
           includesValue(item.bankcode, columnFilters.bankcode) &&
+          includesValue(item.ip, columnFilters.ip) &&
           includesValue(item.transactiontype, columnFilters.transactiontype) &&
           includesValue(item.status, columnFilters.status) &&
           includesValue(
             item.callbackresponse,
             columnFilters.callbackresponse
           ) &&
+          includesValue(item.accountsrc, columnFilters.accountsrc) &&
           includesValue(item.accountno, columnFilters.accountno) &&
           includesValue(item.accountdst, columnFilters.accountdst) &&
           includesValue(item.accountsrcname, columnFilters.accountsrcname) &&
@@ -732,11 +865,6 @@ const DepositPendingList = () => {
       setRefreshing(false);
     }
   };
-
-  useEffect(() => {
-    fetchList();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const toggleRow = (item) => {
     const key = makeKey(item);
@@ -943,7 +1071,7 @@ const DepositPendingList = () => {
                 </Button>
               </Group>
 
-              <Divider />
+              {/* <Divider />
 
               <SimpleGrid
                 cols={3}
@@ -1034,7 +1162,7 @@ const DepositPendingList = () => {
                     {formatNumber(totalFee)}
                   </Text>
                 </Card>
-              </SimpleGrid>
+              </SimpleGrid> */}
             </Stack>
           </Card>
 
@@ -1044,7 +1172,7 @@ const DepositPendingList = () => {
             wrap="wrap"
           >
             <Group gap="xs">
-              <Button
+              {/* <Button
                 leftSection={<IconAlertTriangle size={18} />}
                 variant="light"
                 color="red"
@@ -1052,7 +1180,16 @@ const DepositPendingList = () => {
                 onClick={handleFailSelected}
               >
                 Fail Selected
-              </Button>
+              </Button> */}
+              {/* <Button
+                leftSection={<IconAlertTriangle size={18} />}
+                variant="light"
+                color="red"
+                radius="md"
+                onClick={handleFailSelected}
+              >
+                Fail Selected
+              </Button> */}
               <Badge
                 variant="light"
                 color="gray"

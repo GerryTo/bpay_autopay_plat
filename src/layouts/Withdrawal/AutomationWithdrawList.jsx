@@ -29,7 +29,7 @@ import {
   IconRefresh,
   IconSearch,
 } from '@tabler/icons-react';
-import { withdrawAPI } from '../../helper/api';
+import { transactionAPI, withdrawAPI } from '../../helper/api';
 import { showNotification } from '../../helper/showNotification';
 import { useTableControls } from '../../hooks/useTableControls';
 import ColumnActionMenu from '../../components/ColumnActionMenu';
@@ -451,8 +451,63 @@ const AutomationWithdrawList = () => {
           />
         ),
       },
+      {
+        key: 'actions',
+        label: 'Action',
+        minWidth: 260,
+        render: (item) => (
+          <Group
+            gap="xs"
+            wrap="nowrap"
+          >
+            {item.status === 'Pending' ? (
+              <Button
+                size="xs"
+                variant="light"
+                onClick={() => handleCheck(item)}
+              >
+                Check
+              </Button>
+            ) : null}
+            {item.status === 'Order need to check' ? (
+              <>
+                <Button
+                  size="xs"
+                  variant="light"
+                  color="red"
+                  onClick={() => handleFail(item)}
+                >
+                  Fail
+                </Button>
+                <Button
+                  size="xs"
+                  variant="light"
+                  color="yellow"
+                  onClick={() => handleSuccess(item)}
+                >
+                  Success
+                </Button>
+              </>
+            ) : null}
+            <Button
+              size="xs"
+              variant="light"
+              onClick={() => handleUpdateMemo2(item)}
+            >
+              Update Memo 2
+            </Button>
+          </Group>
+        ),
+      },
     ],
-    [columnFilters, handleFilterChange]
+    [
+      columnFilters,
+      handleCheck,
+      handleFail,
+      handleFilterChange,
+      handleSuccess,
+      handleUpdateMemo2,
+    ]
   );
 
   const {
@@ -630,6 +685,260 @@ const AutomationWithdrawList = () => {
   useEffect(() => {
     fetchList();
   }, [fetchList]);
+
+  async function handleUpdateMemo2(item) {
+    const futuretrxid = item?.id ?? item?.futuretrxid ?? '';
+    if (!futuretrxid) {
+      showNotification({
+        title: 'Validation',
+        message: 'Future ID is missing',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const memo2 = window.prompt(
+      `Update memo2 for [${futuretrxid}]`,
+      String(item?.memo2 ?? '')
+    );
+    if (memo2 === null) return;
+
+    setLoading(true);
+    try {
+      const response = await transactionAPI.updateMemo2ByFutureTrxId({
+        futuretrxid,
+        memo2,
+        ishistory: history,
+      });
+
+      if (response.success && response.data) {
+        const status = String(response.data.status ?? '').toLowerCase();
+        if (status === 'ok') {
+          showNotification({
+            title: 'Success',
+            message: response.data.message || 'Memo2 updated',
+            color: 'green',
+          });
+          await fetchList({ silent: true });
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.data.message || 'Failed to update memo2',
+            color: 'red',
+          });
+        }
+      } else {
+        showNotification({
+          title: 'Error',
+          message: response.error || 'Failed to update memo2',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Update memo2 error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to update memo2',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleCheck(item) {
+    const id = item?.id ?? '';
+    if (!id) {
+      showNotification({
+        title: 'Validation',
+        message: 'Future ID is missing',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await withdrawAPI.checkAutomationWithdrawList(id);
+      if (response.success && response.data) {
+        const status = String(response.data.status ?? '').toLowerCase();
+        if (status === 'ok') {
+          await fetchList({ silent: true });
+          showNotification({
+            title: 'Success',
+            message: response.data.message || 'Withdraw checked',
+            color: 'green',
+          });
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.data.message || 'Failed to check withdraw',
+            color: 'red',
+          });
+        }
+      } else {
+        showNotification({
+          title: 'Error',
+          message: response.error || 'Failed to check withdraw',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Automation withdraw check error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to check withdraw',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleFail(item) {
+    const id = item?.id ?? '';
+    if (!id) {
+      showNotification({
+        title: 'Validation',
+        message: 'Future ID is missing',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    if (!window.confirm(`Are you sure want to fail [${id}]?`)) return;
+
+    const memo = window.prompt('Fail memo (optional)', '');
+    if (memo === null) return;
+
+    setLoading(true);
+    try {
+      const response = await withdrawAPI.updateAutomationWithdrawTransaction({
+        id,
+        status: 'C',
+        accountdest: '',
+        memo,
+      });
+
+      if (response.success && response.data) {
+        const status = String(response.data.status ?? '').toLowerCase();
+        if (status === 'ok') {
+          await fetchList({ silent: true });
+          showNotification({
+            title: 'Success',
+            message: response.data.message || 'Withdraw failed',
+            color: 'green',
+          });
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.data.message || 'Failed to fail withdraw',
+            color: 'red',
+          });
+        }
+      } else {
+        showNotification({
+          title: 'Error',
+          message: response.error || 'Failed to fail withdraw',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Automation withdraw fail error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to fail withdraw',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSuccess(item) {
+    const id = item?.id ?? '';
+    if (!id) {
+      showNotification({
+        title: 'Validation',
+        message: 'Future ID is missing',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const bankcode = window.prompt(
+      'Bank code',
+      String(item?.bankcode ?? '')
+    );
+    if (bankcode === null) return;
+    if (!bankcode.trim()) {
+      showNotification({
+        title: 'Validation',
+        message: 'Bank code is required',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const account = window.prompt(
+      'Destination account',
+      String(item?.dstbankaccount ?? '')
+    );
+    if (account === null) return;
+    if (!account.trim()) {
+      showNotification({
+        title: 'Validation',
+        message: 'Destination account is required',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const receipt = window.prompt('Receipt (optional)', '') ?? '';
+
+    setLoading(true);
+    try {
+      const response = await withdrawAPI.setAutomationWithdrawSuccess({
+        id,
+        account,
+        bankcode,
+        receipt,
+      });
+
+      if (response.success && response.data) {
+        const status = String(response.data.status ?? '').toLowerCase();
+        if (status === 'ok') {
+          await fetchList({ silent: true });
+          showNotification({
+            title: 'Success',
+            message: response.data.message || 'Withdraw marked as success',
+            color: 'green',
+          });
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.data.message || 'Failed to mark success',
+            color: 'red',
+          });
+        }
+      } else {
+        showNotification({
+          title: 'Error',
+          message: response.error || 'Failed to mark success',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Automation withdraw success error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to mark success',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const totals = useMemo(
     () =>

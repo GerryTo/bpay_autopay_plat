@@ -136,6 +136,7 @@ const WithdrawCheckFilterSelected = () => {
   const [columnFilters, setColumnFilters] = useState(defaultFilters);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [selectedKeys, setSelectedKeys] = useState([]);
 
   const handleFilterChange = useCallback((column, value) => {
     setColumnFilters((prev) => ({
@@ -533,6 +534,20 @@ const WithdrawCheckFilterSelected = () => {
           />
         ),
       },
+      {
+        key: 'action',
+        label: 'Action',
+        minWidth: 120,
+        render: () => (
+          <Text
+            size="sm"
+            c="dimmed"
+          >
+            -
+          </Text>
+        ),
+        filter: null,
+      },
     ],
     [columnFilters, handleFilterChange]
   );
@@ -545,6 +560,7 @@ const WithdrawCheckFilterSelected = () => {
     handleResetAll,
   } = useTableControls(columns, {
     onResetFilters: () => setColumnFilters(defaultFilters),
+    onResetSelection: () => setSelectedKeys([]),
   });
 
   const makeKey = (item) => `${item.id || ''}-${item.transactionid || ''}`;
@@ -607,6 +623,34 @@ const WithdrawCheckFilterSelected = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedData = sortedData.slice(startIndex, endIndex);
+
+  const pageKeys = paginatedData.map((item) => makeKey(item));
+  const pageFullySelected =
+    pageKeys.length > 0 && pageKeys.every((key) => selectedKeys.includes(key));
+  const pagePartiallySelected =
+    pageKeys.some((key) => selectedKeys.includes(key)) && !pageFullySelected;
+
+  const toggleRow = (item) => {
+    const key = makeKey(item);
+    setSelectedKeys((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    );
+  };
+
+  const toggleAllOnPage = () => {
+    setSelectedKeys((prev) => {
+      if (pageFullySelected) {
+        return prev.filter((key) => !pageKeys.includes(key));
+      }
+      const combined = new Set([...prev, ...pageKeys]);
+      return Array.from(combined);
+    });
+  };
+
+  const selectedRows = useMemo(
+    () => data.filter((item) => selectedKeys.includes(makeKey(item))),
+    [data, selectedKeys]
+  );
 
   useEffect(() => {
     setCurrentPage(1);
@@ -730,6 +774,102 @@ const WithdrawCheckFilterSelected = () => {
     fetchMerchants();
     fetchList();
   }, [fetchMerchants, fetchList]);
+
+  const handleSubmit = async () => {
+    if (selectedRows.length === 0) {
+      showNotification({
+        title: 'Validation',
+        message: 'Please choose withdraw to submit',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const bankCode = selectedRows[0]?.bankcode ?? '';
+    const diffBank = selectedRows.some(
+      (row) => String(row.bankcode || '') !== String(bankCode)
+    );
+    if (diffBank) {
+      showNotification({
+        title: 'Validation',
+        message: 'Please only choose withdraw with same bank code.',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const account = window.prompt('Account Dest', '');
+    if (account === null) return;
+    if (!account.trim()) {
+      showNotification({
+        title: 'Validation',
+        message: 'Account Dest is required',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const bankcodeInput = window.prompt('Bank Code', String(bankCode || ''));
+    if (bankcodeInput === null) return;
+    if (!bankcodeInput.trim()) {
+      showNotification({
+        title: 'Validation',
+        message: 'Bank Code is required',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const receipt = window.prompt('Receipt (optional)', '') ?? '';
+
+    setLoading(true);
+    try {
+      const results = await Promise.allSettled(
+        selectedRows.map((row) =>
+          withdrawAPI.setWithdrawSuccessWithReceipt({
+            id: row.id ?? row.futuretrxid ?? '',
+            account,
+            bankcode: bankcodeInput,
+            receipt,
+          })
+        )
+      );
+
+      const failures = results.filter((result) => {
+        if (result.status === 'rejected') return true;
+        if (!result.value?.success) return true;
+        const payload = result.value?.data?.data ?? result.value?.data;
+        const statusValue = String(payload?.status ?? '').toLowerCase();
+        return statusValue !== 'ok';
+      });
+
+      if (failures.length > 0) {
+        showNotification({
+          title: 'Warning',
+          message: `Completed with ${failures.length} failure(s).`,
+          color: 'yellow',
+        });
+      } else {
+        showNotification({
+          title: 'Success',
+          message: 'Success!',
+          color: 'green',
+        });
+      }
+
+      setSelectedKeys([]);
+      await fetchList({ silent: true });
+    } catch (error) {
+      console.error('Bulk submit error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Failed to submit selected withdrawals',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Box p="md">
@@ -866,17 +1006,36 @@ const WithdrawCheckFilterSelected = () => {
                   Apply
                 </Button>
               </Group>
-
-              <Group gap="sm">
-                <Badge
-                  variant="light"
-                  color="gray"
-                >
-                  Records: {data.length}
-                </Badge>
-              </Group>
             </Stack>
           </Card>
+
+          <Group
+            justify="space-between"
+            align="center"
+            wrap="wrap"
+          >
+            <Group gap="xs">
+              <Badge
+                variant="light"
+                color="blue"
+              >
+                Selected: {selectedKeys.length}
+              </Badge>
+              <Badge
+                variant="light"
+                color="gray"
+              >
+                Records: {data.length}
+              </Badge>
+            </Group>
+            <Button
+              color="green"
+              onClick={handleSubmit}
+              disabled={selectedKeys.length === 0}
+            >
+              Submit
+            </Button>
+          </Group>
 
           <Box pos="relative">
             <ScrollArea
@@ -895,6 +1054,13 @@ const WithdrawCheckFilterSelected = () => {
               >
                 <Table.Thead>
                   <Table.Tr>
+                    <Table.Th w={40}>
+                      <Checkbox
+                        checked={pageFullySelected}
+                        indeterminate={pagePartiallySelected}
+                        onChange={toggleAllOnPage}
+                      />
+                    </Table.Th>
                     {visibleColumns.map((col) => (
                       <Table.Th
                         key={col.key}
@@ -921,6 +1087,7 @@ const WithdrawCheckFilterSelected = () => {
                     ))}
                   </Table.Tr>
                   <Table.Tr style={{ backgroundColor: '#e7f5ff' }}>
+                    <Table.Th w={40} />
                     {visibleColumns.map((col) => (
                       <Table.Th
                         key={`${col.key}-filter`}
@@ -938,6 +1105,12 @@ const WithdrawCheckFilterSelected = () => {
                   {paginatedData.length > 0 ? (
                     paginatedData.map((item) => (
                       <Table.Tr key={makeKey(item)}>
+                        <Table.Td>
+                          <Checkbox
+                            checked={selectedKeys.includes(makeKey(item))}
+                            onChange={() => toggleRow(item)}
+                          />
+                        </Table.Td>
                         {visibleColumns.map((col) => (
                           <Table.Td key={col.key}>{col.render(item)}</Table.Td>
                         ))}
@@ -945,7 +1118,7 @@ const WithdrawCheckFilterSelected = () => {
                     ))
                   ) : (
                     <Table.Tr>
-                      <Table.Td colSpan={visibleColumns.length}>
+                      <Table.Td colSpan={visibleColumns.length + 1}>
                         <Text
                           ta="center"
                           c="dimmed"

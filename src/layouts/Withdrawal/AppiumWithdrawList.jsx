@@ -28,7 +28,7 @@ import {
   IconRefresh,
   IconSearch,
 } from '@tabler/icons-react';
-import { withdrawAPI, depositAPI } from '../../helper/api';
+import { transactionAPI, withdrawAPI, depositAPI } from '../../helper/api';
 import { showNotification } from '../../helper/showNotification';
 import { useTableControls } from '../../hooks/useTableControls';
 import ColumnActionMenu from '../../components/ColumnActionMenu';
@@ -88,6 +88,26 @@ const getTransactionHighlight = (item) => {
   return diffMinutes >= 3 ? '#ffe3e3' : undefined;
 };
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const formatAgentLabel = (item) => {
+  const rawLabel =
+    item.bankAccName ||
+    item.alias ||
+    item.bankCode ||
+    item.bankAccNo ||
+    item.account ||
+    '';
+  const accountNo = item.bankAccNo || item.account || '';
+
+  if (!rawLabel || !accountNo) return rawLabel;
+
+  const prefixPattern = new RegExp(
+    `^\\s*${escapeRegex(accountNo)}\\s*-\\s*`
+  );
+  return rawLabel.replace(prefixPattern, '');
+};
+
 const AppiumWithdrawList = () => {
   const [dateRange, setDateRange] = useState([
     {
@@ -100,6 +120,7 @@ const AppiumWithdrawList = () => {
   const [status, setStatus] = useState('AUTOMATION FAILED');
   const [agent, setAgent] = useState('');
   const [agentOptions, setAgentOptions] = useState([]);
+  const [dataFilter, setDataFilter] = useState('');
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -117,6 +138,35 @@ const AppiumWithdrawList = () => {
   const handleClearFilters = useCallback(() => {
     setColumnFilters(defaultFilters);
   }, []);
+
+  const isPending = useMemo(() => {
+    const filter = dataFilter || status;
+    return (
+      filter === 'SEND TO AUTOMATION SUCCESS' ||
+      filter === 'assign' ||
+      filter === 'reassign' ||
+      filter === 'pending'
+    );
+  }, [dataFilter, status]);
+
+  const isWithdrawAttention = useMemo(() => {
+    const filter = dataFilter || status;
+    return (
+      filter === 'AUTOMATION FAILED 2' ||
+      filter === 'finished_checking_history' ||
+      filter === 'AUTOMATION FAILED'
+    );
+  }, [dataFilter, status]);
+
+  const isFinishCheckingHistory = useMemo(() => {
+    const filter = dataFilter || status;
+    return filter === 'finished_checking_history';
+  }, [dataFilter, status]);
+
+  const successAndFailed = useMemo(() => {
+    const filter = dataFilter || status;
+    return filter !== 'Withdrawal Failed' && filter !== 'Withdrawal Success';
+  }, [dataFilter, status]);
 
   const columns = useMemo(
     () => [
@@ -477,8 +527,129 @@ const AppiumWithdrawList = () => {
           />
         ),
       },
+      {
+        key: 'actions',
+        label: 'Action',
+        minWidth: 320,
+        render: (item) => {
+          const uploadStatus = String(item.isWithdrawUpload ?? '');
+          const showReassign =
+            isWithdrawAttention &&
+            (successAndFailed || isFinishCheckingHistory) &&
+            uploadStatus === '0';
+          const showManualReassign =
+            isWithdrawAttention &&
+            successAndFailed &&
+            !isFinishCheckingHistory &&
+            (uploadStatus === '0' || uploadStatus === '2');
+          const showReassignUpload =
+            uploadStatus === '1' || uploadStatus === '3';
+
+          return (
+            <Group
+              gap="xs"
+              wrap="nowrap"
+            >
+              {isFinishCheckingHistory ? (
+                <Button
+                  size="xs"
+                  variant="light"
+                  onClick={() => handleResend(item)}
+                >
+                  Resend
+                </Button>
+              ) : null}
+              {showReassign ? (
+                <Button
+                  size="xs"
+                  variant="light"
+                  color="red"
+                  onClick={() => handleReassign(item)}
+                >
+                  Reassign
+                </Button>
+              ) : null}
+              {showManualReassign ? (
+                <Button
+                  size="xs"
+                  variant="light"
+                  color="gray"
+                  onClick={() => handleManualReassign(item)}
+                >
+                  Manual Reassign
+                </Button>
+              ) : null}
+              {showReassignUpload ? (
+                <Button
+                  size="xs"
+                  variant="light"
+                  color="blue"
+                  onClick={() => handleReassignUpload(item)}
+                >
+                  Reassign Upload Withdraw
+                </Button>
+              ) : null}
+              {isWithdrawAttention && successAndFailed ? (
+                <>
+                  <Button
+                    size="xs"
+                    variant="light"
+                    color="yellow"
+                    onClick={() => handleFail(item)}
+                  >
+                    Fail
+                  </Button>
+                  <Button
+                    size="xs"
+                    variant="light"
+                    color="green"
+                    onClick={() => handleSuccess(item)}
+                  >
+                    Success
+                  </Button>
+                </>
+              ) : null}
+              {isPending && successAndFailed ? (
+                <Button
+                  size="xs"
+                  variant="light"
+                  color="red"
+                  onClick={() => handleCancelAutomation(item)}
+                >
+                  Cancel
+                </Button>
+              ) : null}
+              {successAndFailed ? (
+                <Button
+                  size="xs"
+                  variant="light"
+                  color="red"
+                  onClick={() => handleSendToAutoAssign(item)}
+                >
+                  Send To Auto Assign
+                </Button>
+              ) : null}
+            </Group>
+          );
+        },
+      },
     ],
-    [columnFilters, handleFilterChange]
+    [
+      columnFilters,
+      handleFilterChange,
+      handleResend,
+      handleReassign,
+      handleManualReassign,
+      handleReassignUpload,
+      handleFail,
+      handleSuccess,
+      handleCancelAutomation,
+      handleSendToAutoAssign,
+      isFinishCheckingHistory,
+      isPending,
+      isWithdrawAttention,
+      successAndFailed,
+    ]
   );
 
   const {
@@ -601,9 +772,7 @@ const AppiumWithdrawList = () => {
           unique[value] = true;
           arr.push({
             value,
-            label: `${value} - ${
-              item.bankAccName || item.alias || item.bankCode || ''
-            }`,
+            label: formatAgentLabel(item),
           });
           return arr;
         }, []);
@@ -655,6 +824,7 @@ const AppiumWithdrawList = () => {
             const records = Array.isArray(payload.records)
               ? payload.records
               : [];
+            setDataFilter(payload.filter || status);
             const decoded = records.map(decodeRecord);
             setData(mapRecords(decoded));
           } else {
@@ -692,6 +862,534 @@ const AppiumWithdrawList = () => {
     fetchAgents();
     fetchList();
   }, [fetchAgents, fetchList]);
+
+  async function handleResend(item) {
+    const queueId = item?.queue ?? '';
+    if (!queueId) {
+      showNotification({
+        title: 'Validation',
+        message: 'Queue ID is missing',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await withdrawAPI.resendWithdrawQueue(queueId);
+      if (response.success && response.data) {
+        const status = String(response.data.status ?? '').toLowerCase();
+        if (status === 'ok') {
+          showNotification({
+            title: 'Success',
+            message: 'Success send to automation',
+            color: 'green',
+          });
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.data.message || 'Failed to resend',
+            color: 'red',
+          });
+        }
+        await fetchList({ silent: true });
+      } else {
+        showNotification({
+          title: 'Error',
+          message: response.error || 'Failed to resend',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Resend withdraw queue error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to resend',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleReassign(item) {
+    const queueId = item?.queue ?? '';
+    if (!queueId) {
+      showNotification({
+        title: 'Validation',
+        message: 'Queue ID is missing',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await withdrawAPI.reassignAppiumWithdraw({
+        queueId,
+        assign: item?.assignTime ?? '',
+        isAutoReassign: 0,
+      });
+      if (response.success && response.data) {
+        const status = String(response.data.status ?? '').toLowerCase();
+        if (status === 'ok') {
+          showNotification({
+            title: 'Success',
+            message: response.data.messages || 'Reassign success',
+            color: 'green',
+          });
+          await fetchList({ silent: true });
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.data.messages || 'Failed to reassign',
+            color: 'red',
+          });
+        }
+      } else {
+        showNotification({
+          title: 'Error',
+          message: response.error || 'Failed to reassign',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Reassign withdraw error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to reassign',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleManualReassign(item) {
+    const id = item?.id ?? '';
+    if (!id) {
+      showNotification({
+        title: 'Validation',
+        message: 'Future ID is missing',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const accountNo = window.prompt('Account No', '');
+    if (accountNo === null) return;
+    if (!accountNo.trim()) {
+      showNotification({
+        title: 'Validation',
+        message: 'Account No is required',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const bankCode = window.prompt('Bank Code', '');
+    if (bankCode === null) return;
+    if (!bankCode.trim()) {
+      showNotification({
+        title: 'Validation',
+        message: 'Bank Code is required',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const accountName = window.prompt('Account Name', '');
+    if (accountName === null) return;
+
+    const username = window.prompt('Username', '');
+    if (username === null) return;
+
+    setLoading(true);
+    try {
+      const response = await withdrawAPI.manualReassignWithdraw({
+        id,
+        accountNo,
+        bankCode,
+        accountName,
+        username,
+        queueId: item?.queue ?? '',
+        assign: item?.assignTime ?? '',
+      });
+      if (response.success && response.data) {
+        const status = String(response.data.status ?? '').toLowerCase();
+        if (status === 'ok') {
+          showNotification({
+            title: 'Success',
+            message: response.data.message || 'Manual reassign success',
+            color: 'green',
+          });
+          await fetchList({ silent: true });
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.data.message || 'Failed to manual reassign',
+            color: 'red',
+          });
+        }
+      } else {
+        showNotification({
+          title: 'Error',
+          message: response.error || 'Failed to manual reassign',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Manual reassign withdraw error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to manual reassign',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleReassignUpload(item) {
+    const id = item?.id ?? '';
+    if (!id) {
+      showNotification({
+        title: 'Validation',
+        message: 'Future ID is missing',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const accountNo = window.prompt('Account No', '');
+    if (accountNo === null) return;
+    if (!accountNo.trim()) {
+      showNotification({
+        title: 'Validation',
+        message: 'Account No is required',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const bankCode = window.prompt(
+      'Bank Code',
+      String(item?.bankcode ?? '')
+    );
+    if (bankCode === null) return;
+    if (!bankCode.trim()) {
+      showNotification({
+        title: 'Validation',
+        message: 'Bank Code is required',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const accountName = window.prompt('Account Name', '');
+    if (accountName === null) return;
+
+    const username = window.prompt('Username', '');
+    if (username === null) return;
+
+    setLoading(true);
+    try {
+      const response = await withdrawAPI.reassignWithdrawForUpload({
+        id,
+        accountNo,
+        bankCode,
+        accountName,
+        username,
+      });
+      if (response.success && response.data) {
+        const status = String(response.data.status ?? '').toLowerCase();
+        if (status === 'ok') {
+          showNotification({
+            title: 'Success',
+            message: response.data.message || 'Assignment success',
+            color: 'green',
+          });
+          await fetchList({ silent: true });
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.data.message || 'Failed to reassign upload',
+            color: 'red',
+          });
+        }
+      } else {
+        showNotification({
+          title: 'Error',
+          message: response.error || 'Failed to reassign upload',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Reassign upload withdraw error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to reassign upload',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleFail(item) {
+    const id = item?.id ?? '';
+    if (!id) {
+      showNotification({
+        title: 'Validation',
+        message: 'Future ID is missing',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    if (!window.confirm(`Are you sure want to fail [${id}]?`)) return;
+
+    const memo = window.prompt('Fail memo (optional)', '');
+    if (memo === null) return;
+
+    setLoading(true);
+    try {
+      const response = await transactionAPI.updateManualTransaction({
+        id,
+        status: 'C',
+        accountdest: '',
+        memo,
+      });
+      if (response.success && response.data) {
+        const statusValue = String(response.data.status ?? '').toLowerCase();
+        if (statusValue === 'ok') {
+          showNotification({
+            title: 'Success',
+            message: response.data.message || 'Withdraw failed',
+            color: 'green',
+          });
+          await fetchList({ silent: true });
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.data.message || 'Failed to fail withdraw',
+            color: 'red',
+          });
+        }
+      } else {
+        showNotification({
+          title: 'Error',
+          message: response.error || 'Failed to fail withdraw',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Fail withdraw error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to fail withdraw',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSuccess(item) {
+    const id = item?.id ?? '';
+    if (!id) {
+      showNotification({
+        title: 'Validation',
+        message: 'Future ID is missing',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const bankcode = window.prompt(
+      'Bank code',
+      String(item?.bankcode ?? '')
+    );
+    if (bankcode === null) return;
+    if (!bankcode.trim()) {
+      showNotification({
+        title: 'Validation',
+        message: 'Bank code is required',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const account = window.prompt(
+      'Destination account',
+      String(item?.dstbankaccount ?? '')
+    );
+    if (account === null) return;
+    if (!account.trim()) {
+      showNotification({
+        title: 'Validation',
+        message: 'Destination account is required',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    const receipt = window.prompt('Receipt (optional)', '') ?? '';
+
+    setLoading(true);
+    try {
+      const response = await transactionAPI.setTransactionSuccessByFutureTrxId({
+        id,
+        bankcode,
+        account,
+        receipt,
+      });
+      if (response.success && response.data) {
+        const statusValue = String(response.data.status ?? '').toLowerCase();
+        if (statusValue === 'ok') {
+          showNotification({
+            title: 'Success',
+            message: response.data.message || 'Withdraw marked as success',
+            color: 'green',
+          });
+          await fetchList({ silent: true });
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.data.message || 'Failed to mark success',
+            color: 'red',
+          });
+        }
+      } else {
+        showNotification({
+          title: 'Error',
+          message: response.error || 'Failed to mark success',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Success withdraw error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to mark success',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleCancelAutomation(item) {
+    const queueId = item?.queue ?? '';
+    if (!queueId) {
+      showNotification({
+        title: 'Validation',
+        message: 'Queue ID is missing',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    if (
+      !window.confirm(
+        `Are you sure want to cancel automation [${item.id ?? ''}]?`
+      )
+    ) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await withdrawAPI.cancelAutomationWithdraw({ queueId });
+      if (response.success && response.data) {
+        if (String(response.data.status ?? '').toLowerCase() === 'ok') {
+          showNotification({
+            title: 'Success',
+            message: response.data.message || 'Success cancel automation',
+            color: 'green',
+          });
+          await fetchList({ silent: true });
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.data.message || 'Failed to cancel automation',
+            color: 'red',
+          });
+        }
+      } else {
+        showNotification({
+          title: 'Error',
+          message: response.error || 'Failed to cancel automation',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Cancel automation error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to cancel automation',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSendToAutoAssign(item) {
+    const id = item?.id ?? '';
+    if (!id) {
+      showNotification({
+        title: 'Validation',
+        message: 'Future ID is missing',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    if (
+      !window.confirm(
+        `Are you sure want to send this transaction to auto assign [${id}]?`
+      )
+    ) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await withdrawAPI.sendToAutoAssign({ id });
+      if (response.success && response.data) {
+        if (String(response.data.status ?? '').toLowerCase() === 'ok') {
+          showNotification({
+            title: 'Success',
+            message: response.data.message || 'Sent to auto assign',
+            color: 'green',
+          });
+          await fetchList({ silent: true });
+        } else {
+          showNotification({
+            title: 'Error',
+            message: response.data.message || 'Failed to send to auto assign',
+            color: 'red',
+          });
+        }
+      } else {
+        showNotification({
+          title: 'Error',
+          message: response.error || 'Failed to send to auto assign',
+          color: 'red',
+        });
+      }
+    } catch (error) {
+      console.error('Send to auto assign error:', error);
+      showNotification({
+        title: 'Error',
+        message: 'Unable to send to auto assign',
+        color: 'red',
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const totals = useMemo(
     () =>

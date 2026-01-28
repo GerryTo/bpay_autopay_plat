@@ -18,14 +18,8 @@ import LoginData from './data/login-data';
 const Login = () => {
   const [keepLoggedIn, setKeepLoggedIn] = useState(true);
 
-  let {
-    handleLogin,
-    setPassword,
-    setUsername,
-    password,
-    username,
-    loading,
-  } = LoginData({ keepLoggedIn });
+  let { handleLogin, setPassword, setUsername, password, username, loading } =
+    LoginData({ keepLoggedIn });
 
   return (
     <div className={classes.wrapper}>
@@ -75,20 +69,20 @@ const Login = () => {
             justify="space-between"
             mt="md"
           >
-          <Checkbox
-            label="Keep me logged in"
-            size="sm"
-            color="cyan"
-            checked={keepLoggedIn}
-            onChange={(e) => setKeepLoggedIn(e.currentTarget.checked)}
-          />
-            <Anchor
+            <Checkbox
+              label="Keep me logged in"
+              size="sm"
+              color="cyan"
+              checked={keepLoggedIn}
+              onChange={(e) => setKeepLoggedIn(e.currentTarget.checked)}
+            />
+            {/* <Anchor
               component="button"
               size="sm"
               className={classes.link}
             >
               Forgot password?
-            </Anchor>
+            </Anchor> */}
           </Flex>
 
           <Button

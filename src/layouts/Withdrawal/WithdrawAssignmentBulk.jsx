@@ -540,6 +540,20 @@ const WithdrawAssignmentBulk = () => {
           />
         ),
       },
+      {
+        key: 'action',
+        label: 'Action',
+        minWidth: 120,
+        render: () => (
+          <Text
+            size="sm"
+            c="dimmed"
+          >
+            -
+          </Text>
+        ),
+        filter: null,
+      },
     ],
     [columnFilters, handleFilterChange]
   );

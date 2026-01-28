@@ -127,19 +127,21 @@ const WithdrawCheckAutomation = () => {
   }, []);
 
   const copyGenerateText = useCallback(async (row) => {
-    const bankPrefix = {
-      BKASH: 'ƒ~?‹,?ƒ~?‹,?BKASHƒ~?‹,?ƒ~?‹,?',
-      NAGAD: 'ƒ~?‹,?ƒ~?‹,?NAGADƒ~?‹,?ƒ~?‹,?',
-      ROCKET: 'dYs?dYs?ROCKETdYs?dYs?',
-      UPAY: 'dYO?dYO?UPAYdYO?dYO?',
-    }[String(row.bankcode || '').toUpperCase()] || '';
+    const bankPrefix =
+      {
+        BKASH: 'ƒ~?‹,?ƒ~?‹,?BKASHƒ~?‹,?ƒ~?‹,?',
+        NAGAD: 'ƒ~?‹,?ƒ~?‹,?NAGADƒ~?‹,?ƒ~?‹,?',
+        ROCKET: 'dYs?dYs?ROCKETdYs?dYs?',
+        UPAY: 'dYO?dYO?UPAYdYO?dYO?',
+      }[String(row.bankcode || '').toUpperCase()] || '';
 
-    const legacyPrefix = {
-      BKASH: 'dYO^dYO^BKASHdYO^dYO^',
-      NAGAD: 'ƒ~?‹,?ƒ~?‹,?NAGADƒ~?‹,?ƒ~?‹,?',
-      ROCKET: 'dYs?dYs?ROCKETdYs?dYs?',
-      UPAY: 'dYO?dYO?UPAYdYO?dYO?',
-    }[String(row.bankcode || '').toUpperCase()] || '';
+    const legacyPrefix =
+      {
+        BKASH: 'dYO^dYO^BKASHdYO^dYO^',
+        NAGAD: 'ƒ~?‹,?ƒ~?‹,?NAGADƒ~?‹,?ƒ~?‹,?',
+        ROCKET: 'dYs?dYs?ROCKETdYs?dYs?',
+        UPAY: 'dYO?dYO?UPAYdYO?dYO?',
+      }[String(row.bankcode || '').toUpperCase()] || '';
 
     const text =
       (legacyPrefix || bankPrefix) +
@@ -205,7 +207,8 @@ const WithdrawCheckAutomation = () => {
           showNotification({
             title: 'Error',
             message:
-              payload.message || 'Failed to load automation withdraw check list',
+              payload.message ||
+              'Failed to load automation withdraw check list',
             Color: 'red',
           });
           return;
@@ -404,13 +407,7 @@ const WithdrawCheckAutomation = () => {
         key: 'transactionid',
         label: 'Transaction ID',
         minWidth: 140,
-        render: (item) => (
-          <Text
-            size="sm"
-          >
-            {item.transactionid || '-'}
-          </Text>
-        ),
+        render: (item) => <Text size="sm">{item.transactionid || '-'}</Text>,
         filter: (
           <TextInput
             placeholder="Filter transaction..."
@@ -421,236 +418,6 @@ const WithdrawCheckAutomation = () => {
             }
           />
         ),
-      },
-      {
-        key: 'memo',
-        label: 'Memo',
-        minWidth: 150,
-        render: (item) => <Text size="sm">{item.memo || '-'}</Text>,
-        filter: (
-          <TextInput
-            placeholder="Filter memo..."
-            size="xs"
-            value={columnFilters.memo}
-            onChange={(e) => handleFilterChange('memo', e.currentTarget.value)}
-          />
-        ),
-      },
-      {
-        key: 'action',
-        label: 'Action',
-        minWidth: 120,
-        render: (item) => {
-          const id = item.id ?? item.futuretrxid ?? '';
-          const busy = actionLoadingId === String(id);
-
-          const status = String(item.status || '');
-          const note = String(item.note || '');
-          const agentUser = String(item.agentUser || '');
-
-          const canAssign = agentUser === '';
-          const canReassign =
-            agentUser !== '' && !note.includes('AUTOMATION FAILED') && status !== '';
-
-          const canCheck = status === 'Pending';
-          const canFail = status === 'Order need to check';
-          const canSuccess = status === 'Order need to check';
-
-          const onAssign = async () => {
-            const accountNo = window.prompt('Account No', '') ?? '';
-            if (!accountNo.trim()) return;
-
-            const bankCode =
-              window.prompt('Bank Code', String(item.bankcode || '')) ?? '';
-            const accountName = window.prompt('Account Name', '') ?? '';
-            const username = window.prompt('Username', '') ?? '';
-
-            await runRowAction(id, async () => {
-              const res = await withdrawAPI.assignAutomationWithdraw({
-                id,
-                accountNo,
-                bankCode,
-                accountName,
-                username,
-              });
-
-              const ok = String(res.data?.status || '').toLowerCase() === 'ok';
-              if (!res.success || !ok) {
-                showNotification({
-                  title: 'Error',
-                  message:
-                    res.data?.message || res.error || 'Assignment failed',
-                  Color: 'red',
-                });
-                return;
-              }
-
-              showNotification({
-                title: 'Success',
-                message: 'Assignment Success!',
-                Color: 'green',
-              });
-              await fetchList({ silent: true });
-            });
-          };
-
-          const onCheck = async () => {
-            await runRowAction(id, async () => {
-              const res = await withdrawAPI.checkWithdrawList(id);
-              const ok = String(res.data?.status || '').toLowerCase() === 'ok';
-              if (!res.success || !ok) {
-                showNotification({
-                  title: 'Error',
-                  message: res.data?.message || res.error || 'Check failed',
-                  Color: 'red',
-                });
-                return;
-              }
-              await fetchList({ silent: true });
-            });
-          };
-
-          const onFail = async () => {
-            const confirmed = window.confirm(
-              `Are you sure want to fail this transaction [${id}]?`
-            );
-            if (!confirmed) return;
-
-            const memo = window.prompt('Memo / Reason', '') ?? '';
-
-            await runRowAction(id, async () => {
-              const res = await withdrawAPI.updateAutomationWithdrawTransaction({
-                id,
-                status: 'C',
-                accountdest: '',
-                memo,
-              });
-              const ok = String(res.data?.status || '').toLowerCase() === 'ok';
-              if (!res.success || !ok) {
-                showNotification({
-                  title: 'Error',
-                  message:
-                    res.data?.message || res.error || 'Fail transaction failed',
-                  Color: 'red',
-                });
-                return;
-              }
-
-              showNotification({
-                title: 'Success',
-                message: 'Data Saved',
-                Color: 'green',
-              });
-              await fetchList({ silent: true });
-            });
-          };
-
-          const onSuccess = async () => {
-            const account = window.prompt('Account Dest', '') ?? '';
-            if (!account.trim()) return;
-
-            const bankcode =
-              window.prompt('Bank Code', String(item.bankcode || '')) ?? '';
-            const receipt = window.prompt('Receipt (optional)', '') ?? '';
-
-            await runRowAction(id, async () => {
-              const res = await withdrawAPI.setAutomationWithdrawSuccess({
-                id,
-                account,
-                bankcode,
-                receipt,
-              });
-              const ok = String(res.data?.status || '').toLowerCase() === 'ok';
-              if (!res.success || !ok) {
-                showNotification({
-                  title: 'Error',
-                  message: res.data?.message || res.error || 'Success failed',
-                  Color: 'red',
-                });
-                return;
-              }
-
-              showNotification({
-                title: 'Success',
-                message: 'Success!',
-                Color: 'green',
-              });
-              await fetchList({ silent: true });
-            });
-          };
-
-          return (
-            <Menu shadow="sm" withinPortal>
-              <Menu.Target>
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  title="Row Actions"
-                  disabled={busy}
-                >
-                  <IconDotsVertical size={16} />
-                </ActionIcon>
-              </Menu.Target>
-              <Menu.Dropdown>
-                <Menu.Item
-                  leftSection={<IconSearch size={14} />}
-                  onClick={() => copyGenerateText(item)}
-                  disabled={busy}
-                >
-                  Generate
-                </Menu.Item>
-                {canAssign ? (
-                  <Menu.Item
-                    leftSection={<IconUserPlus size={14} />}
-                    onClick={onAssign}
-                    disabled={busy}
-                  >
-                    Assign
-                  </Menu.Item>
-                ) : null}
-                {canReassign ? (
-                  <Menu.Item
-                    leftSection={<IconUserPlus size={14} />}
-                    onClick={onAssign}
-                    disabled={busy}
-                  >
-                    Re-Assign
-                  </Menu.Item>
-                ) : null}
-                {canCheck ? (
-                  <Menu.Item
-                    leftSection={<IconSearch size={14} />}
-                    onClick={onCheck}
-                    disabled={busy}
-                  >
-                    Check
-                  </Menu.Item>
-                ) : null}
-                {canFail ? (
-                  <Menu.Item
-                    leftSection={<IconX size={14} />}
-                    color="red"
-                    onClick={onFail}
-                    disabled={busy}
-                  >
-                    Fail
-                  </Menu.Item>
-                ) : null}
-                {canSuccess ? (
-                  <Menu.Item
-                    leftSection={<IconCheck size={14} />}
-                    color="green"
-                    onClick={onSuccess}
-                    disabled={busy}
-                  >
-                    Success
-                  </Menu.Item>
-                ) : null}
-              </Menu.Dropdown>
-            </Menu>
-          );
-        },
-        filter: null,
       },
       {
         key: 'accountname',
@@ -857,6 +624,243 @@ const WithdrawCheckAutomation = () => {
             }
           />
         ),
+      },
+      {
+        key: 'memo',
+        label: 'Memo',
+        minWidth: 150,
+        render: (item) => <Text size="sm">{item.memo || '-'}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter memo..."
+            size="xs"
+            value={columnFilters.memo}
+            onChange={(e) => handleFilterChange('memo', e.currentTarget.value)}
+          />
+        ),
+      },
+      {
+        key: 'action',
+        label: 'Action',
+        minWidth: 120,
+        render: (item) => {
+          const id = item.id ?? item.futuretrxid ?? '';
+          const busy = actionLoadingId === String(id);
+
+          const status = String(item.status || '');
+          const note = String(item.note || '');
+          const agentUser = String(item.agentUser || '');
+
+          const canAssign = agentUser === '';
+          const canReassign =
+            agentUser !== '' &&
+            !note.includes('AUTOMATION FAILED') &&
+            status !== '';
+
+          const canCheck = status === 'Pending';
+          const canFail = status === 'Order need to check';
+          const canSuccess = status === 'Order need to check';
+
+          const onAssign = async () => {
+            const accountNo = window.prompt('Account No', '') ?? '';
+            if (!accountNo.trim()) return;
+
+            const bankCode =
+              window.prompt('Bank Code', String(item.bankcode || '')) ?? '';
+            const accountName = window.prompt('Account Name', '') ?? '';
+            const username = window.prompt('Username', '') ?? '';
+
+            await runRowAction(id, async () => {
+              const res = await withdrawAPI.assignAutomationWithdraw({
+                id,
+                accountNo,
+                bankCode,
+                accountName,
+                username,
+              });
+
+              const ok = String(res.data?.status || '').toLowerCase() === 'ok';
+              if (!res.success || !ok) {
+                showNotification({
+                  title: 'Error',
+                  message:
+                    res.data?.message || res.error || 'Assignment failed',
+                  Color: 'red',
+                });
+                return;
+              }
+
+              showNotification({
+                title: 'Success',
+                message: 'Assignment Success!',
+                Color: 'green',
+              });
+              await fetchList({ silent: true });
+            });
+          };
+
+          const onCheck = async () => {
+            await runRowAction(id, async () => {
+              const res = await withdrawAPI.checkWithdrawList(id);
+              const ok = String(res.data?.status || '').toLowerCase() === 'ok';
+              if (!res.success || !ok) {
+                showNotification({
+                  title: 'Error',
+                  message: res.data?.message || res.error || 'Check failed',
+                  Color: 'red',
+                });
+                return;
+              }
+              await fetchList({ silent: true });
+            });
+          };
+
+          const onFail = async () => {
+            const confirmed = window.confirm(
+              `Are you sure want to fail this transaction [${id}]?`
+            );
+            if (!confirmed) return;
+
+            const memo = window.prompt('Memo / Reason', '') ?? '';
+
+            await runRowAction(id, async () => {
+              const res = await withdrawAPI.updateAutomationWithdrawTransaction(
+                {
+                  id,
+                  status: 'C',
+                  accountdest: '',
+                  memo,
+                }
+              );
+              const ok = String(res.data?.status || '').toLowerCase() === 'ok';
+              if (!res.success || !ok) {
+                showNotification({
+                  title: 'Error',
+                  message:
+                    res.data?.message || res.error || 'Fail transaction failed',
+                  Color: 'red',
+                });
+                return;
+              }
+
+              showNotification({
+                title: 'Success',
+                message: 'Data Saved',
+                Color: 'green',
+              });
+              await fetchList({ silent: true });
+            });
+          };
+
+          const onSuccess = async () => {
+            const account = window.prompt('Account Dest', '') ?? '';
+            if (!account.trim()) return;
+
+            const bankcode =
+              window.prompt('Bank Code', String(item.bankcode || '')) ?? '';
+            const receipt = window.prompt('Receipt (optional)', '') ?? '';
+
+            await runRowAction(id, async () => {
+              const res = await withdrawAPI.setAutomationWithdrawSuccess({
+                id,
+                account,
+                bankcode,
+                receipt,
+              });
+              const ok = String(res.data?.status || '').toLowerCase() === 'ok';
+              if (!res.success || !ok) {
+                showNotification({
+                  title: 'Error',
+                  message: res.data?.message || res.error || 'Success failed',
+                  Color: 'red',
+                });
+                return;
+              }
+
+              showNotification({
+                title: 'Success',
+                message: 'Success!',
+                Color: 'green',
+              });
+              await fetchList({ silent: true });
+            });
+          };
+
+          return (
+            <Menu
+              shadow="sm"
+              withinPortal
+            >
+              <Menu.Target>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  title="Row Actions"
+                  disabled={busy}
+                >
+                  <IconDotsVertical size={16} />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item
+                  leftSection={<IconSearch size={14} />}
+                  onClick={() => copyGenerateText(item)}
+                  disabled={busy}
+                >
+                  Generate
+                </Menu.Item>
+                {canAssign ? (
+                  <Menu.Item
+                    leftSection={<IconUserPlus size={14} />}
+                    onClick={onAssign}
+                    disabled={busy}
+                  >
+                    Assign
+                  </Menu.Item>
+                ) : null}
+                {canReassign ? (
+                  <Menu.Item
+                    leftSection={<IconUserPlus size={14} />}
+                    onClick={onAssign}
+                    disabled={busy}
+                  >
+                    Re-Assign
+                  </Menu.Item>
+                ) : null}
+                {canCheck ? (
+                  <Menu.Item
+                    leftSection={<IconSearch size={14} />}
+                    onClick={onCheck}
+                    disabled={busy}
+                  >
+                    Check
+                  </Menu.Item>
+                ) : null}
+                {canFail ? (
+                  <Menu.Item
+                    leftSection={<IconX size={14} />}
+                    color="red"
+                    onClick={onFail}
+                    disabled={busy}
+                  >
+                    Fail
+                  </Menu.Item>
+                ) : null}
+                {canSuccess ? (
+                  <Menu.Item
+                    leftSection={<IconCheck size={14} />}
+                    color="green"
+                    onClick={onSuccess}
+                    disabled={busy}
+                  >
+                    Success
+                  </Menu.Item>
+                ) : null}
+              </Menu.Dropdown>
+            </Menu>
+          );
+        },
+        filter: null,
       },
     ],
     [
@@ -1143,7 +1147,9 @@ const WithdrawCheckAutomation = () => {
                     paginatedData.map((item) => (
                       <Table.Tr
                         key={makeKey(item)}
-                        style={{ backgroundColor: getTransactionHighlight(item) }}
+                        style={{
+                          backgroundColor: getTransactionHighlight(item),
+                        }}
                       >
                         {visibleColumns.map((col) => (
                           <Table.Td key={col.key}>{col.render(item)}</Table.Td>

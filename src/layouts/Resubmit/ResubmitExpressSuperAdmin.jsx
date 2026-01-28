@@ -139,7 +139,9 @@ const ResubmitExpress = () => {
         minWidth: 160,
         render: (item) => {
           const parsed = parseDate(item.resubmitTime);
-          const display = parsed ? parsed.format('DD MMM YYYY HH:mm') : item.resubmitTime || '-';
+          const display = parsed
+            ? parsed.format('DD MMM YYYY HH:mm')
+            : item.resubmitTime || '-';
           return <Text size="sm">{display}</Text>;
         },
         filter: (
@@ -147,7 +149,9 @@ const ResubmitExpress = () => {
             placeholder="Filter..."
             size="xs"
             value={columnFilters.resubmitTime}
-            onChange={(e) => handleColumnFilterChange('resubmitTime', e.currentTarget.value)}
+            onChange={(e) =>
+              handleColumnFilterChange('resubmitTime', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -157,7 +161,9 @@ const ResubmitExpress = () => {
         minWidth: 160,
         render: (item) => {
           const parsed = parseDate(item.timestamp);
-          const display = parsed ? parsed.format('DD MMM YYYY HH:mm') : item.timestamp || '-';
+          const display = parsed
+            ? parsed.format('DD MMM YYYY HH:mm')
+            : item.timestamp || '-';
           return <Text size="sm">{display}</Text>;
         },
         filter: (
@@ -165,7 +171,9 @@ const ResubmitExpress = () => {
             placeholder="Filter..."
             size="xs"
             value={columnFilters.timestamp}
-            onChange={(e) => handleColumnFilterChange('timestamp', e.currentTarget.value)}
+            onChange={(e) =>
+              handleColumnFilterChange('timestamp', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -175,7 +183,9 @@ const ResubmitExpress = () => {
         minWidth: 160,
         render: (item) => {
           const parsed = parseDate(item.insert);
-          const display = parsed ? parsed.format('DD MMM YYYY HH:mm') : item.insert || '-';
+          const display = parsed
+            ? parsed.format('DD MMM YYYY HH:mm')
+            : item.insert || '-';
           return <Text size="sm">{display}</Text>;
         },
         filter: (
@@ -183,7 +193,9 @@ const ResubmitExpress = () => {
             placeholder="Filter..."
             size="xs"
             value={columnFilters.insert}
-            onChange={(e) => handleColumnFilterChange('insert', e.currentTarget.value)}
+            onChange={(e) =>
+              handleColumnFilterChange('insert', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -193,7 +205,9 @@ const ResubmitExpress = () => {
         minWidth: 160,
         render: (item) => {
           const parsed = parseDate(item.matchDate);
-          const display = parsed ? parsed.format('DD MMM YYYY HH:mm') : item.matchDate || '-';
+          const display = parsed
+            ? parsed.format('DD MMM YYYY HH:mm')
+            : item.matchDate || '-';
           return <Text size="sm">{display}</Text>;
         },
         filter: (
@@ -201,7 +215,9 @@ const ResubmitExpress = () => {
             placeholder="Filter..."
             size="xs"
             value={columnFilters.matchDate}
-            onChange={(e) => handleColumnFilterChange('matchDate', e.currentTarget.value)}
+            onChange={(e) =>
+              handleColumnFilterChange('matchDate', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -215,7 +231,9 @@ const ResubmitExpress = () => {
             placeholder="Filter..."
             size="xs"
             value={columnFilters.from}
-            onChange={(e) => handleColumnFilterChange('from', e.currentTarget.value)}
+            onChange={(e) =>
+              handleColumnFilterChange('from', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -229,7 +247,9 @@ const ResubmitExpress = () => {
             placeholder="Filter..."
             size="xs"
             value={columnFilters.username}
-            onChange={(e) => handleColumnFilterChange('username', e.currentTarget.value)}
+            onChange={(e) =>
+              handleColumnFilterChange('username', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -243,7 +263,9 @@ const ResubmitExpress = () => {
             placeholder="Filter..."
             size="xs"
             value={columnFilters.phonenumber}
-            onChange={(e) => handleColumnFilterChange('phonenumber', e.currentTarget.value)}
+            onChange={(e) =>
+              handleColumnFilterChange('phonenumber', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -257,7 +279,9 @@ const ResubmitExpress = () => {
             placeholder="Filter..."
             size="xs"
             value={columnFilters.type}
-            onChange={(e) => handleColumnFilterChange('type', e.currentTarget.value)}
+            onChange={(e) =>
+              handleColumnFilterChange('type', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -271,7 +295,9 @@ const ResubmitExpress = () => {
             placeholder="Filter..."
             size="xs"
             value={columnFilters.securitycode}
-            onChange={(e) => handleColumnFilterChange('securitycode', e.currentTarget.value)}
+            onChange={(e) =>
+              handleColumnFilterChange('securitycode', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -285,7 +311,9 @@ const ResubmitExpress = () => {
             placeholder="Filter..."
             size="xs"
             value={columnFilters.customerphone}
-            onChange={(e) => handleColumnFilterChange('customerphone', e.currentTarget.value)}
+            onChange={(e) =>
+              handleColumnFilterChange('customerphone', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -299,7 +327,12 @@ const ResubmitExpress = () => {
             placeholder="Filter..."
             size="xs"
             value={columnFilters.customerphoneTRX}
-            onChange={(e) => handleColumnFilterChange('customerphoneTRX', e.currentTarget.value)}
+            onChange={(e) =>
+              handleColumnFilterChange(
+                'customerphoneTRX',
+                e.currentTarget.value,
+              )
+            }
           />
         ),
       },
@@ -313,7 +346,9 @@ const ResubmitExpress = () => {
             placeholder="Filter..."
             size="xs"
             value={columnFilters.servicecenter}
-            onChange={(e) => handleColumnFilterChange('servicecenter', e.currentTarget.value)}
+            onChange={(e) =>
+              handleColumnFilterChange('servicecenter', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -334,7 +369,9 @@ const ResubmitExpress = () => {
             placeholder="Filter..."
             size="xs"
             value={columnFilters.amount}
-            onChange={(e) => handleColumnFilterChange('amount', e.currentTarget.value)}
+            onChange={(e) =>
+              handleColumnFilterChange('amount', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -355,7 +392,9 @@ const ResubmitExpress = () => {
             placeholder="Filter..."
             size="xs"
             value={columnFilters.transAmount}
-            onChange={(e) => handleColumnFilterChange('transAmount', e.currentTarget.value)}
+            onChange={(e) =>
+              handleColumnFilterChange('transAmount', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -377,7 +416,9 @@ const ResubmitExpress = () => {
             placeholder="Filter..."
             size="xs"
             value={columnFilters.message}
-            onChange={(e) => handleColumnFilterChange('message', e.currentTarget.value)}
+            onChange={(e) =>
+              handleColumnFilterChange('message', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -407,7 +448,9 @@ const ResubmitExpress = () => {
             placeholder="Filter..."
             size="xs"
             value={columnFilters.smsid}
-            onChange={(e) => handleColumnFilterChange('smsid', e.currentTarget.value)}
+            onChange={(e) =>
+              handleColumnFilterChange('smsid', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -416,14 +459,18 @@ const ResubmitExpress = () => {
         label: 'Future Trx ID',
         minWidth: 140,
         render: (item) => (
-          <Text size="sm">{item.futuretrxid === -1 ? 'Expired' : item.futuretrxid || '-'}</Text>
+          <Text size="sm">
+            {item.futuretrxid === -1 ? 'Expired' : item.futuretrxid || '-'}
+          </Text>
         ),
         filter: (
           <TextInput
             placeholder="Filter..."
             size="xs"
             value={columnFilters.futuretrxid}
-            onChange={(e) => handleColumnFilterChange('futuretrxid', e.currentTarget.value)}
+            onChange={(e) =>
+              handleColumnFilterChange('futuretrxid', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -445,7 +492,9 @@ const ResubmitExpress = () => {
             placeholder="Filter..."
             size="xs"
             value={columnFilters.suspectedreason}
-            onChange={(e) => handleColumnFilterChange('suspectedreason', e.currentTarget.value)}
+            onChange={(e) =>
+              handleColumnFilterChange('suspectedreason', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -466,7 +515,9 @@ const ResubmitExpress = () => {
             placeholder="Filter..."
             size="xs"
             value={columnFilters.balance}
-            onChange={(e) => handleColumnFilterChange('balance', e.currentTarget.value)}
+            onChange={(e) =>
+              handleColumnFilterChange('balance', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -487,7 +538,12 @@ const ResubmitExpress = () => {
             placeholder="Filter..."
             size="xs"
             value={columnFilters.balancecalculate}
-            onChange={(e) => handleColumnFilterChange('balancecalculate', e.currentTarget.value)}
+            onChange={(e) =>
+              handleColumnFilterChange(
+                'balancecalculate',
+                e.currentTarget.value,
+              )
+            }
           />
         ),
       },
@@ -508,7 +564,9 @@ const ResubmitExpress = () => {
             placeholder="Filter..."
             size="xs"
             value={columnFilters.balancediff}
-            onChange={(e) => handleColumnFilterChange('balancediff', e.currentTarget.value)}
+            onChange={(e) =>
+              handleColumnFilterChange('balancediff', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -522,7 +580,9 @@ const ResubmitExpress = () => {
             placeholder="Filter..."
             size="xs"
             value={columnFilters.matchmanually}
-            onChange={(e) => handleColumnFilterChange('matchmanually', e.currentTarget.value)}
+            onChange={(e) =>
+              handleColumnFilterChange('matchmanually', e.currentTarget.value)
+            }
           />
         ),
       },
@@ -532,7 +592,9 @@ const ResubmitExpress = () => {
         minWidth: 140,
         render: (item) => {
           const parsed = parseDate(item.matchdate);
-          const display = parsed ? parsed.format('DD MMM YYYY HH:mm') : item.matchdate || '-';
+          const display = parsed
+            ? parsed.format('DD MMM YYYY HH:mm')
+            : item.matchdate || '-';
           return <Text size="sm">{display}</Text>;
         },
         filter: (
@@ -540,12 +602,14 @@ const ResubmitExpress = () => {
             placeholder="Filter..."
             size="xs"
             value={columnFilters.matchdate}
-            onChange={(e) => handleColumnFilterChange('matchdate', e.currentTarget.value)}
+            onChange={(e) =>
+              handleColumnFilterChange('matchdate', e.currentTarget.value)
+            }
           />
         ),
       },
     ],
-    [columnFilters, handleColumnFilterChange]
+    [columnFilters, handleColumnFilterChange],
   );
 
   const {
@@ -560,33 +624,55 @@ const ResubmitExpress = () => {
   });
 
   const filteredData = useMemo(() => {
-    const start = activeRange ? dayjs(activeRange[0].startDate).startOf('day') : null;
+    const start = activeRange
+      ? dayjs(activeRange[0].startDate).startOf('day')
+      : null;
     const end = activeRange ? dayjs(activeRange[0].endDate).endOf('day') : null;
 
     return data.filter((item) => {
-      if (!includesValue(item.resubmitTime, columnFilters.resubmitTime)) return false;
+      if (!includesValue(item.resubmitTime, columnFilters.resubmitTime))
+        return false;
       if (!includesValue(item.timestamp, columnFilters.timestamp)) return false;
       if (!includesValue(item.insert, columnFilters.insert)) return false;
       if (!includesValue(item.matchDate, columnFilters.matchDate)) return false;
       if (!includesValue(item.from, columnFilters.from)) return false;
       if (!includesValue(item.username, columnFilters.username)) return false;
-      if (!includesValue(item.phonenumber, columnFilters.phonenumber)) return false;
+      if (!includesValue(item.phonenumber, columnFilters.phonenumber))
+        return false;
       if (!includesValue(item.type, columnFilters.type)) return false;
-      if (!includesValue(item.securitycode, columnFilters.securitycode)) return false;
-      if (!includesValue(item.customerphone, columnFilters.customerphone)) return false;
-      if (!includesValue(item.customerphoneTRX, columnFilters.customerphoneTRX)) return false;
-      if (!includesValue(item.servicecenter, columnFilters.servicecenter)) return false;
-      if (!includesValue(String(item.amount), columnFilters.amount)) return false;
-      if (!includesValue(String(item.transAmount), columnFilters.transAmount)) return false;
+      if (!includesValue(item.securitycode, columnFilters.securitycode))
+        return false;
+      if (!includesValue(item.customerphone, columnFilters.customerphone))
+        return false;
+      if (!includesValue(item.customerphoneTRX, columnFilters.customerphoneTRX))
+        return false;
+      if (!includesValue(item.servicecenter, columnFilters.servicecenter))
+        return false;
+      if (!includesValue(String(item.amount), columnFilters.amount))
+        return false;
+      if (!includesValue(String(item.transAmount), columnFilters.transAmount))
+        return false;
       if (!includesValue(item.message, columnFilters.message)) return false;
-      if (!includesValue(item.transactiontype, columnFilters.transactiontype)) return false;
+      if (!includesValue(item.transactiontype, columnFilters.transactiontype))
+        return false;
       if (!includesValue(item.smsid, columnFilters.smsid)) return false;
-      if (!includesValue(String(item.futuretrxid), columnFilters.futuretrxid)) return false;
-      if (!includesValue(item.suspectedreason, columnFilters.suspectedreason)) return false;
-      if (!includesValue(String(item.balance), columnFilters.balance)) return false;
-      if (!includesValue(String(item.balancecalculate), columnFilters.balancecalculate)) return false;
-      if (!includesValue(String(item.balancediff), columnFilters.balancediff)) return false;
-      if (!includesValue(item.matchmanually, columnFilters.matchmanually)) return false;
+      if (!includesValue(String(item.futuretrxid), columnFilters.futuretrxid))
+        return false;
+      if (!includesValue(item.suspectedreason, columnFilters.suspectedreason))
+        return false;
+      if (!includesValue(String(item.balance), columnFilters.balance))
+        return false;
+      if (
+        !includesValue(
+          String(item.balancecalculate),
+          columnFilters.balancecalculate,
+        )
+      )
+        return false;
+      if (!includesValue(String(item.balancediff), columnFilters.balancediff))
+        return false;
+      if (!includesValue(item.matchmanually, columnFilters.matchmanually))
+        return false;
       if (!includesValue(item.matchdate, columnFilters.matchdate)) return false;
 
       if (start && end) {
@@ -629,7 +715,9 @@ const ResubmitExpress = () => {
   const fetchList = async ({ silent = false, payloadFilter } = {}) => {
     silent ? setRefreshing(true) : setLoading(true);
     try {
-      const response = await resubmitExpressAPI.getList(payloadFilter || filterUsed);
+      const response = await resubmitExpressAPI.getList(
+        payloadFilter || filterUsed,
+      );
       if (response.success && response.data) {
         const payload = response.data;
         if ((payload.status || '').toLowerCase() === 'ok') {
@@ -693,7 +781,9 @@ const ResubmitExpress = () => {
 
   const toggleAllOnPage = () => {
     if (pageFullySelected) {
-      setSelectedKeys((current) => current.filter((key) => !pageKeys.includes(key)));
+      setSelectedKeys((current) =>
+        current.filter((key) => !pageKeys.includes(key)),
+      );
     } else {
       const toAdd = pageKeys.filter((key) => !selectedKeys.includes(key));
       if (selectedKeys.length + toAdd.length > 50) {
@@ -709,7 +799,9 @@ const ResubmitExpress = () => {
   };
 
   const handleSubmit = async () => {
-    const selectedRecords = sortedData.filter((item) => selectedKeys.includes(makeKey(item)));
+    const selectedRecords = sortedData.filter((item) =>
+      selectedKeys.includes(makeKey(item)),
+    );
 
     if (selectedRecords.length === 0) {
       showNotification({
@@ -741,7 +833,9 @@ const ResubmitExpress = () => {
         if ((payloadData.status || '').toLowerCase() === 'ok') {
           showNotification({
             title: 'Success',
-            message: payloadData.message || 'Matching is in progress. Please refresh the list.',
+            message:
+              payloadData.message ||
+              'Matching is in progress. Please refresh the list.',
             color: 'green',
           });
           setData([]);
@@ -853,7 +947,7 @@ const ResubmitExpress = () => {
             shadow="xs"
           >
             <Stack gap="md">
-              <Group
+              {/* <Group
                 gap="md"
                 wrap="wrap"
                 align="flex-end"
@@ -948,9 +1042,9 @@ const ResubmitExpress = () => {
                 >
                   Apply
                 </Button>
-              </Group>
+              </Group> */}
 
-              <Divider />
+              {/* <Divider /> */}
 
               <Group
                 gap="xs"
@@ -1053,7 +1147,19 @@ const ResubmitExpress = () => {
                       return (
                         <Table.Tr
                           key={key}
-                          bg={selected ? 'rgba(34, 139, 230, 0.06)' : undefined}
+                          bg={
+                            item.suspectedreason &&
+                            (item.suspectedreason.includes(
+                              'Balance Different is not allowed',
+                            ) ||
+                              item.suspectedreason.includes(
+                                'WL SC + AMT CHECKER',
+                              ))
+                              ? '#ffe3e3'
+                              : selected
+                                ? 'rgba(34, 139, 230, 0.06)'
+                                : undefined
+                          }
                         >
                           <Table.Td>
                             <Checkbox
@@ -1063,7 +1169,9 @@ const ResubmitExpress = () => {
                           </Table.Td>
                           {visibleColumns.map((col) => (
                             <Table.Td key={`${col.key}-${key}`}>
-                              {col.render ? col.render(item) : item[col.key] || '-'}
+                              {col.render
+                                ? col.render(item)
+                                : item[col.key] || '-'}
                             </Table.Td>
                           ))}
                         </Table.Tr>
@@ -1102,8 +1210,10 @@ const ResubmitExpress = () => {
                           size="sm"
                           c="dimmed"
                         >
-                          Showing {paginatedData.length > 0 ? startIndex + 1 : 0}-
-                          {Math.min(endIndex, filteredData.length)} of {filteredData.length}
+                          Showing{' '}
+                          {paginatedData.length > 0 ? startIndex + 1 : 0}-
+                          {Math.min(endIndex, filteredData.length)} of{' '}
+                          {filteredData.length}
                         </Text>
                       </Group>
                     </Table.Td>

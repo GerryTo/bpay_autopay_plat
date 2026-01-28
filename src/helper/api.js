@@ -1875,10 +1875,15 @@ export const depositAPI = {
    */
   getAutomationAgents: async () => {
     try {
-      const formData = new URLSearchParams();
-      formData.append('data', '');
-
-      const response = await apiClient.post('/getMasterMyBankNew.php', formData);
+      const response = await apiClient.post(
+        '/getMasterMyBankNew.php',
+        { data: '' },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (response.data && response.data.data) {
         const decryptedData = CRYPTO.decrypt(response.data.data);
@@ -2242,9 +2247,14 @@ export const smsAPI = {
         };
 
         // Wrap inside `data` to match backend expectation ($param_POST->data)
-        const response = await apiClient.post('/smsLog_getList.php', { data: payload }, {
-          headers: { 'Content-Type': 'application/json' },
-        });
+        const response = await apiClient.post(
+          '/smsLog_getList.php',
+          { data: payload },
+          {
+            headers: { 'Content-Type': 'application/json' },
+            timeout: 120000,
+          }
+        );
 
         if (response.data && response.data.data) {
           const parsed = typeof response.data.data === 'string'
@@ -3854,10 +3864,14 @@ export const transactionAPI = {
       formData.append('data', jsonData);
 
       const response = await apiClient.post('/transactionCallbackEmpty_getList.php', formData);
+      const data = response.data;
+      if (data?.records && Array.isArray(data.records)) {
+        data.records = data.records.map((record) => CRYPTO.decodeRawUrl(record));
+      }
 
       return {
         success: true,
-        data: response.data,
+        data,
       };
     } catch (error) {
       console.error('Transaction callback empty API error:', error);
@@ -6110,6 +6124,208 @@ export const withdrawAPI = {
   },
 
   /**
+   * Resend withdraw queue item to automation (encrypted)
+   * @param {String|Number} queueId
+   */
+  resendWithdrawQueue: async (queueId) => {
+    try {
+      const jsonData = CRYPTO.encrypt({ queueId });
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/withdrawQueue_resend.php', formData);
+      const payloadData = response.data?.data
+        ? CRYPTO.decrypt(response.data.data)
+        : response.data;
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Withdraw queue resend API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to resend withdraw queue',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Reassign appium withdraw transaction (plain request)
+   * @param {{ queueId: string|number, assign?: string, isAutoReassign?: number }} params
+   */
+  reassignAppiumWithdraw: async ({ queueId, assign = '', isAutoReassign = 0 } = {}) => {
+    try {
+      const payload = { queueId, assign, isAutoReassign };
+      const response = await apiClient.post(
+        '/appiumWithdrawTransaction_Reassign.php',
+        { data: payload },
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Appium withdraw reassign API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to reassign withdraw',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Manual reassign withdraw (encrypted)
+   * @param {{ id: string|number, accountNo: string, bankCode: string, accountName?: string, username?: string, queueId?: string|number, assign?: string }} params
+   */
+  manualReassignWithdraw: async ({
+    id,
+    accountNo,
+    bankCode,
+    accountName = '',
+    username = '',
+    queueId = '',
+    assign = '',
+  } = {}) => {
+    try {
+      const jsonData = CRYPTO.encrypt({
+        id,
+        accountNo,
+        bankCode,
+        accountName,
+        username,
+        queueId,
+        assign,
+      });
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post(
+        '/withdrawAssignmentManual_assign.php',
+        formData
+      );
+
+      const payloadData = response.data?.data
+        ? CRYPTO.decrypt(response.data.data)
+        : response.data;
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Manual withdraw reassign API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to manual reassign withdraw',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Reassign withdraw for upload (encrypted)
+   * @param {{ id: string|number, accountNo: string, bankCode: string, accountName?: string, username?: string }} params
+   */
+  reassignWithdrawForUpload: async ({
+    id,
+    accountNo,
+    bankCode,
+    accountName = '',
+    username = '',
+  } = {}) => {
+    try {
+      const jsonData = CRYPTO.encrypt({
+        id,
+        accountNo,
+        bankCode,
+        accountName,
+        username,
+      });
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post(
+        '/withdrawAssignmentForUpload_assign.php',
+        formData
+      );
+
+      const payloadData = response.data?.data
+        ? CRYPTO.decrypt(response.data.data)
+        : response.data;
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Withdraw upload reassign API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to reassign upload withdraw',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Cancel automation withdraw (plain request)
+   * @param {{ queueId: string|number }} params
+   */
+  cancelAutomationWithdraw: async ({ queueId } = {}) => {
+    try {
+      const response = await apiClient.post(
+        '/appiumWithdrawCancelAutomation.php',
+        { data: { queueId } },
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Cancel automation withdraw API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to cancel automation withdraw',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Send withdraw to auto assign (plain request)
+   * @param {{ id: string|number }} params
+   */
+  sendToAutoAssign: async ({ id } = {}) => {
+    try {
+      const response = await apiClient.post(
+        '/appiumWithdrawSendToAutoAssign.php',
+        { data: { id } },
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Send to auto assign API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to send to auto assign',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
    * Get withdraw need-to-check list (encrypted)
    * @param {Object} params
    * @param {String} params.datefrom - YYYY-MM-DD
@@ -6287,6 +6503,42 @@ export const withdrawAPI = {
       return {
         success: false,
         error: error.message || 'Failed to check withdraw list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Check withdraw NTC duplicate (not encrypted)
+   * @param {{ amount: string|number, dstbankacc: string, futuretrx: string|number, bankcode: string }} params
+   */
+  checkWithdrawNtcDuplicate: async ({
+    amount = '',
+    dstbankacc = '',
+    futuretrx = '',
+    bankcode = '',
+  } = {}) => {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('data[amount]', amount ?? '');
+      formData.append('data[dstbankacc]', dstbankacc ?? '');
+      formData.append('data[futuretrx]', futuretrx ?? '');
+      formData.append('data[bankcode]', bankcode ?? '');
+
+      const response = await apiClient.post(
+        '/checkWithdrawNtcDuplicate.php',
+        formData
+      );
+
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      console.error('Withdraw NTC duplicate check API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to check withdraw NTC duplicate',
         details: error.response?.data || null,
       };
     }
@@ -7164,6 +7416,36 @@ export const crawlerAPI = {
       return {
         success: false,
         error: error.message || 'Failed to load appium history list',
+        details: error.response?.data || null,
+      };
+    }
+  },
+
+  /**
+   * Check automation withdraw list item (encrypted)
+   * @param {String|Number} id
+   */
+  checkAutomationWithdrawList: async (id) => {
+    try {
+      const jsonData = CRYPTO.encrypt({ id });
+      const formData = new URLSearchParams();
+      formData.append('data', jsonData);
+
+      const response = await apiClient.post('/withdrawList_checkAutomation.php', formData);
+
+      const payloadData = response.data?.data
+        ? CRYPTO.decrypt(response.data.data)
+        : response.data;
+
+      return {
+        success: true,
+        data: payloadData,
+      };
+    } catch (error) {
+      console.error('Automation withdraw check API error:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to check automation withdraw list',
         details: error.response?.data || null,
       };
     }
