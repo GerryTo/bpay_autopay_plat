@@ -9181,10 +9181,11 @@ export const serviceBkashAPI = {
    */
   execute: async (payload = {}) => {
     try {
-      const formData = new URLSearchParams();
-      formData.append('data', JSON.stringify(payload));
-
-      const response = await apiClient.post('/executeServiceBkashAPI.php', formData);
+      const response = await apiClient.post(
+        '/executeServiceBkashAPI.php',
+        { data: payload },
+        { headers: { 'Content-Type': 'application/json' } },
+      );
       return {
         success: true,
         data: response.data,

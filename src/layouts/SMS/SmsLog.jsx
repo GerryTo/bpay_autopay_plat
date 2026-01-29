@@ -6,23 +6,18 @@ import {
   Group,
   LoadingOverlay,
   Pagination,
+  Popover,
+  Paper,
   ScrollArea,
   Select,
   Stack,
   Table,
   Text,
   TextInput,
-  Popover,
 } from '@mantine/core';
-import {
-  IconFilter,
-  IconMessage,
-  IconRefresh,
-  IconSearch,
-  IconCalendar,
-} from '@tabler/icons-react';
+import { IconFilter, IconMessage, IconRefresh, IconCalendar } from '@tabler/icons-react';
 import dayjs from 'dayjs';
-import { DateRangePicker } from 'react-date-range';
+import { Calendar } from 'react-date-range';
 import { format } from 'date-fns';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
@@ -30,14 +25,6 @@ import ColumnActionMenu from '../../components/ColumnActionMenu';
 import { smsAPI } from '../../helper/api';
 import { showNotification } from '../../helper/showNotification';
 import { useTableControls } from '../../hooks/useTableControls';
-
-const buildDefaultRange = () => [
-  {
-    startDate: new Date(),
-    endDate: new Date(),
-    key: 'selection',
-  },
-];
 
 const typeOptions = [
   { value: '0', label: 'All' },
@@ -79,7 +66,7 @@ const formatNumber = (value) => {
 };
 
 const SmsLog = () => {
-  const [dateRange, setDateRange] = useState(buildDefaultRange());
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [datePickerOpened, setDatePickerOpened] = useState(false);
   const [type, setType] = useState('2');
   const [user, setUser] = useState('');
@@ -104,7 +91,8 @@ const SmsLog = () => {
 
   const handleResetAllFilters = () => {
     handleClearFilters();
-    setDateRange(buildDefaultRange());
+    setSelectedDate(new Date());
+    setDatePickerOpened(false);
     setType('2');
     setUser('');
     setData([]);
@@ -638,29 +626,19 @@ const SmsLog = () => {
   }, []);
 
   const fetchData = async ({ silent = false } = {}) => {
-    const start = dateRange?.[0]?.startDate;
-    const end = dateRange?.[0]?.endDate;
+    const date = selectedDate;
 
-    if (!start || !end) {
+    if (!date) {
       showNotification({
         title: 'Validation',
-        message: 'Please select a date range',
+        message: 'Please select a date',
         color: 'yellow',
       });
       return;
     }
 
-    if (dayjs(end).isBefore(dayjs(start), 'day')) {
-      showNotification({
-        title: 'Validation',
-        message: 'End date cannot be before start date',
-        color: 'yellow',
-      });
-      return;
-    }
-
-    const from = `${dayjs(start).format('YYYY-MM-DD')} 00:00:00`;
-    const to = `${dayjs(end).format('YYYY-MM-DD')} 23:59:59`;
+    const from = `${dayjs(date).format('YYYY-MM-DD')} 00:00:00`;
+    const to = `${dayjs(date).format('YYYY-MM-DD')} 23:59:59`;
 
     silent ? setRefreshing(true) : setLoading(true);
 
@@ -903,20 +881,17 @@ const SmsLog = () => {
                     leftSection={<IconCalendar size={18} />}
                     onClick={() => setDatePickerOpened((o) => !o)}
                   >
-                    {format(dateRange[0].startDate, 'dd MMM yyyy')} -{' '}
-                    {format(dateRange[0].endDate, 'dd MMM yyyy')}
+                    {format(selectedDate, 'dd MMM yyyy')}
                   </Button>
                 </Popover.Target>
-                <Popover.Dropdown p="sm">
-                  <DateRangePicker
-                    onChange={(ranges) => {
-                      const selection = ranges.selection;
-                      setDateRange([selection]);
-                    }}
-                    moveRangeOnFirstSelection={false}
-                    ranges={dateRange}
-                    maxDate={new Date()}
-                  />
+                <Popover.Dropdown p={0}>
+                  <Paper>
+                    <Calendar
+                      date={selectedDate}
+                      onChange={(date) => setSelectedDate(date)}
+                      maxDate={new Date()}
+                    />
+                  </Paper>
                 </Popover.Dropdown>
               </Popover>
               <Select

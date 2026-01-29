@@ -22,6 +22,8 @@ import ColumnActionMenu from '../../components/ColumnActionMenu';
 
 const defaultFilters = {
   user: '',
+  username: '',
+  accountNo: '',
 };
 
 const batchSize = 25;
@@ -63,16 +65,22 @@ const ServiceBkashApi = () => {
   const filteredData = useMemo(
     () =>
       data.filter((item) => {
-        return includesValue(item.v_mainuser, columnFilters.user);
+        return (
+          includesValue(item.v_mainuser, columnFilters.user) &&
+          includesValue(item.v_username, columnFilters.username) &&
+          includesValue(item.v_userbank, columnFilters.accountNo)
+        );
       }),
-    [data, columnFilters]
+    [data, columnFilters],
   );
 
   const sortAccessors = useMemo(
     () => ({
       user: (item) => item.v_mainuser ?? '',
+      username: (item) => item.v_username ?? '',
+      accountNo: (item) => item.v_userbank ?? '',
     }),
-    []
+    [],
   );
 
   const columns = useMemo(
@@ -99,9 +107,41 @@ const ServiceBkashApi = () => {
         ),
       },
       {
+        key: 'username',
+        label: 'Username',
+        minWidth: 200,
+        render: (item) => <Text size="sm">{item.v_username || '-'}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter username..."
+            size="xs"
+            value={columnFilters.username}
+            onChange={(e) =>
+              handleFilterChange('username', e.currentTarget.value)
+            }
+          />
+        ),
+      },
+      {
+        key: 'accountNo',
+        label: 'Account no',
+        minWidth: 200,
+        render: (item) => <Text size="sm">{item.v_userbank || '-'}</Text>,
+        filter: (
+          <TextInput
+            placeholder="Filter account no..."
+            size="xs"
+            value={columnFilters.accountNo}
+            onChange={(e) =>
+              handleFilterChange('accountNo', e.currentTarget.value)
+            }
+          />
+        ),
+      },
+      {
         key: 'action',
         label: 'Action',
-        minWidth: 220,
+        minWidth: 260,
         render: (item) => (
           <Group gap="xs">
             <Button
@@ -135,7 +175,7 @@ const ServiceBkashApi = () => {
         ),
       },
     ],
-    [columnFilters, handleFilterChange, saving, bulkProgress.isRunning]
+    [columnFilters, handleFilterChange, saving, bulkProgress.isRunning],
   );
 
   const {
@@ -189,7 +229,7 @@ const ServiceBkashApi = () => {
           const records = Array.isArray(payload.records) ? payload.records : [];
           const withKeys = records.map((item, idx) => ({
             ...item,
-            _rowKey: `${item.v_mainuser || 'service'}-${idx}`,
+            _rowKey: `${item.v_mainuser || 'service'}-${item.v_username || 'user'}-${item.v_userbank || 'acc'}-${idx}`,
           }));
           setData(withKeys);
         } else {
@@ -233,7 +273,9 @@ const ServiceBkashApi = () => {
     handleResetAll();
   };
 
-  const makeKey = (item) => item._rowKey || item.v_mainuser || '';
+  const makeKey = (item) =>
+    item._rowKey ||
+    `${item.v_mainuser || 'service'}-${item.v_username || 'user'}-${item.v_userbank || 'acc'}`;
 
   const toggleRow = (item) => {
     const key = makeKey(item);

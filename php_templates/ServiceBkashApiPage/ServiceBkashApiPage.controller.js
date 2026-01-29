@@ -17,7 +17,7 @@ app.controller("serviceBkashAPICtrl", [
     $stateParams,
     $uibModal,
     $interval,
-    $rootScope
+    $rootScope,
   ) {
     $scope.gridIsLoading = false;
     $scope.selectedRows = [];
@@ -52,6 +52,8 @@ app.controller("serviceBkashAPICtrl", [
 
       columnDefs: [
         { name: "User", field: "v_mainuser" },
+        { name: "username", field: "v_username" },
+        { name: "Account no", field: "v_userbank" },
         {
           name: "Action",
           width: 250,
@@ -107,7 +109,7 @@ app.controller("serviceBkashAPICtrl", [
             headers: {
               "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
             },
-          }
+          },
         )
         .then(
           function (res) {
@@ -118,8 +120,12 @@ app.controller("serviceBkashAPICtrl", [
           function () {
             $scope.gridIsLoading = false;
             alert("Request failed");
-          }
+          },
         );
+    };
+
+    $scope.refresh = function () {
+      $scope.getListData();
     };
 
     // =========================
@@ -142,7 +148,7 @@ app.controller("serviceBkashAPICtrl", [
             " " +
             total +
             " service(s)?\n\nBatch: " +
-            totalBatches
+            totalBatches,
         )
       ) {
         return;
@@ -193,7 +199,7 @@ app.controller("serviceBkashAPICtrl", [
                   "Content-Type":
                     "application/x-www-form-urlencoded;charset=UTF-8",
                 },
-              }
+              },
             )
             .then(
               function (res) {
@@ -205,8 +211,8 @@ app.controller("serviceBkashAPICtrl", [
               function () {
                 $scope.bulkProgress.processed++;
                 $scope.bulkProgress.failed++;
-              }
-            )
+              },
+            ),
         );
       });
 
@@ -227,7 +233,7 @@ app.controller("serviceBkashAPICtrl", [
           " completed\n\nSuccess: " +
           $scope.bulkProgress.success +
           "\nFailed: " +
-          $scope.bulkProgress.failed
+          $scope.bulkProgress.failed,
       );
 
       $scope.gridApi.selection.clearSelectedRows();
@@ -249,7 +255,7 @@ app.controller("serviceBkashAPICtrl", [
             headers: {
               "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
             },
-          }
+          },
         )
         .then(
           function (res) {
@@ -260,7 +266,7 @@ app.controller("serviceBkashAPICtrl", [
           },
           function () {
             $scope.gridIsLoading = false;
-          }
+          },
         );
     };
 

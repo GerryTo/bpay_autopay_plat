@@ -507,7 +507,7 @@ const AutomationWithdrawList = () => {
       handleFilterChange,
       handleSuccess,
       handleUpdateMemo2,
-    ]
+    ],
   );
 
   const {
@@ -543,7 +543,7 @@ const AutomationWithdrawList = () => {
           includesValue(item.accountno, columnFilters.accountno) &&
           includesValue(
             item.sourceaccountname,
-            columnFilters.sourceaccountname
+            columnFilters.sourceaccountname,
           ) &&
           includesValue(item.dstbankaccount, columnFilters.dstbankaccount) &&
           includesValue(item.accountname, columnFilters.accountname) &&
@@ -555,7 +555,7 @@ const AutomationWithdrawList = () => {
           includesValue(item.memo2, columnFilters.memo2)
         );
       }),
-    [data, columnFilters]
+    [data, columnFilters],
   );
 
   const sortedData = useMemo(() => {
@@ -640,7 +640,7 @@ const AutomationWithdrawList = () => {
         const response = await withdrawAPI.getAutomationList(
           payloadDateFrom,
           payloadDateTo,
-          history
+          history,
         );
 
         if (response.success && response.data) {
@@ -679,7 +679,7 @@ const AutomationWithdrawList = () => {
         setRefreshing(false);
       }
     },
-    [dateRange, history]
+    [dateRange, history],
   );
 
   useEffect(() => {
@@ -699,7 +699,7 @@ const AutomationWithdrawList = () => {
 
     const memo2 = window.prompt(
       `Update memo2 for [${futuretrxid}]`,
-      String(item?.memo2 ?? '')
+      String(item?.memo2 ?? ''),
     );
     if (memo2 === null) return;
 
@@ -866,10 +866,7 @@ const AutomationWithdrawList = () => {
       return;
     }
 
-    const bankcode = window.prompt(
-      'Bank code',
-      String(item?.bankcode ?? '')
-    );
+    const bankcode = window.prompt('Bank code', String(item?.bankcode ?? ''));
     if (bankcode === null) return;
     if (!bankcode.trim()) {
       showNotification({
@@ -882,7 +879,7 @@ const AutomationWithdrawList = () => {
 
     const account = window.prompt(
       'Destination account',
-      String(item?.dstbankaccount ?? '')
+      String(item?.dstbankaccount ?? ''),
     );
     if (account === null) return;
     if (!account.trim()) {
@@ -948,9 +945,9 @@ const AutomationWithdrawList = () => {
           acc.fee += Number(item.fee) || 0;
           return acc;
         },
-        { amount: 0, fee: 0 }
+        { amount: 0, fee: 0 },
       ),
-    [data]
+    [data],
   );
 
   return (
@@ -1073,7 +1070,7 @@ const AutomationWithdrawList = () => {
                 </Button>
               </Group>
 
-              <Group gap="sm">
+              {/* <Group gap="sm">
                 <Badge
                   variant="light"
                   color="gray"
@@ -1092,7 +1089,7 @@ const AutomationWithdrawList = () => {
                 >
                   Total Fee: {formatNumber(totals.fee)}
                 </Badge>
-              </Group>
+              </Group> */}
             </Stack>
           </Card>
 

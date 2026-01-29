@@ -39,7 +39,7 @@ const NavigationSection = ({ opened, toggle }) => {
     loginUser?.role;
   const filteredRoutes = useMemo(
     () => filterRoutesByRole(mockdataRoutes, loginUserType),
-    [loginUserType]
+    [loginUserType],
   );
 
   function handleLogout() {
@@ -91,7 +91,7 @@ const NavigationSection = ({ opened, toggle }) => {
           const found = findNavigationItem(
             [{ title: section.title, links: item.links }],
             targetLink,
-            { label: item.label, icon: item.icon }
+            { label: item.label, icon: item.icon },
           );
           if (found) return found;
         }
@@ -110,7 +110,7 @@ const NavigationSection = ({ opened, toggle }) => {
           label: navInfo.item.label,
           breadcrumbs,
           parentSection: navInfo.section,
-        })
+        }),
       );
     }
   }, [location.pathname, dispatch, filteredRoutes]);
@@ -156,7 +156,7 @@ const NavigationSection = ({ opened, toggle }) => {
           label,
           breadcrumbs,
           parentSection: navInfo.section,
-        })
+        }),
       );
     }
 
@@ -522,7 +522,7 @@ const NavigationSection = ({ opened, toggle }) => {
                   )}
                 </Box>
               );
-          })}
+            })}
 
           {/* Log Out */}
           <Box

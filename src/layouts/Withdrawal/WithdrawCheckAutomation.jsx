@@ -251,7 +251,7 @@ const WithdrawCheckAutomation = () => {
         setRefreshing(false);
       }
     },
-    [dateRange, history]
+    [dateRange, history],
   );
 
   const columns = useMemo(
@@ -717,7 +717,7 @@ const WithdrawCheckAutomation = () => {
 
           const onFail = async () => {
             const confirmed = window.confirm(
-              `Are you sure want to fail this transaction [${id}]?`
+              `Are you sure want to fail this transaction [${id}]?`,
             );
             if (!confirmed) return;
 
@@ -730,7 +730,7 @@ const WithdrawCheckAutomation = () => {
                   status: 'C',
                   accountdest: '',
                   memo,
-                }
+                },
               );
               const ok = String(res.data?.status || '').toLowerCase() === 'ok';
               if (!res.success || !ok) {
@@ -870,7 +870,7 @@ const WithdrawCheckAutomation = () => {
       fetchList,
       handleFilterChange,
       runRowAction,
-    ]
+    ],
   );
 
   const {
@@ -909,7 +909,7 @@ const WithdrawCheckAutomation = () => {
           includesValue(item.accountno, columnFilters.accountno) &&
           includesValue(
             item.sourceaccountname,
-            columnFilters.sourceaccountname
+            columnFilters.sourceaccountname,
           ) &&
           includesValue(item.originaldate, columnFilters.originaldate) &&
           includesValue(item.fee, columnFilters.fee) &&
@@ -921,7 +921,7 @@ const WithdrawCheckAutomation = () => {
           includesValue(item.assignStatusDesc, columnFilters.assignStatusDesc)
         );
       }),
-    [data, columnFilters]
+    [data, columnFilters],
   );
 
   const sortedData = useMemo(() => {
@@ -1075,14 +1075,14 @@ const WithdrawCheckAutomation = () => {
                 </Button>
               </Group>
 
-              <Group gap="sm">
+              {/* <Group gap="sm">
                 <Badge
                   variant="light"
                   color="gray"
                 >
                   Records: {data.length}
                 </Badge>
-              </Group>
+              </Group> */}
             </Stack>
           </Card>
 
