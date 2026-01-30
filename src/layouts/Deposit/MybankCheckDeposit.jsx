@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 import {
   Badge,
@@ -149,11 +149,6 @@ const MybankCheckDeposit = () => {
       setRefreshing(false);
     }
   };
-
-  useEffect(() => {
-    fetchList();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const ensureAutomationOnline = async (item) => {
     const phoneNumber = item.phonenumber || item.phoneNumber || '';

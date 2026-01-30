@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Badge,
   Box,
@@ -211,16 +211,6 @@ const MyBankLimit = () => {
   const pagePartiallySelected =
     pageKeys.some((key) => selectedKeys.includes(key)) && !pageFullySelected;
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [columnFilters]);
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages || 1);
-    }
-  }, [totalPages, currentPage]);
-
   const loadData = async () => {
     setLoading(true);
     try {
@@ -254,10 +244,6 @@ const MyBankLimit = () => {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    loadData();
-  }, []);
 
   const handleFilterChange = (column, value) => {
     setColumnFilters((prev) => ({

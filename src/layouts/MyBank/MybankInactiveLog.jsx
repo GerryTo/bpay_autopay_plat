@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 import {
   Box,
@@ -194,10 +194,6 @@ const MybankInactiveLog = () => {
     });
   }, [filteredData, sortConfig]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [columnFilters, activeRange]);
-
   const totalPages = Math.ceil(sortedData.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -237,10 +233,6 @@ const MybankInactiveLog = () => {
       setRefreshing(false);
     }
   };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   const applyDateRange = () => {
     setActiveRange([...pickerRange]);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Box,
   Button,
@@ -152,10 +152,6 @@ const AgentCredit = () => {
   const handleRefresh = () => {
     getListData();
   };
-
-  useEffect(() => {
-    getListData();
-  }, []);
 
   // Calculate totals
   const totalNagad = data.reduce(

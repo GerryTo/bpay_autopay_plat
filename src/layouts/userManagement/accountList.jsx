@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Box,
   Button,
@@ -344,10 +344,6 @@ const AccountList = () => {
   const endIndex = startIndex + itemsPerPage;
   const paginatedData = sortedData.slice(startIndex, endIndex);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [columnFilters]);
-
   // Update column filter
   const handleFilterChange = (column, value) => {
     setColumnFilters((prev) => ({
@@ -462,10 +458,6 @@ const AccountList = () => {
       }
     }
   };
-
-  useEffect(() => {
-    getListData();
-  }, []);
 
   return (
     <Box p="md">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Box,
   Button,
@@ -112,11 +112,6 @@ const MerchantBankAcc = () => {
   const endIndex = startIndex + itemsPerPage;
   const paginatedData = filteredData.slice(startIndex, endIndex);
 
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [columnFilters, selectedMerchant]);
-
   // Update column filter
   const handleFilterChange = (column, value) => {
     setColumnFilters((prev) => ({
@@ -200,16 +195,6 @@ const MerchantBankAcc = () => {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    loadMerchantList();
-  }, []);
-
-  useEffect(() => {
-    if (selectedMerchant) {
-      loadBankAccData();
-    }
-  }, [selectedMerchant]);
 
   const formatNumber = (value) => {
     if (value === null || value === undefined || value === '') return '';

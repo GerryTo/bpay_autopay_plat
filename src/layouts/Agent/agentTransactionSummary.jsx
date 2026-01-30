@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Box,
   Button,
@@ -149,10 +149,6 @@ const AgentTransactionSummary = () => {
     });
     setDetailModalOpen(true);
   };
-
-  useEffect(() => {
-    getListData();
-  }, [dateRange, includeZeroCredit]);
 
   // Calculate totals
   const totalAvailableCredit = data.reduce(

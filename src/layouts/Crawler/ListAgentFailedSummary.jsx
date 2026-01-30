@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 import {
   Badge,
@@ -290,15 +290,9 @@ const ListAgentFailedSummary = () => {
   const pagePartiallySelected =
     pageKeys.some((key) => selectedKeys.includes(key)) && !pageFullySelected;
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [columnFilters]);
+  
 
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages || 1);
-    }
-  }, [totalPages, currentPage]);
+  
 
   const fetchList = useCallback(
     async ({ silent = false } = {}) => {
@@ -357,10 +351,7 @@ const ListAgentFailedSummary = () => {
     [dateRange, phase]
   );
 
-  useEffect(() => {
-    fetchList();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  
 
   const toggleRow = (item) => {
     const key = makeKey(item);

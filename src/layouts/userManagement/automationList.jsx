@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Box,
   Button,
@@ -123,11 +123,6 @@ const AutomationList = () => {
   const endIndex = startIndex + itemsPerPage;
   const paginatedData = filteredData.slice(startIndex, endIndex);
 
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [columnFilters]);
-
   // Update column filter
   const handleFilterChange = (column, value) => {
     setColumnFilters((prev) => ({
@@ -188,10 +183,6 @@ const AutomationList = () => {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    getListData();
-  }, []);
 
   const getStatusColor = (status) => {
     if (status === 'ONLINE') return 'green';

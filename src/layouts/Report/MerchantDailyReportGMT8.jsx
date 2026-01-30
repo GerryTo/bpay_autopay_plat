@@ -114,7 +114,7 @@ const MerchantDailyReportGMT8 = () => {
     try {
       const fromDate = `${format(
         dateRange[0].startDate,
-        'yyyy-MM-dd'
+        'yyyy-MM-dd',
       )} 00:00:00`;
       const toDate = `${format(dateRange[0].endDate, 'yyyy-MM-dd')} 23:59:59`;
 
@@ -127,7 +127,7 @@ const MerchantDailyReportGMT8 = () => {
       const response = await merchantAPI.getMerchantDailyReport(
         fromDate,
         toDate,
-        selectedMerchant
+        selectedMerchant,
       );
 
       console.log('API Response:', response);
@@ -196,39 +196,39 @@ const MerchantDailyReportGMT8 = () => {
   // Calculate totals from filtered data
   const totalOpeningBalance = filteredData.reduce(
     (sum, item) => sum + (parseFloat(item.opening_balance) || 0),
-    0
+    0,
   );
   const totalDeposit = filteredData.reduce(
     (sum, item) => sum + (parseFloat(item.total_deposit) || 0),
-    0
+    0,
   );
   const totalWithdrawal = filteredData.reduce(
     (sum, item) => sum + (parseFloat(item.total_withdrawal) || 0),
-    0
+    0,
   );
   const totalFee = filteredData.reduce(
     (sum, item) => sum + (parseFloat(item.total_fee) || 0),
-    0
+    0,
   );
   const totalTopup = filteredData.reduce(
     (sum, item) => sum + (parseFloat(item.total_topup) || 0),
-    0
+    0,
   );
   const totalSettlement = filteredData.reduce(
     (sum, item) => sum + (parseFloat(item.total_settlement) || 0),
-    0
+    0,
   );
   const totalClosingBalance = filteredData.reduce(
     (sum, item) => sum + (parseFloat(item.closing_balance) || 0),
-    0
+    0,
   );
   const totalDepositCount = filteredData.reduce(
     (sum, item) => sum + (parseFloat(item.deposit_count) || 0),
-    0
+    0,
   );
   const totalWithdrawCount = filteredData.reduce(
     (sum, item) => sum + (parseFloat(item.withdraw_count) || 0),
-    0
+    0,
   );
 
   const rows = paginatedData.map((item, index) => (
@@ -351,22 +351,10 @@ const MerchantDailyReportGMT8 = () => {
           </Group>
 
           {/* Action Buttons */}
-          <Group>
-            <Button
-              leftSection={<IconSearch size={18} />}
-              onClick={handleClearFilters}
-              variant="light"
-              color="red"
-              radius="md"
-              size="sm"
-            >
-              Clear Column Filters
-            </Button>
-          </Group>
 
           {/* Filters */}
           <Grid>
-            <Grid.Col span={{ base: 12, md: 3 }}>
+            <Grid.Col span={{ base: 10, md: 3 }}>
               <Popover
                 opened={datePickerOpened}
                 onChange={setDatePickerOpened}
@@ -423,6 +411,18 @@ const MerchantDailyReportGMT8 = () => {
                 fullWidth
               >
                 Refresh
+              </Button>
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, md: 1.5 }}>
+              <Button
+                leftSection={<IconSearch size={18} />}
+                onClick={handleClearFilters}
+                variant="light"
+                color="red"
+                radius="md"
+                size="sm"
+              >
+                Clear Column Filters
               </Button>
             </Grid.Col>
           </Grid>
@@ -506,7 +506,10 @@ const MerchantDailyReportGMT8 = () => {
                         size="xs"
                         value={columnFilters.merchantcode}
                         onChange={(e) =>
-                          handleFilterChange('merchantcode', e.currentTarget.value)
+                          handleFilterChange(
+                            'merchantcode',
+                            e.currentTarget.value,
+                          )
                         }
                       />
                     </Table.Th>

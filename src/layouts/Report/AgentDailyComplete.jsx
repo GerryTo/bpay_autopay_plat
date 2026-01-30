@@ -57,11 +57,15 @@ const AgentDailyComplete = () => {
 
     const bankMatch =
       !columnFilters.bankCode ||
-      item.bankCode?.toLowerCase().includes(columnFilters.bankCode.toLowerCase());
+      item.bankCode
+        ?.toLowerCase()
+        .includes(columnFilters.bankCode.toLowerCase());
 
     const accountNoMatch =
       !columnFilters.accountNo ||
-      item.accountNo?.toLowerCase().includes(columnFilters.accountNo.toLowerCase());
+      item.accountNo
+        ?.toLowerCase()
+        .includes(columnFilters.accountNo.toLowerCase());
 
     const accountNameMatch =
       !columnFilters.accountName ||
@@ -110,7 +114,10 @@ const AgentDailyComplete = () => {
 
       console.log('Request params:', { fromDate, toDate });
 
-      const response = await merchantAPI.getAgentDailyComplete(fromDate, toDate);
+      const response = await merchantAPI.getAgentDailyComplete(
+        fromDate,
+        toDate,
+      );
 
       console.log('API Response:', response);
 
@@ -169,11 +176,11 @@ const AgentDailyComplete = () => {
   // Calculate totals from filtered data
   const totalDeposit = filteredData.reduce(
     (sum, item) => sum + (parseFloat(item.deposit) || 0),
-    0
+    0,
   );
   const totalWithdraw = filteredData.reduce(
     (sum, item) => sum + (parseFloat(item.withdraw) || 0),
-    0
+    0,
   );
 
   const rows = paginatedData.map((item, index) => (
@@ -247,7 +254,7 @@ const AgentDailyComplete = () => {
 
           {/* Filters */}
           <Grid>
-            <Grid.Col span={{ base: 12, md: 4 }}>
+            <Grid.Col span={{ base: 12, md: 3 }}>
               <Popover
                 opened={datePickerOpened}
                 onChange={setDatePickerOpened}
@@ -403,7 +410,10 @@ const AgentDailyComplete = () => {
                         size="xs"
                         value={columnFilters.accountName}
                         onChange={(e) =>
-                          handleFilterChange('accountName', e.currentTarget.value)
+                          handleFilterChange(
+                            'accountName',
+                            e.currentTarget.value,
+                          )
                         }
                       />
                     </Table.Th>
@@ -442,17 +452,13 @@ const AgentDailyComplete = () => {
                       <Table.Td></Table.Td>
                       <Table.Td></Table.Td>
                       <Table.Td></Table.Td>
-                      <Table.Td
-                        style={{ textAlign: 'right', fontWeight: 600 }}
-                      >
+                      <Table.Td style={{ textAlign: 'right', fontWeight: 600 }}>
                         {totalDeposit.toLocaleString('en-US', {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}
                       </Table.Td>
-                      <Table.Td
-                        style={{ textAlign: 'right', fontWeight: 600 }}
-                      >
+                      <Table.Td style={{ textAlign: 'right', fontWeight: 600 }}>
                         {totalWithdraw.toLocaleString('en-US', {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,

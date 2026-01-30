@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ActionIcon,
   Box,
@@ -192,16 +192,6 @@ const UpdateMerchantBankSelected = () => {
   const pagePartiallySelected =
     pageKeys.some((key) => selectedKeys.includes(key)) && !pageFullySelected;
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [columnFilters]);
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages || 1);
-    }
-  }, [totalPages, currentPage]);
-
   const loadMerchantList = async () => {
     const response = await merchantAPI.getMerchantList();
     if (response.success && response.data?.status?.toLowerCase() === 'ok') {
@@ -261,14 +251,6 @@ const UpdateMerchantBankSelected = () => {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    loadMerchantList();
-  }, []);
-
-  useEffect(() => {
-    loadData();
-  }, [selectedMerchant, isNotLinked]);
 
   const handleFilterChange = (column, value) => {
     setColumnFilters((prev) => ({

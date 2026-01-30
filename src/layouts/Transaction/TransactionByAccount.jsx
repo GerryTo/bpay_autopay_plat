@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import dayjs from 'dayjs';
+import { format } from 'date-fns';
 import {
   Badge,
   Box,
@@ -7,6 +9,7 @@ import {
   Group,
   LoadingOverlay,
   Pagination,
+  Popover,
   ScrollArea,
   Select,
   Stack,
@@ -14,8 +17,12 @@ import {
   Text,
   TextInput,
 } from '@mantine/core';
+import { DateRangePicker } from 'react-date-range';
+import 'react-date-range/dist/styles.css';
+import 'react-date-range/dist/theme/default.css';
 import {
   IconArrowDownCircle,
+  IconCalendar,
   IconCash,
   IconFilter,
   IconRefresh,
@@ -64,11 +71,17 @@ const formatNumber = (value) => {
   return num.toLocaleString('en-US', { maximumFractionDigits: 2 });
 };
 
-const todayISO = () => new Date().toISOString().slice(0, 10);
+const defaultDateRange = () => [
+  {
+    startDate: new Date(),
+    endDate: new Date(),
+    key: 'selection',
+  },
+];
 
 const TransactionByAccount = () => {
-  const [fromDate, setFromDate] = useState(todayISO());
-  const [toDate, setToDate] = useState(todayISO());
+  const [dateRange, setDateRange] = useState(defaultDateRange());
+  const [datePickerOpened, setDatePickerOpened] = useState(false);
   const [accountValue, setAccountValue] = useState('0');
   const [accounts, setAccounts] = useState([]);
   const [data, setData] = useState([]);
@@ -624,7 +637,9 @@ const TransactionByAccount = () => {
   };
 
   const fetchData = async ({ silent = false } = {}) => {
-    if (!fromDate || !toDate) {
+    const startDate = dateRange?.[0]?.startDate;
+    const endDate = dateRange?.[0]?.endDate;
+    if (!startDate || !endDate) {
       showNotification({
         title: 'Validation',
         message: 'Please pick From and To date',
@@ -639,8 +654,8 @@ const TransactionByAccount = () => {
       const [accountno = '0', bank = ''] = accountValue.split('||');
 
       const response = await transactionAPI.getTransactionByAccount({
-        datefrom: `${fromDate} 00:00:00`,
-        dateto: `${toDate} 23:59:59`,
+        datefrom: `${dayjs(startDate).format('YYYY-MM-DD')} 00:00:00`,
+        dateto: `${dayjs(endDate).format('YYYY-MM-DD')} 23:59:59`,
         accountno,
         bank,
         isPending: '0',
@@ -712,8 +727,7 @@ const TransactionByAccount = () => {
   );
 
   const handleReset = () => {
-    setFromDate(todayISO());
-    setToDate(todayISO());
+    setDateRange(defaultDateRange());
     setAccountValue('0');
     setData([]);
     handleClearFilters();
@@ -805,20 +819,37 @@ const TransactionByAccount = () => {
               gap="md"
               wrap="wrap"
             >
-              <TextInput
-                label="From Date"
-                placeholder="YYYY-MM-DD"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.currentTarget.value)}
-                style={{ minWidth: 160 }}
-              />
-              <TextInput
-                label="To Date"
-                placeholder="YYYY-MM-DD"
-                value={toDate}
-                onChange={(e) => setToDate(e.currentTarget.value)}
-                style={{ minWidth: 160 }}
-              />
+              <Popover
+                position="bottom-start"
+                opened={datePickerOpened}
+                onChange={setDatePickerOpened}
+                width="auto"
+                withArrow
+                shadow="md"
+              >
+                <Popover.Target>
+                  <Button
+                    variant="light"
+                    color="blue"
+                    leftSection={<IconCalendar size={18} />}
+                    onClick={() => setDatePickerOpened((o) => !o)}
+                  >
+                    {format(dateRange[0].startDate, 'dd MMM yyyy')} -{' '}
+                    {format(dateRange[0].endDate, 'dd MMM yyyy')}
+                  </Button>
+                </Popover.Target>
+                <Popover.Dropdown p="sm">
+                  <DateRangePicker
+                    onChange={(ranges) => {
+                      const selection = ranges.selection;
+                      setDateRange([selection]);
+                    }}
+                    moveRangeOnFirstSelection={false}
+                    ranges={dateRange}
+                    maxDate={new Date()}
+                  />
+                </Popover.Dropdown>
+              </Popover>
               <Select
                 label="Account"
                 data={accountOptions}

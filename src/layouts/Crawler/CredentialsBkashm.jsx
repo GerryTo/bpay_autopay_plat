@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   Box,
   Button,
@@ -142,15 +142,9 @@ const CredentialsBkashm = () => {
   const endIndex = startIndex + itemsPerPage;
   const paginatedData = sortedData.slice(startIndex, endIndex);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [columnFilters]);
+  
 
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages || 1);
-    }
-  }, [totalPages, currentPage]);
+  
 
   const fetchList = useCallback(async ({ silent = false } = {}) => {
     silent ? setRefreshing(true) : setLoading(true);
@@ -192,10 +186,7 @@ const CredentialsBkashm = () => {
     }
   }, []);
 
-  useEffect(() => {
-    fetchList();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  
 
   const handleResetAll = () => {
     handleClearFilters();

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import {
   Box,
   Button,
@@ -60,11 +60,6 @@ const BlacklistList = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedData = filteredData.slice(startIndex, endIndex);
-
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [columnFilters]);
 
   // Update column filter
   const handleFilterChange = (column, value) => {
@@ -233,25 +228,6 @@ const BlacklistList = () => {
   const handleRefresh = () => {
     loadBlacklistData();
   };
-
-  // Setup auto-refresh (every 2 minutes)
-  useEffect(() => {
-    // Initial load
-    loadBlacklistData();
-
-    // Setup interval
-    intervalRef.current = setInterval(() => {
-      loadBlacklistData();
-    }, 120000); // 120000ms = 2 minutes
-
-    // Cleanup on unmount
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const rows = paginatedData.map((item, index) => (
     <Table.Tr key={index}>

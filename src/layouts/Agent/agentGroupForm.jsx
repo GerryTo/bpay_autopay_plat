@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
@@ -32,19 +32,6 @@ const AgentGroupForm = () => {
     name: '',
     status: 'Yes',
   });
-
-  useEffect(() => {
-    if (editData) {
-      setFormData({
-        id: editData.id || 0,
-        name: editData.name || '',
-        status: editData.active || 'Yes',
-      });
-    } else {
-      // If no data, redirect back to list
-      navigate('/agentgroup');
-    }
-  }, [editData, navigate]);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({

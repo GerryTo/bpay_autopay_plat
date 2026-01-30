@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Badge,
   Box,
@@ -197,11 +197,7 @@ const AgentTrackerDashboard = () => {
     });
   }, [data, statusFilter, search, columnFilters]);
 
-  useEffect(() => {
-    setSelectedKeys((prev) =>
-      prev.filter((key) => data.some((item) => makeKey(item) === key))
-    );
-  }, [data, makeKey]);
+  
 
   const getReasonColor = (reason) => {
     const reasonMap = {
@@ -517,15 +513,9 @@ const AgentTrackerDashboard = () => {
   const pagePartiallySelected =
     pageKeys.some((key) => selectedKeys.includes(key)) && !pageFullySelected;
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [columnFilters, statusFilter, search, selectedBank]);
+  
 
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages || 1);
-    }
-  }, [totalPages, currentPage]);
+  
 
   const toggleRow = (item) => {
     const key = makeKey(item);
@@ -617,23 +607,9 @@ const AgentTrackerDashboard = () => {
     [selectedBank]
   );
 
-  useEffect(() => {
-    fetchDashboard();
-    fetchAgents();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedBank]);
+  
 
-  useEffect(() => {
-    if (autoRefresh) {
-      intervalRef.current = setInterval(() => {
-        fetchDashboard();
-        fetchAgents({ silent: true });
-      }, 10000);
-    }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [autoRefresh, fetchDashboard, fetchAgents]);
+  
 
   const resetAll = () => {
     setColumnFilters(defaultFilters);

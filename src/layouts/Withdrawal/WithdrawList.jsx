@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 import {
   Badge,
@@ -525,16 +525,6 @@ const WithdrawList = () => {
   const pagePartiallySelected =
     pageKeys.some((key) => selectedKeys.includes(key)) && !pageFullySelected;
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [columnFilters]);
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages || 1);
-    }
-  }, [totalPages, currentPage]);
-
   const decodeRecord = (record) =>
     Object.entries(record || {}).reduce((acc, [key, value]) => {
       if (typeof value === 'string') {
@@ -888,10 +878,6 @@ const WithdrawList = () => {
       setLoading(false);
     }
   }
-
-  useEffect(() => {
-    fetchList();
-  }, [fetchList]);
 
   const toggleRow = (item) => {
     const key = makeKey(item);

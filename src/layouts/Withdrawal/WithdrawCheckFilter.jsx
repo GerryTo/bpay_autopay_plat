@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 import {
   Badge,
@@ -690,16 +690,6 @@ const WithdrawCheckFilter = () => {
   const endIndex = startIndex + itemsPerPage;
   const paginatedData = sortedData.slice(startIndex, endIndex);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [columnFilters]);
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages || 1);
-    }
-  }, [totalPages, currentPage]);
-
   const decodeRecord = (record) =>
     Object.entries(record || {}).reduce((acc, [key, value]) => {
       if (typeof value === 'string') {
@@ -818,11 +808,6 @@ const WithdrawCheckFilter = () => {
     },
     [dateRange, hourRange, merchantFilter, history, status]
   );
-
-  useEffect(() => {
-    fetchMerchants();
-    fetchList();
-  }, [fetchMerchants, fetchList]);
 
   const buildGenerateText = (item) => {
     const bankCode = String(item?.bankcode ?? '').toUpperCase();

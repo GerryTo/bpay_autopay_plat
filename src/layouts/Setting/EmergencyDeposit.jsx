@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 import {
   Badge,
@@ -578,15 +578,9 @@ const EmergencyDeposit = () => {
   const endIndex = startIndex + itemsPerPage;
   const paginatedData = sortedData.slice(startIndex, endIndex);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [columnFilters]);
+  
 
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages || 1);
-    }
-  }, [totalPages, currentPage]);
+  
 
   const totalDebit = useMemo(
     () => data.reduce((acc, curr) => acc + (Number(curr.DB) || 0), 0),
@@ -668,10 +662,7 @@ const EmergencyDeposit = () => {
     [dateRange]
   );
 
-  useEffect(() => {
-    fetchList();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  
 
   const runEmergency = async () => {
     const start = dateRange?.[0]?.startDate;

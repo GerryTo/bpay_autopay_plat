@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 import {
   Box,
@@ -177,10 +177,6 @@ const ReportResubmitWithoutAutomationSummary = () => {
     });
   }, [filteredData, sortConfig]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [columnFilters]);
-
   const totalPages = Math.ceil(sortedData.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -233,11 +229,6 @@ const ReportResubmitWithoutAutomationSummary = () => {
       setRefreshing(false);
     }
   };
-
-  useEffect(() => {
-    fetchList({ payloadFilter: filterUsed });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const handleApplyFilter = () => {
     const nextRange = activeRange || pickerRange;

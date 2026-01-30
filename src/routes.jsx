@@ -429,12 +429,12 @@ export const mockdataRoutes = [
             link: '/account-balance-log',
             element: <AccountBalanceLog />,
           },
-          {
-            label: 'Merchant Daily (GMT+6)',
-            icon: <IconReportMoney />,
-            link: '/master-report-daily-admin-complete',
-            element: <MerchantDailyReportGMT6 />,
-          },
+          // {
+          //   label: 'Merchant Daily (GMT+6)',
+          //   icon: <IconReportMoney />,
+          //   link: '/master-report-daily-admin-complete',
+          //   element: <MerchantDailyReportGMT6 />,
+          // },
           {
             label: 'Merchant Daily (GMT+8)',
             icon: <IconReportMoney />,
@@ -451,7 +451,7 @@ export const mockdataRoutes = [
             label: 'Agent success Trans Realtime (GMT+6)',
             icon: <IconReportMoney />,
             link: '/acc-report-daily-realtime-6',
-            element: <AgentDailyCompleteGMT6 />,
+            element: <AgentRealtimeReportGMT6 />,
           },
         ],
       },

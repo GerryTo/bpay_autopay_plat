@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   Box,
   Button,
@@ -74,9 +74,7 @@ const CreateTransactionB2B = () => {
     setLoadingLists(false);
   }, []);
 
-  useEffect(() => {
-    loadOptions();
-  }, [loadOptions]);
+  
 
   const handleChange = (key, value) => {
     setForm((prev) => ({

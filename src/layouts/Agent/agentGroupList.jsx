@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Box,
   Button,
@@ -124,10 +124,6 @@ const AgentGroupList = () => {
       }
     }
   };
-
-  useEffect(() => {
-    getListData();
-  }, []);
 
   const rows = data.map((item, index) => (
     <Table.Tr key={index}>

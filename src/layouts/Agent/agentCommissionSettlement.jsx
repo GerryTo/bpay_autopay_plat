@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Box,
   Button,
@@ -301,10 +301,6 @@ const AgentCommissionSettlement = () => {
   const handleRefresh = () => {
     getListData();
   };
-
-  useEffect(() => {
-    getListData();
-  }, []);
 
   // Calculate totals
   const totalCount = data.length;

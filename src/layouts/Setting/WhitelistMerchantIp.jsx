@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   Badge,
   Box,
@@ -153,15 +153,9 @@ const WhitelistMerchantIp = () => {
   const endIndex = startIndex + itemsPerPage;
   const paginatedData = sortedData.slice(startIndex, endIndex);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [columnFilters]);
+  
 
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages || 1);
-    }
-  }, [totalPages, currentPage]);
+  
 
   const loadMerchantOptions = useCallback(async () => {
     const response = await userAPI.getMasterMerchantList();
@@ -223,11 +217,7 @@ const WhitelistMerchantIp = () => {
     []
   );
 
-  useEffect(() => {
-    fetchList();
-    loadMerchantOptions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  
 
   const resetAll = () => {
     setColumnFilters(defaultFilters);

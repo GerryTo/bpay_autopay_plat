@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 import {
   Badge,
@@ -727,16 +727,6 @@ const AppiumWithdrawList = () => {
   const endIndex = startIndex + itemsPerPage;
   const paginatedData = sortedData.slice(startIndex, endIndex);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [columnFilters]);
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages || 1);
-    }
-  }, [totalPages, currentPage]);
-
   const decodeRecord = (record) =>
     Object.entries(record || {}).reduce((acc, [key, value]) => {
       if (typeof value === 'string') {
@@ -857,11 +847,6 @@ const AppiumWithdrawList = () => {
     },
     [agent, dateRange, status]
   );
-
-  useEffect(() => {
-    fetchAgents();
-    fetchList();
-  }, [fetchAgents, fetchList]);
 
   async function handleResend(item) {
     const queueId = item?.queue ?? '';

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 import {
   Badge,
@@ -472,16 +472,6 @@ const MerchantTransactionDeposit = () => {
   const endIndex = startIndex + itemsPerPage;
   const paginatedData = sortedData.slice(startIndex, endIndex);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [columnFilters]);
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages || 1);
-    }
-  }, [totalPages, currentPage]);
-
   const mapRecords = (records = []) =>
     records.map((item) => {
       const transType = item.transactiontype;
@@ -603,10 +593,6 @@ const MerchantTransactionDeposit = () => {
     },
     [dateRange, status]
   );
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
 
   const summaryCards = [
     {

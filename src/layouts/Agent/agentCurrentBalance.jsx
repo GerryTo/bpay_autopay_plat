@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Box,
   Button,
@@ -205,10 +205,6 @@ const AgentCurrentBalance = () => {
   const handleRefresh = () => {
     getListData();
   };
-
-  useEffect(() => {
-    getListData();
-  }, []);
 
   // Calculate totals
   const totalAgents = data.length;

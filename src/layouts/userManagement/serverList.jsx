@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -67,11 +67,6 @@ const ServerList = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedData = filteredData.slice(startIndex, endIndex);
-
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [columnFilters]);
 
   // Update column filter
   const handleFilterChange = (column, value) => {
@@ -181,10 +176,6 @@ const ServerList = () => {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    getListData();
-  }, []);
 
   const rows = paginatedData.map((item, index) => (
     <Table.Tr key={index}>
